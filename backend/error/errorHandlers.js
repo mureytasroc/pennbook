@@ -3,11 +3,11 @@
  * and sets up proper error handling, following https://sematext.com/blog/node-js-error-handling/.
  */
 
-import {BaseError} from './errorHandlers.js';
+import { BaseError } from './errorHandlers.js';
 
 /**
  * Log the given error appropriately, depending on environment.
- * @param {object} err - The error object to log
+ * @param {Object} err - The error object to log
  */
 export function logError(err) {
   console.error(err);
@@ -15,9 +15,9 @@ export function logError(err) {
 
 /**
  * A middleware wrapper around {@link logError}.
- * @param {object} err - The error object to log
- * @param {object} req - The request object
- * @param {object} res - The response object
+ * @param {Object} err - The error object to log
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
  * @param {function} next - The next middleware callback
  */
 export function logErrorMiddleware(err, req, res, next) {
@@ -27,18 +27,18 @@ export function logErrorMiddleware(err, req, res, next) {
 
 /**
  * A middleware wrapper to return the appropriate response for an error.
- * @param {object} err - The error object
- * @param {object} req - The request object
- * @param {object} res - The response object
+ * @param {Object} err - The error object
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
  * @param {function} next - The next middleware callback
  */
 export function returnError(err, req, res, next) {
-  res.status(err.statusCode || 500).json({message: err.message});
+  res.status(err.statusCode || 500).json({ message: err.message });
 }
 
 /**
  * A helper function to determine if the given error is an operational error.
- * @param {object} error - The error object to inspect
+ * @param {Object} error - The error object to inspect
  * @return {boolean} true if the error is an operational error, false otherwise
  */
 export function isOperationalError(error) {
@@ -56,7 +56,6 @@ process.on('unhandledRejection', (error) => {
 // Decide whether to restart server on unhandled error
 process.on('uncaughtException', (error) => {
   logError(error);
-
   if (!isOperationalError(error)) {
     process.exit(1);
   }

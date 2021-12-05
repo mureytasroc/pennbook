@@ -1,8 +1,8 @@
 import express from 'express';
-import chat from './routes/chat.js';
-import news from './routes/news.js';
-import posts from './routes/posts.js';
-import user from './routes/user.js';
+import chat from './routes/chat';
+import news from './routes/news';
+import posts from './routes/posts';
+import user from './routes/user';
 
 const router = new express.Router();
 

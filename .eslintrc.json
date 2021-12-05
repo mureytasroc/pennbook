@@ -4,18 +4,15 @@
         "es2021": true,
         "node": true
     },
-    "extends": [
-        "plugin:vue/essential",
-        "google"
-    ],
+    "extends": ["plugin:vue/essential", "google"],
     "parserOptions": {
-        "ecmaVersion": 13,
+        "ecmaVersion": 12,
         "sourceType": "module"
     },
-    "plugins": [
-        "vue"
-    ],
+    "plugins": ["vue"],
     "rules": {
-        "max-len": ["error", 100]
+        "max-len": ["error", 100],
+        "object-curly-spacing": ["error", "always"],
+        "no-undef": "error"
     }
 }
