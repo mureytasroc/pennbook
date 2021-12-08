@@ -11,7 +11,7 @@ const routes = [
     children: [
       { path: 'homepage', component: () => import('pages/Homepage.vue') },
       { path: 'profile', component: () => import('pages/Profile.vue') },
-      { path: 'friends', component: () => import('pages/Index.vue') },
+      { path: 'friends', component: () => import('pages/Friends.vue') },
     ]
   },
 

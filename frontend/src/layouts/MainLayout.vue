@@ -216,7 +216,6 @@ export default {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: url(/Bgs/animated.png);
   /*background-repeat: no-repeat;*/
   background-size: cover;
   background-position: 50% 50%;
@@ -259,7 +258,6 @@ export default {
   }
 
   .bg-image {
-    background: url(/animated.png) no-repeat center center fixed;
 
     -webkit-background-size: cover;
     -moz-background-size: cover;

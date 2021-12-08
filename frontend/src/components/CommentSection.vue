@@ -22,6 +22,24 @@
             </q-item>
           </div>
         </q-list>
+
+        <q-form @keyup:enter="postComment" class="full-width">
+          <q-input outlined autogrow v-model="newComment" label="Add Comment:">
+            <template v-slot:after>
+                <q-btn style="background:black"
+                  v-show="newComment"
+                  @click="postComment"
+                  round
+                  dense
+                  flat
+                  type="submit"
+                  color="white"
+                  icon="send"
+                />
+              </template>
+          </q-input>
+        </q-form>
+
   </div>
 </template>
 
@@ -30,7 +48,7 @@
 export default {
   data() {
     return {
-
+      newComment: "",
     }
   },
   props: {
@@ -50,6 +68,13 @@ export default {
     },
 
   },
+
+  methods: {
+    postComment() {
+      //TODO: call route to update db with new comment
+      console.log('send message');
+    }
+  }
 
 };
 </script>
