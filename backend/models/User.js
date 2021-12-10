@@ -41,24 +41,7 @@ export const UserAutocomplete = dynamo.define('UserAutocomplete', {
   },
 });
 
-export const Friendship = dynamo.define('Friendship', {
-  hashKey: 'username',
-  rangeKey: 'friendshipUUID',
-  schema: {
-    username: Joi.string(),
-    friendUsername: Joi.string(),
-    friendFirstName: Joi.string(),
-    friendLastName: Joi.string(),
-    friendshipUUID: Joi.string(),
-    confirmed: Joi.boolean().default(false),
-    timestamp: Joi.date(),
-  },
-  indexes: [{
-    hashKey: 'username', rangeKey: 'friendUsername', type: 'local', name: 'FriendUsernameIndex',
-  }],
-});
-
-dynamo.createTables(function(err) {
+dynamo.createTables(function (err) {
   if (err && err.code !== 'ResourceInUseException') {
     throw err;
   }
@@ -67,7 +50,7 @@ dynamo.createTables(function(err) {
 /**
  * @return {Set} a set of valid affiliations
  */
-const getAffiliationsUnmemoized = async function() {
+const getAffiliationsUnmemoized = async function () {
   const affiliations = await Affiliation.loadAll().exec();
   const affiliationsSet = new Set();
   affiliations.map((item) => item.affiliation).forEach(affiliationsSet.add);
@@ -176,12 +159,12 @@ export async function updateUser(profile) {
   const username = profile.username;
   try {
     const newProfile = await User.update(
-        profile,
-        {
-          ConditionExpression: `username = :uname`,
-          ExpressionAttributeValues: { ':uname': username },
-          ReturnValues: 'ALL_NEW',
-        },
+      profile,
+      {
+        ConditionExpression: `username = :uname`,
+        ExpressionAttributeValues: { ':uname': username },
+        ReturnValues: 'ALL_NEW',
+      },
     );
     return unmarshallAttributes(newProfile.Attributes);
   } catch (err) {
@@ -199,7 +182,7 @@ export async function updateUser(profile) {
  */
 export async function getUser(username) {
   try {
-    const profile = await User.get( username, { ConsistentRead: true });
+    const profile = await User.get(username, { ConsistentRead: true });
     return unmarshallAttributes(profile.Attributes);
   } catch (err) {
     if (err.code === 'ResourceNotFoundException') {
