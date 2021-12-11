@@ -2,8 +2,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import dynamo from 'dynamodb';
 import { getUser } from '../models/User';
-import { NotFound, Conflict } from '../error/errors';
+import { Conflict } from '../error/errors';
 import Joi from 'joi';
+import { unmarshallAttributes } from '../util/utils.js';
 
 
 export const Friendship = dynamo.define('Friendship', {
@@ -25,31 +26,25 @@ export const Friendship = dynamo.define('Friendship', {
 
 /**
  * Creates a Friendship item in DynamoDB from a new friendship creation request.
- * @param {Object} user the user to create a friendship from
- * @param {Object} friend the friend to create a friendship with
+ * @param {Object} username the username of the user to add a friendhsip for
+ * @param {Object} friendUsername the username of the new friend
  * @return {Object} the new friendship object
  */
-export async function createFriendship(user, friend) {
+export async function createFriendship(username, friendUsername) {
+  const [user, friend] = await Promise.all([getUser(username), getUser(friendUsername)]);
   try {
-    user = getUser(user);
-    friend = getUser(friend);
-  } catch (err) {
-    throw new NotFound('User or friend not found');
-  }
-  const friendship = {};
-  friendship.username = user;
-  friendship.friendUsername = friend.username;
-  friendship.friendFirstName = friend.firstName;
-  friendship.friendshipUUID = uuidv4();
-  friendship.timestamp = new Date().toISOString();
-  try {
-    const fship = await Friendship.create(friendship, { overwrite: false });
-    return fship;
+    const friendship = await Friendship.create({
+      username: user.username,
+      friendUsername: friend.username,
+      friendFirstName: friend.firstName,
+      friendshipUUID: uuidv4(),
+      timestamp: new Date().toISOString(),
+    }, { overwrite: false });
+    return unmarshallAttributes(friendship.Attributes);
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
       throw new Conflict(
-          `The specified friendship between '${friendship.username}'` +
-          `and '${friendship.friendUsername}' is taken.`,
+          `The specified friendship between '${username}' and '${friendUsername}' already exists.`,
       );
     }
     throw err;
