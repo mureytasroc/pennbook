@@ -1,7 +1,7 @@
 import jwtMiddlewareConstructor from 'express-jwt';
 import unless from 'express-unless';
 import jwt from 'jsonwebtoken';
-import { Forbidden, Unauthenticated } from '../error/errors';
+import { Forbidden, Unauthenticated } from '../error/errors.js';
 
 
 const JWT_ALGORITHM = 'HS256';
@@ -51,7 +51,7 @@ export function userAuthAndPathRequired(req, res, next) {
 userAuthAndPathRequired.unless = unless;
 
 /**
- * A function for signing a JWT with the given username (expiring in 2h).
+ * A function for signing a JWT with the given username (expiring in 1h).
  * @param {string} username the username with which this JWT will be signed
  * @return {Object} a signed JWT with the given username
  */
@@ -61,7 +61,7 @@ export function generateJwt(username) {
       process.env.jwtSecret,
       {
         algorithms: [JWT_ALGORITHM],
-        expiresIn: '1h', // TODO: access token vs refresh token?
+        expiresIn: '1h',
         issuer: process.env.jwtIssuer,
         audience: process.env.jwtAudience,
       },

@@ -3,11 +3,11 @@ import express from 'express';
 import { StatusCodes } from 'http-status-codes';
 import owasp from 'owasp-password-strength-test';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
-import { NotFound, TooManyRequests, Unauthenticated } from '../error/errors';
+import { NotFound, TooManyRequests, Unauthenticated } from '../error/errors.js';
 import { redisClient } from '../models/connect.js';
-import { createUser, getAffiliations, getUser, updateUser } from '../models/User';
-import { assertString, cannotUpdate } from '../util/utils';
-import { generateJwt, userAuthAndPathRequired } from './auth';
+import { createUser, getAffiliations, getUser, updateUser } from '../models/User.js';
+import { assertString, cannotUpdate } from '../util/utils.js';
+import { generateJwt, userAuthAndPathRequired } from './auth.js';
 
 const router = new express.Router();
 

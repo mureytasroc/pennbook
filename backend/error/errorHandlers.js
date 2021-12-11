@@ -3,7 +3,7 @@
  * and sets up proper error handling, following https://sematext.com/blog/node-js-error-handling/.
  */
 
-import { BaseError } from './errorHandlers.js';
+import { BaseError } from './errors.js';
 
 /**
  * Log the given error appropriately, depending on environment.

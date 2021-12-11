@@ -1,12 +1,12 @@
 import express from 'express';
 import { StatusCodes } from 'http-status-codes';
 import routeCache from 'route-cache';
-import { BadRequest } from '../error/errors';
-import { turnTextIntoKeywords } from '../jobs/load-news';
+import { BadRequest } from '../error/errors.js';
+import { turnTextToKeywords } from '../jobs/load-news.js';
 import {
   articleSearch, getCategories, likeArticle, recommendArticles, unlikeArticle,
-} from '../models/News';
-import { userAuthAndPathRequired, userAuthRequired } from './auth';
+} from '../models/News.js';
+import { userAuthAndPathRequired, userAuthRequired } from './auth.js';
 
 
 const MAX_ARTICLE_QUERY_LIMIT = 100;
@@ -33,7 +33,7 @@ router.get('/news/categories', routeCache.cacheSeconds(60 * 60), async function(
 router.get('/news/articles', userAuthRequired, async function(req, res) {
   let keywords;
   try {
-    keywords = turnTextIntoKeywords(req.query.q || '');
+    keywords = turnTextToKeywords(req.query.q || '');
   } catch (err) {
     if (err instanceof BadRequest) {
       throw new BadRequest(

@@ -1,18 +1,12 @@
-import dotenvDefaults from 'dotenv-defaults';
-import dotenvExpand from 'dotenv-expand';
-dotenvExpand(dotenvDefaults.config());
-
-import { logErrorMiddleware, returnError } from 'errors/errorHandlers';
+import './config/dotenv.js';
+import './models/connect.js';
+import { logErrorMiddleware, returnError } from './error/errorHandlers.js';
 import express from 'express';
-import { initDynamoDB } from 'models/connect.js';
 import api from './routes/api.js';
 
 // Setup server
 const app = express();
 app.use(express.urlencoded());
-
-// Connect to DB
-initDynamoDB();
 
 // Setup error handling middleware
 app.use(logErrorMiddleware);

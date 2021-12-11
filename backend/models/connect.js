@@ -1,16 +1,10 @@
 import dynamo from 'dynamodb';
-import redis from 'redis';
-
-/**
- * Initializes a connection to DynamoDB (works for dev or prod).
- */
-export function initDynamoDB() {
-  if (process.env.NODE_ENV === 'production') {
-    dynamo.AWS.config.update({ region: process.env.awsRegion });
-  } else {
-    // TODO: figure out how to handle DynamoDB in dev
-  }
-}
+import './Chat.js';
+import './News.js';
+import './Post.js';
+import './User.js';
+import { prod } from '../config/dotenv.js';
+const { default: redis } = await import(prod ? 'redis' : 'redis-mock');
 
 export const redisClient = redis.createClient({
   host: process.env.redisHost,
@@ -18,4 +12,10 @@ export const redisClient = redis.createClient({
 });
 redisClient.on('error', function(err) {
   throw err;
+});
+
+dynamo.createTables(function(err) {
+  if (err && err.code !== 'ResourceInUseException') {
+    throw err;
+  }
 });

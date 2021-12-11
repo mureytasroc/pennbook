@@ -2,9 +2,9 @@
  * This module contains the script to load news articles, and related helper functions.
  */
 
-import stemmer from 'stemmer';
+import { stemmer } from 'stemmer';
 import sw from 'stopword';
-import { BadRequest } from '../error/errors';
+import { BadRequest } from '../error/errors.js';
 
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 

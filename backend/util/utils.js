@@ -1,7 +1,7 @@
-import AWS from 'aws-sdk';
+import dynamo from 'dynamodb';
 import { BadRequest, UnprocessableEntity } from '../error/errors.js';
 
-export const unmarshallAttributes = AWS.DynamoDB.Converter.unmarshall;
+export const unmarshallAttributes = dynamo.AWS.DynamoDB.Converter.unmarshall;
 
 /**
  * Asserts the given toCheck variable is a string and (optionally) within the provided

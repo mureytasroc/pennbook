@@ -1,9 +1,8 @@
 import express from 'express';
-import { userAuthAndPathRequired, userAuthRequired } from './auth';
-
-router.use(userAuthRequired.unless({ path: ['/api/users/:username/chats/'] }));
+import { userAuthAndPathRequired, userAuthRequired } from './auth.js';
 
 const router = new express.Router();
+router.use(userAuthRequired.unless({ path: ['/api/users/:username/chats/'] }));
 
 
 // TODO: setup socket.io?

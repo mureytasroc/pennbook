@@ -4,10 +4,10 @@ import dynamo from 'dynamodb';
 import emailValidator from 'email-validator';
 import Joi from 'joi';
 import memoize from 'memoizee';
-import { getCategories } from 'News';
+import { getCategories } from './News.js';
 import owasp from 'owasp-password-strength-test';
-import { BadRequest, Conflict, NotFound } from '../error/errors';
-import { assertString, unmarshallAttributes } from '../util/utils';
+import { BadRequest, Conflict, NotFound } from '../error/errors.js';
+import { assertString, unmarshallAttributes } from '../util/utils.js';
 
 
 export const Affiliation = dynamo.define('Affiliation', {
@@ -41,16 +41,28 @@ export const UserAutocomplete = dynamo.define('UserAutocomplete', {
   },
 });
 
-dynamo.createTables(function (err) {
-  if (err && err.code !== 'ResourceInUseException') {
-    throw err;
-  }
+export const Friendship = dynamo.define('Friendship', {
+  hashKey: 'username',
+  rangeKey: 'friendshipUUID',
+  schema: {
+    username: Joi.string(),
+    friendUsername: Joi.string(),
+    friendFirstName: Joi.string(),
+    friendLastName: Joi.string(),
+    friendshipUUID: Joi.string(),
+    confirmed: Joi.boolean().default(false),
+    timestamp: Joi.date(),
+  },
+  indexes: [{
+    hashKey: 'username', rangeKey: 'friendUsername', type: 'local', name: 'FriendUsernameIndex',
+  }],
 });
+
 
 /**
  * @return {Set} a set of valid affiliations
  */
-const getAffiliationsUnmemoized = async function () {
+const getAffiliationsUnmemoized = async function() {
   const affiliations = await Affiliation.loadAll().exec();
   const affiliationsSet = new Set();
   affiliations.map((item) => item.affiliation).forEach(affiliationsSet.add);
@@ -159,12 +171,12 @@ export async function updateUser(profile) {
   const username = profile.username;
   try {
     const newProfile = await User.update(
-      profile,
-      {
-        ConditionExpression: `username = :uname`,
-        ExpressionAttributeValues: { ':uname': username },
-        ReturnValues: 'ALL_NEW',
-      },
+        profile,
+        {
+          ConditionExpression: `username = :uname`,
+          ExpressionAttributeValues: { ':uname': username },
+          ReturnValues: 'ALL_NEW',
+        },
     );
     return unmarshallAttributes(newProfile.Attributes);
   } catch (err) {

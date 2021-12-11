@@ -1,8 +1,8 @@
 import dynamo from 'dynamodb';
 import Joi from 'joi';
 import memoize from 'memoizee';
-import { BadRequest, Conflict, NotFound, UnprocessableEntity } from '../error/errors';
-import { unmarshallAttributes } from '../util/utils';
+import { BadRequest, Conflict, NotFound, UnprocessableEntity } from '../error/errors.js';
+import { unmarshallAttributes } from '../util/utils.js';
 
 
 export const Category = dynamo.define('Category', {
@@ -63,12 +63,6 @@ export const RecommendedArticle = dynamo.define('RecommendedArticle', {
     recUUID: Joi.string(),
     articleUUID: Joi.string(),
   },
-});
-
-dynamo.createTables(function(err) {
-  if (err && err.code !== 'ResourceInUseException') {
-    throw err;
-  }
 });
 
 
