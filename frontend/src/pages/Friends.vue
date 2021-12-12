@@ -44,6 +44,22 @@
           "
           style="margin-top:4%"
         >
+            <!--TODO: make this functional and search for friends / move elsewhere-->
+            <q-toolbar class="bg-primary text-white rounded-borders">
+                <h7 class="gt-xs">
+                Find/Add friends!
+                </h7>
+
+                <q-space />
+
+                <q-input dark dense standout v-model="text" input-class="text-right" class="q-ml-md">
+                <template v-slot:append>
+                    <q-icon v-if="text === ''" name="search" />
+                    <q-icon v-else name="clear" class="cursor-pointer" @click="text = ''" />
+                </template>
+                </q-input>
+            </q-toolbar>
+
 
             <q-item v-for="friend in getFriends" :key="friend" clickable v-ripple style="
                 height: 80px;

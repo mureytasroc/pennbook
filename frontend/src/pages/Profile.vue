@@ -1,46 +1,54 @@
 <!--TODO: have div for displaying/changing account, and div below for Wall (maybe separate component) -->
 <template>
 <q-page style="overflow-y: hidden">
+
+
   <div class="flex q-pa-md"
       style="width: 100%;display: flex; justify-content: center; margin: auto;margin-top:30px; overflow-x: hidden">
-    <q-card
-      vertical
-      flat
-      style="
-        width: 300px;
-        display: flex;
-        border: 4px solid grey;
-        border-radius: 20px;
-        overflow: hidden;
-      "
-    >
-      <q-card-section style="width: 100%">
-          <div
-            flat
-            style="margin-top: -5px; margin-left: -5px; text-align: left"
-          >
 
-             <span style="font-size: 1.1rem; color: black"
-            >{{ 'Email: ' + this.getActiveUserInfo.emailAddress + " "}}</span>
-            <br>
+    <div>
 
-            <span style="font-size: 1.1rem; color: black"
-              >{{ 'Affiliation: ' + this.getActiveUserInfo.affiliation + " "}}</span>
-              <br>
 
-            <span style="font-size: 1.1rem; color: black"
-            >{{ 'Interests: ' + this.getActiveUserInfo.interests + " "}}</span>
-            <br>
+    <q-bar dark class="bg-secondary text-white">
+      <q-btn dense flat round icon="lens" size="8.5px" color="red" />
+      <q-btn dense flat round icon="lens" size="8.5px" color="blue" />
+      <q-btn dense flat round icon="lens" size="8.5px" color="white" />
+      <div class="col text-center text-weight-bold">
+        My Profile
+      </div>
+    </q-bar>
 
-            <span style="font-size: 1.1rem; color: black"
-            >{{ 'Password'}}</span>
-            <br>
+    <br>
 
-            <q-btn label="edit profile" /> <!--this should open up og component to update settings?-->
+        <q-card class="my-card">
+        <q-card-section class="bg-primary text-white">
+            <div class="text-h6">{{ this.getActiveUserInfo.firstName + " " + this.getActiveUserInfo.lastName}}</div>
+            <div class="text-subtitle2">{{ this.getActiveUserInfo.emailAddress + " "}}</div>
+        </q-card-section>
 
+        <q-card-actions>
+                <q-item style="font-size: 1.1rem; color: black"
+                >{{ '🎓: ' + this.getActiveUserInfo.affiliation + " "}}</q-item>
+                <br>
+
+                 <q-separator color="orange" inset />
+
+                <q-item style="font-size: 1.1rem; color: black"
+                >{{ '❤️:  ' + this.getActiveUserInfo.interests}}</q-item
+                >
+                <br>
+
+                <br>
+        </q-card-actions>
+
+        <div style="padding:10px; margin:auto; text-align:center">
+        <q-btn label="edit profile"/> <!--this should open up og component to update settings?-->
         </div>
-      </q-card-section>
-    </q-card>
+        </q-card>
+        <br>
+    </div>
+
+      <hr style="height:1px; background: grey; width: 100%">
 
     <Wall :wallPosts="getWallPosts"></Wall>
 
@@ -94,6 +102,11 @@ export default {
 </script>
 
 
+<style lang="sass">
+.my-card
+  width: 100%
+  max-width: 250px
+</style>
 
 
 

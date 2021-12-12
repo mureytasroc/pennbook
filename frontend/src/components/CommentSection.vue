@@ -2,31 +2,37 @@
   <div>
     <q-list class="full-width">
           <div>
-           <q-item
-              v-for="comment in comments"
+              <q-item v-for="comment in comments"
               :key="comment"
-              bordered separator
-              clickable
-              v-ripple
-
               style="
                 margin: auto;
                 margin-bottom: 10px;
                 margin-top: 10px;
                 opacity: 0.8;
+                background: whitesmoke;
               "
-            >
+              clickable v-ripple
+              >
+              <q-item-section avatar>
+                  <q-avatar color="primary" text-color="white">
+                      {{ comment.creator.firstName.charAt(0).toUpperCase() + comment.creator.lastName.charAt(0).toUpperCase()}}
+                  </q-avatar>
+              </q-item-section>
 
-            <q-item-section>{{comment.creator.firstName + " " + comment.creator.lastName + ": " + comment.content }} </q-item-section>
+              <q-item-section>{{ comment.creator.firstName + " " + comment.creator.lastName}}</q-item-section>
+                  <q-item-section style="word-wrap: break-word;margin-left: -35px; padding-left: 10px; border-left: 0.1rem solid rgba(0, 0, 0, 0.12);">{{ comment.content }} </q-item-section>
+        </q-item>
 
-            </q-item>
           </div>
         </q-list>
 
+        <br>
+
+        <!--TODO: make this call route to add comment under post -->
         <q-form @keyup:enter="postComment" class="full-width">
           <q-input outlined autogrow v-model="newComment" label="Add Comment:">
             <template v-slot:after>
-                <q-btn style="background:black"
+                <q-btn style="background: rgba(0, 0, 0, 0.12)"
                   v-show="newComment"
                   @click="postComment"
                   round
@@ -62,7 +68,7 @@ export default {
 
     //TODO: this has to call route to postUUID to fetch comments
     comments() {
-      let comments = [{"commentUUID": "a", "creator": {"username": "bruh", "firstName": "joe", "lastName": "joe"}, "content": "comment1"},
+      let comments = [{"commentUUID": "a", "creator": {"username": "bruh", "firstName": "joe", "lastName": "joe"}, "content": "comment1 YOOOOOOOOO LES G O O O O AFSF ASF LASF ASLFLASLFASLFLAS"},
       {"commentUUID": "b", "creator": {"username": "bruhh", "firstName": "joes", "lastName": "jose"}, "content": "comment2"}];
       return comments;
     },
@@ -80,13 +86,5 @@ export default {
 </script>
 
 <style>
-.rainbowname {
-  background: red;
-  background: -webkit-linear-gradient(left, #c33764, #1d2671);
-  background: -o-linear-gradient(right, #c33764, #1d2671);
-  background: -moz-linear-gradient(right, #c33764, #1d2671);
-  background: linear-gradient(to right, #c33764, #1d2671);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+
 </style>
