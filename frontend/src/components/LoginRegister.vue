@@ -32,14 +32,7 @@
         </template>
 		</q-input>
 
-        <q-input v-if="tab=='register'"
-			v-model="formData.affiliation"
-			class="q-mb-md"
-			outlined
-			label="Affiliation"
-			lazy-rules
-		>
-		</q-input>
+         <q-select v-if="tab=='register'" v-model="formData.affiliation" :options="options" label="Affiliation" />
 
          <q-input v-if="tab=='register'"
 			v-model="formData.birthay"
@@ -127,6 +120,7 @@
                     affiliation: "",
                     interests: [],
 				},
+                options: ['Google', 'Facebook', 'Twitter', 'Apple', 'Oracle'],
                 confirmPassword: "",
 				message: "Please fill out the form entirely!",
 				alert: false,
