@@ -57,7 +57,8 @@
             v-model="text"
             input-class="text-right"
             class="q-ml-md"
-          >
+          />
+        </q-toolbar>
             <q-tabs
               v-model="tab"
               dense
