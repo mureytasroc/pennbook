@@ -32,8 +32,8 @@
         </template>
 		</q-input>
 
-         <q-select v-if="tab=='register'" v-model="formData.affiliation" :options="options" label="Affiliation" />
-
+         <q-select outlined v-if="tab=='register'" v-model="formData.affiliation" :options="options" label="Affiliation" />
+        <br>
          <q-input v-if="tab=='register'"
 			v-model="formData.birthay"
 			class="q-mb-md"
