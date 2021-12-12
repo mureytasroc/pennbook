@@ -6,25 +6,35 @@
       vertical
       flat
       style="
-        width: 300px;
+        width: 350px;
         display: flex;
-        border: 4px solid grey;
-        border-radius: 20px;
+        border: 5px solid whitesmoke;
+        border-radius: 10px;
         overflow: hidden;
       "
     >
       <q-card-section style="width: 100%">
           <div
-            flat
-            style="margin-top: -5px; margin-left: -5px; text-align: left"
-          >
-            <span style="font-size: 1.1rem; color: black"
-              >{{ this.firstName + " " + this.lastName}}</span>
+            flat >
 
-              <br>
+          <q-item clickable v-ripple style="background: #fce8ea">
+             <q-item-section avatar>
+                <q-avatar color="primary" text-color="white">
+                    {{ this.firstName.charAt(0).toUpperCase() + this.lastName.charAt(0).toUpperCase()}}
+                </q-avatar>
+            </q-item-section>
+            <q-item-section>{{ this.firstName + " " + this.lastName}}</q-item-section>
+        </q-item>
 
-            <b><span style="font-size: 1.1rem; color: black"
-              > {{ this.content }}</span></b>
+        <q-separator spaced inset />
+        <q-item clickable v-ripple style="background: #e6f4f7;padding:20px">
+            <div style="font-size: 1.2rem; color:black">
+            <q-item-section>{{ this.content }}</q-item-section>
+            </div>
+        </q-item>
+
+         <q-separator spaced inset />
+
 
             <CommentSection :postUUID="this.postUUID"> </CommentSection>
 

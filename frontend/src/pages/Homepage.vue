@@ -115,7 +115,7 @@ export default {
     // ex. if we're on page 1 and size is 5, return keys [5..9]
     // prerequisite: matchOnline is "sorted" by keys
     posts() {
-      let posts = [{"postUUID": 'a', "creator": {"username": "bruh", "firstName": "john", "lastName": "smith"}, "type": "Post", "content": "I took a dump"},
+      let posts = [{"postUUID": 'a', "creator": {"username": "bruh", "firstName": "john", "lastName": "smith"}, "type": "Post", "content": "I got a new hat"},
       {"type": "friendship", "user1": {"username": 'bruh', "firstName": 'bruh', "lastName": '1'}, "user2": {"username": 'bruh2', "firstName": 'bruh', "lastName": '2'}}];
       return posts;
     },

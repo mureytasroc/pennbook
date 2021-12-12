@@ -9,7 +9,7 @@
 
       <div> <!--TODO: v-else -->
         <div>
-            WALL
+
         </div>
         <q-list class="full-width">
           <div>
