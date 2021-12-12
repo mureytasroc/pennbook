@@ -15,7 +15,7 @@
     >
       <q-card-section style="width: 100%">
           <div
-            flat >
+            flat>
 
           <q-item clickable v-ripple style="background: #fce8ea">
              <q-item-section avatar>
@@ -23,7 +23,7 @@
                     {{ this.firstName.charAt(0).toUpperCase() + this.lastName.charAt(0).toUpperCase()}}
                 </q-avatar>
             </q-item-section>
-            <q-item-section>{{ this.firstName + " " + this.lastName}}</q-item-section>
+            <q-item-section style="font-size: 1rem">{{ this.firstName + " " + this.lastName}} 📢 </q-item-section>
         </q-item>
 
         <q-separator spaced inset />

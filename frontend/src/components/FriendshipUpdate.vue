@@ -2,36 +2,45 @@
 
 <template>
   <div>
-    <q-card
+      <q-card
       vertical
       flat
       style="
-        width: 300px;
+        width: 350px;
         display: flex;
-        border: 4px solid grey;
-        border-radius: 20px;
+        border: 5px solid whitesmoke;
+        border-radius: 10px;
         overflow: hidden;
       "
     >
       <q-card-section style="width: 100%">
           <div
-            flat
-            style="margin-top: -5px; margin-left: -5px; text-align: left"
-          >
-            <span style="font-size: 1.1rem; color: black"
-              >{{ this.firstNameA + " " + this.lastNameA}}</span>
-            <br>
-            <span>and </span>
-            <br>
-            <span style="font-size: 1.1rem; color: black"
-              >{{ this.firstNameB + " " + this.lastNameB}}</span>
-            <br>
-            <span>are now friends.</span>
-              <br>
+            flat>
+
+          <q-item clickable v-ripple style="background: #87E789">
+             <q-item-section avatar>
+                <q-avatar color="primary" text-color="white">
+                    {{ this.firstNameA.charAt(0).toUpperCase() + this.lastNameA.charAt(0).toUpperCase()}}
+                </q-avatar>
+            </q-item-section>
+            <q-item-section style="font-size: 1rem">{{ this.firstNameA + " " + this.lastNameA}} </q-item-section>
+
+            <q-item-section avatar>
+                <q-avatar color="primary" text-color="white">
+                    {{ this.firstNameB.charAt(0).toUpperCase() + this.lastNameB.charAt(0).toUpperCase()}}
+                </q-avatar>
+            </q-item-section>
+            <q-item-section style="font-size: 1rem; margin-left: 10px">{{ this.firstNameB + " " + this.lastNameB}} </q-item-section>
+        </q-item>
+
+         <q-separator spaced inset />
+                <q-img src="/handshake.png" width="150px"/>
+            <span>They are now friends!</span>
 
         </div>
       </q-card-section>
     </q-card>
+
   </div>
 </template>
 
