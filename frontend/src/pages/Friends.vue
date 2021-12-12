@@ -58,78 +58,113 @@
             input-class="text-right"
             class="q-ml-md"
           >
-            <template v-slot:append>
-              <q-icon v-if="text === ''" name="search" />
-              <q-icon
-                v-else
-                name="clear"
-                class="cursor-pointer"
-                @click="text = ''"
-              />
-            </template>
-          </q-input>
-        </q-toolbar>
+            <q-tabs
+              v-model="tab"
+              dense
+              class="text-white"
+              active-color="black"
+              indicator-color="black"
+              align="center"
+              narrow-indicator
+            >
 
-        <q-item
-          v-for="friend in getFriends"
-          :key="friend"
-          clickable
-          v-ripple
-          style="
-            height: 80px;
-            margin: auto;
-            margin-bottom: 10px;
-            margin-top: 10px;
-            width: 600px;
-            opacity: 0.8;
-            background: whitesmoke;
+                <q-tab style="color: #011F5b" label="People" name="People" />
+
+                <q-tab style="color: #011F5b" label="Friends" name="friends" />
+
+                <q-tab
+                style="color:#011F5b"
+                label="Visualizer"
+                name="visualizer"
+                @click="changeMe"
+                />
+
+            </q-tabs>
+          </div>
+
+           <!-- profile tab (for regular chat) -->
+        <div
+          v-if="
+            this.tab == 'friends'
           "
+          style="margin-top:2%"
         >
-          <q-item-section avatar>
-            <q-avatar color="primary" text-color="white">
-              {{ friend.firstName.charAt(0).toUpperCase() }}
-            </q-avatar>
-          </q-item-section>
 
-          <q-item-section avatar>
-            <q-btn
-              v-if="friend.loggedIn"
-              round
-              dense
-              unelevated
-              style="font-size: 6px !important; margin-left: 5px"
-              color="light-green-5"
-            />
-          </q-item-section>
+            <q-item v-for="friend in getFriends" :key="friend" clickable v-ripple style="
+                height: 80px;
+                margin: auto;
+                margin-bottom: 10px;
+                width:600px;
+                opacity: 0.8;
+                background: whitesmoke
+              ">
+                <q-item-section avatar>
+                <q-avatar color="primary" text-color="white">
+                    {{ friend.firstName.charAt(0).toUpperCase() }}
 
-          <q-item-section>
-            <q-item-label>{{
-              friend.firstName + " " + friend.lastName
-            }}</q-item-label>
-          </q-item-section>
+                </q-avatar>
+                </q-item-section>
 
-          <q-item-section side>
-            <!--TODO: on click, remove this friend -->
-            <q-btn
-              icon="remove_circle_outline"
-              flat
-              dense
-              unelevated
-              style="font-size: 12px !important; margin-left: 5px"
-              color="red"
-              @click="removeFriend(friend.username)"
-            />
-          </q-item-section>
-        </q-item>
-      </div>
+                <q-item-section avatar>
+                 <q-btn
+                    v-if="friend.loggedIn"
+                    round
+                    dense
+                    unelevated
+                    style="font-size: 6px !important; margin-left: 5px"
+                    color="light-green-5"
+                  />
+                </q-item-section>
 
-      <div
-        v-else
-        class="inline justify-center shift no-wrap"
-        style="display: flex; position: relative"
-      >
+                <q-item-section>
+                <q-item-label>{{ friend.firstName + " " + friend.lastName }}</q-item-label>
+
+                </q-item-section>
+
+                <q-item-section side>
+                <!--TODO: on click, remove this friend -->
+                <q-btn
+                    icon="remove_circle_outline"
+                    flat
+                    dense
+                    unelevated
+                    style="font-size: 12px !important; margin-left: 5px"
+                    color="red"
+                     @click="removeFriend(friend.username)"
+                  />
+        </q-item-section>
+      </q-item>
+
+        </div>
+
+        <div v-else-if="this.tab == 'visualizer'" class="inline justify-center shift no-wrap"
+          style="display: flex; position: relative;">
         yeet
-      </div>
+        </div>
+
+        <!-- people -->
+        <!--TODO: once get profiles showing up, make 'add friend' button-->
+        <div v-else class="inline justify-center shift no-wrap"
+          style="display: flex; position: relative;margin-top: 2%">
+                    <!--TODO: make this functional and search for friends / move elsewhere-->
+            <q-toolbar class="bg-primary text-white rounded-borders">
+                <h7 class="gt-xs">
+                Find/Add friends!
+                </h7>
+
+                <q-space />
+
+                <q-input dark dense standout v-model="searchPeopleQuery" input-class="text-right" class="q-ml-md">
+                <template v-slot:append>
+                    <q-icon v-if="text === ''" name="search" />
+                    <q-icon v-else name="clear" class="cursor-pointer" @click="text = ''" />
+                </template>
+                </q-input>
+            </q-toolbar>
+
+             <q-btn v-if="searchPeopleQuery" icon="search" style="margin-left: 20px" color="secondary" @click="searchPeople"/>
+        </div>
+
     </div>
   </q-page>
 </template>
@@ -140,7 +175,7 @@ export default {
   data() {
     return {
       tab: "friends",
-      text: "",
+      searchPeopleQuery: ""
     };
   },
   props: {},
@@ -181,6 +216,22 @@ export default {
       */
       return friends;
     },
+
+  },
+
+  methods: {
+      //TODO: make this route call
+      searchPeople() {
+          console.log(this.searchPeopleQuery)
+      }
+  },
+
+  watch: {
+
+
+  },
+  mounted() {
+
   },
 
   watch: {},
