@@ -10,9 +10,6 @@
 
 
     <q-bar dark class="bg-secondary text-white">
-      <q-btn dense flat round icon="lens" size="8.5px" color="red" />
-      <q-btn dense flat round icon="lens" size="8.5px" color="blue" />
-      <q-btn dense flat round icon="lens" size="8.5px" color="white" />
       <div class="col text-center text-weight-bold">
         My Profile
       </div>

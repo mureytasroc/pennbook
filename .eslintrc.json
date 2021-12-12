@@ -6,14 +6,13 @@
     },
     "extends": ["plugin:vue/essential", "google"],
     "parserOptions": {
-        "ecmaVersion": "latest",
+        "ecmaVersion": 12,
         "sourceType": "module"
     },
     "plugins": ["vue"],
     "rules": {
         "max-len": ["error", 100],
         "object-curly-spacing": ["error", "always"],
-        "no-undef": "error",
-        "prefer-promise-reject-errors": "off"
+        "no-undef": "error"
     }
 }
