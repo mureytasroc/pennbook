@@ -1,7 +1,7 @@
 import dynamo from 'dynamodb';
 import Joi from 'joi';
 import memoize from 'memoizee';
-import _ from 'lodash'
+import _ from 'lodash';
 import { BadRequest, Conflict, NotFound, UnprocessableEntity } from '../error/errors.js';
 import { unmarshallAttributes, executeAsync } from '../util/utils.js';
 
@@ -70,13 +70,13 @@ export const RecommendedArticle = dynamo.define('RecommendedArticle', {
 /**
  * @return {Set} a set of valid news categories
  */
-const getCategoriesUnmemoized = async function () {
-  const callback = function (resp) {
-    return _.map(resp.Items, x => JSON.parse(JSON.stringify(x)).category)
-  }
+const getCategoriesUnmemoized = async function() {
+  const callback = function(resp) {
+    return _.map(resp.Items, (x) => JSON.parse(JSON.stringify(x)).category);
+  };
   const categoriesSet = new Set();
-  var data = await executeAsync(Category.scan().loadAll(), callback)
-  data.forEach((x, i) => categoriesSet.add(x))
+  const data = await executeAsync(Category.scan().loadAll(), callback);
+  data.forEach((x, i) => categoriesSet.add(x));
   return categoriesSet;
 };
 export const getCategories = memoize(getCategoriesUnmemoized, { maxAge: 1000 * 60 * 60 });
@@ -115,10 +115,10 @@ export async function articleSearch(username, keywords, page, limit) {
     throw new UnprocessableEntity('Query is unprocessable; make keywords more specific');
   }
   const matchingArticles = await Promise.all(
-    keywords.map((keyword) =>
-      ArticleKeyword.query(keyword)
-        .loadAll()
-        .exec()),
+      keywords.map((keyword) =>
+        ArticleKeyword.query(keyword)
+            .loadAll()
+            .exec()),
   );
   const articleUUIDtoMatchCount = new Map();
   const articleUUIDtoArticle = new Map();
@@ -139,7 +139,7 @@ export async function articleSearch(username, keywords, page, limit) {
   const startMatchCount = (page === 'current' ? maxMatchCount : articleUUIDtoMatchCount.get(page));
 
   const sortedEntries = articleUUIDtoMatchCount.entries().filter(
-    ([_, matches]) => matches <= currMatchCount,
+      ([_, matches]) => matches <= currMatchCount,
   );
   sortedEntries.sort((a, b) => b[1] - a[1]); // sort in descending order
   if (!sortedEntries.length) {
@@ -170,7 +170,7 @@ export async function articleSearch(username, keywords, page, limit) {
 
 
   const articleRatings = await ArticleRanking.getItems(
-    articleUUIDsToRate.map((uuid) => ({ username, articleUUID: uuid })),
+      articleUUIDsToRate.map((uuid) => ({ username, articleUUID: uuid })),
   );
 
   const articleUUIDtoWeight = new Map();
@@ -198,17 +198,17 @@ export async function recommendArticles(username, page, limit) {
   let recsResult;
   if (page === 'current') {
     recsResult = await RecommendedArticle.query(username)
-      .limit(limit)
-      .descending()
-      .loadAll()
-      .exec();
+        .limit(limit)
+        .descending()
+        .loadAll()
+        .exec();
   } else {
     recsResult = await RecommendedArticle.query(username)
-      .where('recUUID').lt(page)
-      .limit(limit)
-      .descending()
-      .loadAll()
-      .exec();
+        .where('recUUID').lt(page)
+        .limit(limit)
+        .descending()
+        .loadAll()
+        .exec();
   }
   const articleUUIDtoRecUUID = new Map();
   for (const rec of recsResult.Items.map((item) => unmarshallAttributes(item))) {
@@ -216,7 +216,7 @@ export async function recommendArticles(username, page, limit) {
   }
   const articlesResult = await Article.getItems(articleUUIDtoRecUUID.keys());
   return articlesResult.Items.map((item) => unmarshallAttributes(item)).map(
-    (article) => ({ recUUID: articleUUIDtoRecUUID.get(article.articleUUID), ...article }),
+      (article) => ({ recUUID: articleUUIDtoRecUUID.get(article.articleUUID), ...article }),
   );
 }
 
@@ -228,11 +228,11 @@ export async function recommendArticles(username, page, limit) {
 export async function likeArticle(username, articleUUID) {
   try {
     await ArticleLike.create(
-      { articleUUID, username },
-      {
-        ConditionExpression: `(articleUUID <> :auuid) or (username <> :uname)`,
-        ExpressionAttributeValues: { ':auuid': articleUUID, ':uname': username },
-      },
+        { articleUUID, username },
+        {
+          ConditionExpression: `(articleUUID <> :auuid) or (username <> :uname)`,
+          ExpressionAttributeValues: { ':auuid': articleUUID, ':uname': username },
+        },
     );
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
@@ -249,8 +249,8 @@ export async function likeArticle(username, articleUUID) {
  */
 export async function unlikeArticle(username, articleUUID) {
   const oldLike = await ArticleLike.destroy(
-    { articleUUID, username },
-    { ReturnValues: true },
+      { articleUUID, username },
+      { ReturnValues: true },
   );
   if (!oldLike.Attributes) {
     throw new Conflict(`The username ${username} has not liked the article ${articleUUID}.`);

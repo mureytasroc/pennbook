@@ -1,15 +1,14 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import dynamo from 'dynamodb';
-import { getUser } from '../models/User';
-import { Conflict } from '../error/errors';
+import { getUser } from '../models/User.js';
+import { Conflict, NotFound } from '../error/errors.js';
 import Joi from 'joi';
-import { unmarshallAttributes } from '../util/utils.js';
-
+import _ from 'lodash';
 
 export const Friendship = dynamo.define('Friendship', {
   hashKey: 'username',
-  rangeKey: 'friendshipUUID',
+  rangeKey: 'friendUsername',
   schema: {
     username: Joi.string(),
     friendUsername: Joi.string(),
@@ -20,7 +19,7 @@ export const Friendship = dynamo.define('Friendship', {
     timestamp: Joi.date(),
   },
   indexes: [{
-    hashKey: 'username', rangeKey: 'friendUsername', type: 'local', name: 'FriendUsernameIndex',
+    hashKey: 'username', rangeKey: 'friendshipUUID', type: 'local', name: 'FriendUUIDIndex',
   }],
 });
 
@@ -33,25 +32,39 @@ export const Friendship = dynamo.define('Friendship', {
  */
 export async function createFriendship(username, friendUsername) {
   const [user, friend] = await Promise.all([getUser(username), getUser(friendUsername)]);
+
+  if (_.isEmpty(user) || _.isEmpty(friend)) {
+    throw new NotFound('At least one user does not exist');
+  }
+
   try {
+    /**
+     * Create friendship object using user and friend
+     * @param {*} user
+     * @param {*} friend
+     * @return {*}
+     */
     function createFriendshipHelper(user, friend) {
-      obj = {
+      const obj = {
         username: user.username,
         friendUsername: friend.username,
         friendFirstName: friend.firstName,
         friendshipUUID: uuidv4(),
         timestamp: new Date().toISOString(),
-      }
-      return obj
+      };
+      return obj;
     }
-    const friendship = await Friendship.create(createFriendshipHelper(user, friend), { overwrite: false });
-    await Friendship.create(createFriendshipHelper(friend, user), { overwrite: false });
 
-    return unmarshallAttributes(friendship.Attributes);
+    const friendship = await Friendship.create(createFriendshipHelper(user, friend),
+        { overwrite: false });
+    await Friendship.create(createFriendshipHelper(friend, user),
+        { overwrite: false });
+
+    return JSON.parse(JSON.stringify(friendship));
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
       throw new Conflict(
-        `The specified friendship between '${username}' and '${friendUsername}' already exists.`,
+          `The specified friendship between '${username}' and '${friendUsername}' already exists.`,
       );
     }
     throw err;
@@ -60,20 +73,24 @@ export async function createFriendship(username, friendUsername) {
 
 /**
  * Deletes a pair of Friendships from DynamoDB given two users
- * @param {*} user user to delete friendship from
- * @param {*} friend friend to delete friendship from
+ * @param {*} username username of user to delete friendship from
+ * @param {*} friendUsername username of friend to delete friendship from
  */
-export async function deleteFriendship(user, friend) {
-  try {
-    user = getUser(user)
-    friend = getUser(friend)
-  } catch (err) {
-    throw new NotFound("User or friend not found")
+export async function deleteFriendship(username, friendUsername) {
+  const [user, friend] = await Promise.all([getUser(username), getUser(friendUsername)]);
+
+  if (_.isEmpty(user) || _.isEmpty(friend)) {
+    throw new NotFound('At least one user does not exist');
   }
 
-  Friendship.destroy(user.username, friend.username, function (err) {
-  })
-  Friendship.destroy(friend.username, user.username, function (err) {
-    return "Deleted"
-  })
+  Friendship.destroy(user.username, friend.username, function(err) {
+    if (err) {
+      throw err;
+    }
+  });
+  Friendship.destroy(friend.username, user.username, function(err) {
+    if (err) {
+      throw err;
+    }
+  });
 }

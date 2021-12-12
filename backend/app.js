@@ -1,6 +1,6 @@
 import './config/dotenv.js';
 import './models/connect.js';
-import { logErrorMiddleware, returnError, logError } from './error/errorHandlers.js';
+import { logErrorMiddleware, returnError } from './error/errorHandlers.js';
 import express from 'express';
 import api from './routes/api.js';
 

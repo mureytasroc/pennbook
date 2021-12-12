@@ -12,7 +12,7 @@ const JWT_ALGORITHM = 'HS256';
 export const userAuthRequired = jwtMiddlewareConstructor({
   secret: process.env.jwtSecret,
   algorithms: [JWT_ALGORITHM],
-  getToken: function (req) {
+  getToken: function(req) {
     let signedToken;
     if (
       req.headers.authorization &&
@@ -38,7 +38,7 @@ export const userAuthRequired = jwtMiddlewareConstructor({
  * @param {function} next the express next function
  */
 export function userAuthAndPathRequired(req, res, next) {
-  userAuthRequired(req, res, function (error) {
+  userAuthRequired(req, res, function(error) {
     if (error) {
       next(error);
     }
@@ -57,13 +57,13 @@ userAuthAndPathRequired.unless = unless;
  */
 export function generateJwt(username) {
   return jwt.sign(
-    { username },
-    process.env.jwtSecret,
-    {
-      algorithm: JWT_ALGORITHM,
-      expiresIn: '1h',
-      issuer: process.env.jwtIssuer,
-      audience: process.env.jwtAudience,
-    },
+      { username },
+      process.env.jwtSecret,
+      {
+        algorithm: JWT_ALGORITHM,
+        expiresIn: '1h',
+        issuer: process.env.jwtIssuer,
+        audience: process.env.jwtAudience,
+      },
   );
 }

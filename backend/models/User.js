@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import dynamo from 'dynamodb';
 import emailValidator from 'email-validator';
 import Joi from 'joi';
-import _ from 'lodash'
+import _ from 'lodash';
 import memoize from 'memoizee';
 import { getCategories } from './News.js';
 import owasp from 'owasp-password-strength-test';
@@ -45,13 +45,13 @@ export const UserAutocomplete = dynamo.define('UserAutocomplete', {
 /**
  * @return {Set} a set of valid affiliations
  */
-const getAffiliationsUnmemoized = async function () {
-  const callback = function (resp) {
-    return _.map(resp.Items, x => JSON.parse(JSON.stringify(x)).affiliation)
-  }
+const getAffiliationsUnmemoized = async function() {
+  const callback = function(resp) {
+    return _.map(resp.Items, (x) => JSON.parse(JSON.stringify(x)).affiliation);
+  };
   const affiliationsSet = new Set();
-  var data = await executeAsync(Affiliation.scan().loadAll(), callback)
-  data.forEach((x, i) => affiliationsSet.add(x))
+  const data = await executeAsync(Affiliation.scan().loadAll(), callback);
+  data.forEach((x, i) => affiliationsSet.add(x));
   return affiliationsSet;
 };
 
@@ -101,7 +101,8 @@ export async function validateUserProfile(profile, keysToCheck) {
     if (!owasp.test(password).strong) {
       throw new BadRequest('Password does not meet strength requirements.');
     }
-    validatedProfile.passwordHash = await bcrypt.hash(password, parseInt(process.env.passwordSaltRounds));
+    validatedProfile.passwordHash = await bcrypt.hash(password,
+        parseInt(process.env.passwordSaltRounds));
   }
 
   if (!keysToCheck || 'affiliation' in keysToCheck) {
@@ -117,14 +118,14 @@ export async function validateUserProfile(profile, keysToCheck) {
     if (!interests) {
       throw new BadRequest('You must specify your interests.');
     }
-    var interestsList = interests.split(",").map(x => x.trim())
+    const interestsList = interests.split(',').map((x) => x.trim());
     const categoriesSet = await getCategories();
     const invalidInterests = interestsList.filter((interest) => !categoriesSet.has(interest));
     if (invalidInterests.length) {
       throw new BadRequest('Invalid interests: ' + JSON.stringify(invalidInterests));
     }
     if (interestsList.length == 0) {
-      throw new BadRequest("All interests were invalid")
+      throw new BadRequest('All interests were invalid');
     }
     validatedProfile.interests = interestsList;
   }
@@ -160,12 +161,12 @@ export async function updateUser(profile) {
   const username = profile.username;
   try {
     const newProfile = await User.update(
-      profile,
-      {
-        ConditionExpression: `username = :uname`,
-        ExpressionAttributeValues: { ':uname': username },
-        ReturnValues: 'ALL_NEW',
-      },
+        profile,
+        {
+          ConditionExpression: `username = :uname`,
+          ExpressionAttributeValues: { ':uname': username },
+          ReturnValues: 'ALL_NEW',
+        },
     );
     return unmarshallAttributes(newProfile.Attributes);
   } catch (err) {
@@ -184,7 +185,7 @@ export async function updateUser(profile) {
 export async function getUser(username) {
   try {
     const profile = await User.get(username, { ConsistentRead: true });
-    return unmarshallAttributes(profile.Attributes);
+    return JSON.parse(JSON.stringify(profile));
   } catch (err) {
     if (err.code === 'ResourceNotFoundException') {
       throw new NotFound(`The username ${username} was not found.`);

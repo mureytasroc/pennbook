@@ -31,7 +31,8 @@
         "redis": "^4.0.0",
         "route-cache": "^0.4.5",
         "stemmer": "^2.0.0",
-        "stopword": "^1.0.11"
+        "stopword": "^1.0.11",
+        "uuid": "^8.3.2"
     },
     "type": "module",
     "devDependencies": {

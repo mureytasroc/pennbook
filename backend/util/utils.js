@@ -46,17 +46,19 @@ export function cannotUpdate(object, field) {
 
 /**
  * A helper function to wrap DynamodDb API queries into promises
- * @param {*} q the query to execute 
+ * @param {*} q the query to execute
  * @param {*} callback the callback function to transform the data
- * @returns 
+ * @return {*}
  */
 export function executeAsync(q, callback) {
-  return new Promise(function (resolve, reject) {
-    q.exec(function (err, resp) {
+  return new Promise(function(resolve, reject) {
+    q.exec(function(err, resp) {
       if (err) {
-        reject(err)
+        reject(err);
       }
-      resolve(resp)
-    })
-  }).then(callback, err => { throw new OperationalServerError(err) })
+      resolve(resp);
+    });
+  }).then(callback, (err) => {
+    throw new OperationalServerError(err);
+  });
 }

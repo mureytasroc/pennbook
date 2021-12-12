@@ -7,11 +7,12 @@ import { NotFound, TooManyRequests, Unauthenticated } from '../error/errors.js';
 import { redisClient } from '../models/connect.js';
 import { createUser, getAffiliations, getUser, updateUser } from '../models/User.js';
 import { assertString, cannotUpdate } from '../util/utils.js';
-import { generateJwt, userAuthAndPathRequired } from './auth.js';
+import { generateJwt } from './auth.js';
+import { createFriendship, deleteFriendship } from '../models/Friendship.js';
 
 const router = new express.Router();
 
-router.use(userAuthAndPathRequired.unless({ path: ['/api/users', '/api/users/affiliations'] }));
+// router.use(userAuthAndPathRequired.unless({ path: ['/api/users', '/api/users/affiliations'] }));
 
 
 /**
@@ -40,7 +41,7 @@ router.post('/users', async function (req, res, next) {
     profile.token = generateJwt(profile.username);
     res.status(StatusCodes.CREATED).json(profile);
   } catch (err) {
-    next(err)
+    next(err);
   }
 });
 
@@ -103,23 +104,29 @@ router.get('/users', async function (req, res) {
 });
 
 
-
 /**
  * Add friendship.
  */
-router.post('/users/:username/friends/:friendUsername', userAuthAndPathRequired, async function (req, res) {
-  friendship = await createFriendship(req.body.username, req.body.friendUsername)
-  res.status(StatusCodes.CREATED).json(friendship);
+router.post('/users/:username/friends/:friendUsername', async function (req, res, next) {
+  try {
+    const friendship = await createFriendship(req.params.username, req.params.friendUsername);
+    res.status(StatusCodes.CREATED).json(friendship);
+  } catch (err) {
+    next(err);
+  }
 });
-
 
 
 /**
  * Remove friendship. Only need to call this for one direction, code will handle other direction
  */
-router.delete('/users/:username/friends/:friendUsername', userAuthAndPathRequired, async function (req, res) {
-  deleteFriendship(req.body.username, req.body.friendUsername)
-  res.end(200).end();
+router.delete('/users/:username/friends/:friendUsername', async function (req, res, next) {
+  try {
+    deleteFriendship(req.params.username, req.params.friendUsername);
+  } catch (err) {
+    next(err);
+  }
+  res.status(200).end();
 });
 
 
