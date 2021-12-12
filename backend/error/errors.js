@@ -18,7 +18,12 @@ export class BaseError extends Error {
     this.message = message;
     this.statusCode = statusCode;
     this.isOperational = isOperational;
-    Error.captureStackTrace(this);
+    if (process.env.NODE_ENV == "development") {
+      Error.captureStackTrace(this);
+    }
+    else {
+      this.stack = ""
+    }
   }
 }
 
@@ -26,9 +31,9 @@ export class BaseError extends Error {
 export class OperationalServerError extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'Internal server error.',
-      statusCode = StatusCodes.INTERNAL_SERVER_ERROR,
-      isOperational = true,
+    message = 'Internal server error.',
+    statusCode = StatusCodes.INTERNAL_SERVER_ERROR,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }
@@ -38,9 +43,9 @@ export class OperationalServerError extends BaseError {
 export class BadRequest extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'Bad request.',
-      statusCode = StatusCodes.BAD_REQUEST,
-      isOperational = true,
+    message = 'Bad request.',
+    statusCode = StatusCodes.BAD_REQUEST,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }
@@ -50,9 +55,9 @@ export class BadRequest extends BaseError {
 export class Unauthenticated extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'Unauthenticated.',
-      statusCode = StatusCodes.UNAUTHORIZED,
-      isOperational = true,
+    message = 'Unauthenticated.',
+    statusCode = StatusCodes.UNAUTHORIZED,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }
@@ -62,9 +67,9 @@ export class Unauthenticated extends BaseError {
 export class Forbidden extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'User is forbidden from accessing the desired resource.',
-      statusCode = StatusCodes.FORBIDDEN,
-      isOperational = true,
+    message = 'User is forbidden from accessing the desired resource.',
+    statusCode = StatusCodes.FORBIDDEN,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }
@@ -74,9 +79,9 @@ export class Forbidden extends BaseError {
 export class NotFound extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'Not found.',
-      statusCode = StatusCodes.NOT_FOUND,
-      isOperational = true,
+    message = 'Not found.',
+    statusCode = StatusCodes.NOT_FOUND,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }
@@ -86,9 +91,9 @@ export class NotFound extends BaseError {
 export class Conflict extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'Conflict.',
-      statusCode = StatusCodes.CONFLICT,
-      isOperational = true,
+    message = 'Conflict.',
+    statusCode = StatusCodes.CONFLICT,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }
@@ -98,9 +103,9 @@ export class Conflict extends BaseError {
 export class UnprocessableEntity extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'Unprocessable entity.',
-      statusCode = StatusCodes.UNPROCESSABLE_ENTITY,
-      isOperational = true,
+    message = 'Unprocessable entity.',
+    statusCode = StatusCodes.UNPROCESSABLE_ENTITY,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }
@@ -110,9 +115,9 @@ export class UnprocessableEntity extends BaseError {
 export class TooManyRequests extends BaseError {
   /** @inheritdoc */
   constructor(
-      message = 'Too many requests.',
-      statusCode = StatusCodes.TOO_MANY_REQUESTS,
-      isOperational = true,
+    message = 'Too many requests.',
+    statusCode = StatusCodes.TOO_MANY_REQUESTS,
+    isOperational = true,
   ) {
     super(message, statusCode, isOperational);
   }

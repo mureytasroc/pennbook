@@ -1,5 +1,5 @@
 import dynamo from 'dynamodb';
-import { BadRequest, UnprocessableEntity } from '../error/errors.js';
+import { BadRequest, OperationalServerError, UnprocessableEntity } from '../error/errors.js';
 
 export const unmarshallAttributes = dynamo.AWS.DynamoDB.Converter.unmarshall;
 
@@ -42,4 +42,21 @@ export function cannotUpdate(object, field) {
     throw new UnprocessableEntity(`You cannot update ${field}.`);
   }
   return object;
+}
+
+/**
+ * A helper function to wrap DynamodDb API queries into promises
+ * @param {*} q the query to execute 
+ * @param {*} callback the callback function to transform the data
+ * @returns 
+ */
+export function executeAsync(q, callback) {
+  return new Promise(function (resolve, reject) {
+    q.exec(function (err, resp) {
+      if (err) {
+        reject(err)
+      }
+      resolve(resp)
+    })
+  }).then(callback, err => { throw new OperationalServerError(err) })
 }

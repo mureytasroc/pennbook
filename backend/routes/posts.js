@@ -3,15 +3,15 @@ import { userAuthAndPathRequired, userAuthRequired } from './auth.js';
 
 const router = new express.Router();
 
-router.use(userAuthRequired.unless({
-  path: ['/api/users/:username/wall', '/api/users/:username/home'],
-}));
+// router.use(userAuthRequired.unless({
+//  path: ['/api/users/:username/wall', '/api/users/:username/home'],
+// }));
 
 
 /**
  * Add post to wall.
  */
-router.post('/users/:username/wall', userAuthAndPathRequired, async function(req, res) {
+router.post('/users/:username/wall', userAuthAndPathRequired, async function (req, res) {
   // TODO
 });
 
@@ -19,7 +19,7 @@ router.post('/users/:username/wall', userAuthAndPathRequired, async function(req
 /**
  * Get posts from wall.
  */
-router.get('/users/:username/wall', async function(req, res) {
+router.get('/users/:username/wall', async function (req, res) {
   // TODO
 });
 
@@ -27,7 +27,7 @@ router.get('/users/:username/wall', async function(req, res) {
 /**
  * Get home page posts.
  */
-router.get('/users/:username/home', userAuthAndPathRequired, async function(req, res) {
+router.get('/users/:username/home', userAuthAndPathRequired, async function (req, res) {
   // TODO
 });
 
@@ -35,7 +35,7 @@ router.get('/users/:username/home', userAuthAndPathRequired, async function(req,
 /**
  * Post comment.
  */
-router.post('/users/:username/wall/:postUUID/comments', async function(req, res) {
+router.post('/users/:username/wall/:postUUID/comments', async function (req, res) {
   // TODO
 });
 
@@ -43,7 +43,7 @@ router.post('/users/:username/wall/:postUUID/comments', async function(req, res)
 /**
  * Get comments.
  */
-router.get('/users/:username/wall/:postUUID/comments', async function(req, res) {
+router.get('/users/:username/wall/:postUUID/comments', async function (req, res) {
   // TODO
 });
 

@@ -3,11 +3,12 @@ import bcrypt from 'bcrypt';
 import dynamo from 'dynamodb';
 import emailValidator from 'email-validator';
 import Joi from 'joi';
+import _ from 'lodash'
 import memoize from 'memoizee';
 import { getCategories } from './News.js';
 import owasp from 'owasp-password-strength-test';
 import { BadRequest, Conflict, NotFound } from '../error/errors.js';
-import { assertString, unmarshallAttributes } from '../util/utils.js';
+import { assertString, unmarshallAttributes, executeAsync } from '../util/utils.js';
 
 
 export const Affiliation = dynamo.define('Affiliation', {
@@ -41,38 +42,22 @@ export const UserAutocomplete = dynamo.define('UserAutocomplete', {
   },
 });
 
-export const Friendship = dynamo.define('Friendship', {
-  hashKey: 'username',
-  rangeKey: 'friendshipUUID',
-  schema: {
-    username: Joi.string(),
-    friendUsername: Joi.string(),
-    friendFirstName: Joi.string(),
-    friendLastName: Joi.string(),
-    friendshipUUID: Joi.string(),
-    confirmed: Joi.boolean().default(false),
-    timestamp: Joi.date(),
-  },
-  indexes: [{
-    hashKey: 'username', rangeKey: 'friendUsername', type: 'local', name: 'FriendUsernameIndex',
-  }],
-});
-
-
 /**
  * @return {Set} a set of valid affiliations
  */
-const getAffiliationsUnmemoized = async function() {
-  const affiliations = await Affiliation.loadAll().exec();
+const getAffiliationsUnmemoized = async function () {
+  const callback = function (resp) {
+    return _.map(resp.Items, x => JSON.parse(JSON.stringify(x)).affiliation)
+  }
   const affiliationsSet = new Set();
-  affiliations.map((item) => item.affiliation).forEach(affiliationsSet.add);
+  var data = await executeAsync(Affiliation.scan().loadAll(), callback)
+  data.forEach((x, i) => affiliationsSet.add(x))
   return affiliationsSet;
 };
 
 export const getAffiliations = memoize(getAffiliationsUnmemoized, { maxAge: 1000 * 60 * 60 });
 
 const isValidUsername = /^[a-zA-Z0-9-_]+$/;
-
 /**
  * Validates a user profile provided by a create or update user request.
  * @param {Object} profile the request body of a create or update user request
@@ -116,7 +101,7 @@ export async function validateUserProfile(profile, keysToCheck) {
     if (!owasp.test(password).strong) {
       throw new BadRequest('Password does not meet strength requirements.');
     }
-    validatedProfile.password = await bcrypt.hash(password, process.env.passwordSaltRounds);
+    validatedProfile.passwordHash = await bcrypt.hash(password, parseInt(process.env.passwordSaltRounds));
   }
 
   if (!keysToCheck || 'affiliation' in keysToCheck) {
@@ -132,12 +117,16 @@ export async function validateUserProfile(profile, keysToCheck) {
     if (!interests) {
       throw new BadRequest('You must specify your interests.');
     }
+    var interestsList = interests.split(",").map(x => x.trim())
     const categoriesSet = await getCategories();
-    const invalidInterests = interests.filter((interest) => !categoriesSet.has(interest));
+    const invalidInterests = interestsList.filter((interest) => !categoriesSet.has(interest));
     if (invalidInterests.length) {
       throw new BadRequest('Invalid interests: ' + JSON.stringify(invalidInterests));
     }
-    validatedProfile.interests = interests;
+    if (interestsList.length == 0) {
+      throw new BadRequest("All interests were invalid")
+    }
+    validatedProfile.interests = interestsList;
   }
 
   return validatedProfile;
@@ -149,7 +138,7 @@ export async function validateUserProfile(profile, keysToCheck) {
  * @return {Object} the new profile object from the database
  */
 export async function createUser(profile) {
-  profile = validateUserProfile(profile);
+  profile = await validateUserProfile(profile);
   try {
     await User.create(profile, { overwrite: false });
   } catch (err) {
@@ -167,16 +156,16 @@ export async function createUser(profile) {
  * @return {Object} the new profile object from the database
  */
 export async function updateUser(profile) {
-  profile = validateUserProfile(profile, profile);
+  profile = validateUserProfile(profile);
   const username = profile.username;
   try {
     const newProfile = await User.update(
-        profile,
-        {
-          ConditionExpression: `username = :uname`,
-          ExpressionAttributeValues: { ':uname': username },
-          ReturnValues: 'ALL_NEW',
-        },
+      profile,
+      {
+        ConditionExpression: `username = :uname`,
+        ExpressionAttributeValues: { ':uname': username },
+        ReturnValues: 'ALL_NEW',
+      },
     );
     return unmarshallAttributes(newProfile.Attributes);
   } catch (err) {
