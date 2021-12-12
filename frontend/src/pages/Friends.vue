@@ -31,35 +31,7 @@
           align="center"
           narrow-indicator
         >
-          <q-tab style="color: #011f5b" label="Friends" name="friends" />
-
-          <q-tab
-            style="color: #011f5b"
-            label="Visualizer"
-            name="visualizer"
-            @click="changeMe"
-          />
-        </q-tabs>
-      </div>
-
-      <!-- profile tab (for regular chat) -->
-      <div v-if="this.tab == 'friends'" style="margin-top: 4%">
-        <!--TODO: make this functional and search for friends / move elsewhere-->
-        <q-toolbar class="bg-primary text-white rounded-borders">
-          <h7 class="gt-xs"> Find/Add friends! </h7>
-
-          <q-space />
-
-          <q-input
-            dark
-            dense
-            standout
-            v-model="text"
-            input-class="text-right"
-            class="q-ml-md"
-          />
-        </q-toolbar>
-            <q-tabs
+                      <q-tabs
               v-model="tab"
               dense
               class="text-white"
@@ -81,7 +53,8 @@
                 />
 
             </q-tabs>
-          </div>
+        </q-tabs>
+      </div>
 
            <!-- profile tab (for regular chat) -->
         <div
