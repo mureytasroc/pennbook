@@ -21,3 +21,8 @@
 .idea/
 *.tmproj
 .vscode/
+# Secrets
+*.pk
+*.crt
+# Docker config JSON
+dockerconfigjson.yaml

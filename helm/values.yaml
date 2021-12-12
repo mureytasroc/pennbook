@@ -9,6 +9,7 @@ application:
   secrets:
     jwt: TODO (github actions)
     uuid-namespace: TODO (github actions)
+    docker-config-json: TODO (github actions)
 
 recommend-articles-job:
   schedule: "0 3 * * *"

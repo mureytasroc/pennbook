@@ -35,7 +35,7 @@ spec:
                             name: {{ .Release.Name }}-secret-tokens
                             key: uuid-namespace
             imagePullSecrets:
-                - name: docker-registry-registrycreds
+                - name: dockerconfigjson-github-com
 ---
 apiVersion: v1
 kind: Service
