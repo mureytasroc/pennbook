@@ -1,14 +1,20 @@
 <template>
   <q-page style="overflow-y: hidden">
-
     <div
       class="flex q-pa-md"
-      style="width: 100%;display: flex; justify-content: center; margin: auto;margin-top:30px; overflow-x: hidden"
+      style="
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin: auto;
+        margin-top: 30px;
+        overflow-x: hidden;
+      "
     >
-
       <!-- homepage -->
 
-      <div> <!--TODO: v-if="!this.hasFeed" -->
+      <div>
+        <!--TODO: v-if="!this.hasFeed" -->
         <!-- User no feed display -->
 
         <!--<span class="absolute-center" style="text-align: center; width: 90%">
@@ -20,7 +26,8 @@
         </span>-->
       </div>
 
-      <div > <!-- TODO: v-else-if="!this.feedLoaded" -->
+      <div>
+        <!-- TODO: v-else-if="!this.feedLoaded" -->
         <!--<span
           class="absolute-center"
           style="text-align: center"
@@ -38,18 +45,16 @@
         </span>-->
       </div>
 
-      <div> <!--TODO: v-else -->
-        <div style="margin-left: -100px">
-
-        </div>
+      <div>
+        <!--TODO: v-else -->
+        <div style="margin-left: -100px"></div>
         <q-list class="full-width">
           <div>
-           <q-item
+            <q-item
               v-for="post in posts"
               :key="post.postUUID"
               clickable
               v-ripple
-
               style="
                 margin: auto;
                 margin-bottom: 10px;
@@ -57,36 +62,32 @@
                 opacity: 0.8;
               "
             >
-
-            <div v-if="post.type == 'friendship'">
+              <div v-if="post.type == 'friendship'">
                 <FriendshipUpdate
-                    :firstNameA="post.user1.firstName"
-                    :lastNameA="post.user1.lastName"
-                    :firstNameB="post.user2.firstName"
-                    :lastNameB="post.user2.lastName"
-                    style="height: 100%;width: 100%; margin:auto"
+                  :firstNameA="post.user1.firstName"
+                  :lastNameA="post.user1.lastName"
+                  :firstNameB="post.user2.firstName"
+                  :lastNameB="post.user2.lastName"
+                  style="height: 100%; width: 100%; margin: auto"
                 />
-            </div>
+              </div>
 
-            <div v-else>
+              <div v-else>
                 <StatusPost
-                    :postUUID="post.postUUID"
-                    :firstName="post.creator.firstName"
-                    :lastName="post.creator.lastName"
-                    :content="post.content"
-                    style="height: 100%;width: 100%; margin:auto"
+                  :postUUID="post.postUUID"
+                  :firstName="post.creator.firstName"
+                  :lastName="post.creator.lastName"
+                  :content="post.content"
+                  style="height: 100%; width: 100%; margin: auto"
                 />
-            </div>
-
+              </div>
             </q-item>
           </div>
         </q-list>
-
       </div>
     </div>
   </q-page>
 </template>
-
 
 <script>
 //maybe pull up chats of matches here; in v-for, only load user if in liked array
@@ -95,9 +96,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import { Notify } from "quasar";
 export default {
   data() {
-    return {
-
-    };
+    return {};
   },
 
   props: {
@@ -110,13 +109,40 @@ export default {
   },
 
   computed: {
-
     // return the key range specified by the current message page # and size of page.
     // ex. if we're on page 1 and size is 5, return keys [5..9]
     // prerequisite: matchOnline is "sorted" by keys
     posts() {
-      let posts = [{"postUUID": 'a', "creator": {"username": "bruh", "firstName": "john", "lastName": "smith"}, "type": "Post", "content": "I got a new hat"},
-      {"type": "friendship", "user1": {"username": 'bruh', "firstName": 'bruh', "lastName": '1'}, "user2": {"username": 'bruh2', "firstName": 'bruh', "lastName": '2'}}];
+      let posts = [
+        {
+          postUUID: "a",
+          creator: { username: "bruh", firstName: "john", lastName: "smith" },
+          type: "Post",
+          content: "I got a new hat",
+        },
+        {
+          type: "friendship",
+          user1: { username: "bruh", firstName: "bruh", lastName: "1" },
+          user2: { username: "bruh2", firstName: "bruh", lastName: "2" },
+        },
+      ];
+
+      /**
+      let posts = [];
+      axios.get("/api/users/" + sessions.username +  "/home/").then((resp) => {
+        if (resp == 200) {
+          // ok
+          posts = resp.data;
+        } else if (resp == 400) {
+          // bad req
+        } else if (resp == 401) {
+          //unauth
+        } else if (resp == 403) {
+          //forbidden
+        }
+      })
+      */
+
       return posts;
     },
 
@@ -130,27 +156,16 @@ export default {
     },
 
     postsLength() {
-     // return Object.keys(this.matchOnline).length;
-     return 1;
+      // return Object.keys(this.matchOnline).length;
+      return 1;
     },
-
-
   },
 
+  methods: {},
 
-  methods: {
-
-
-  },
-
-
-  mounted() {
-
-  },
+  mounted() {},
 };
 </script>
-
-
 
 <style>
 #background {
