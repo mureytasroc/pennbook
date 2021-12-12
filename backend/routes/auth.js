@@ -10,7 +10,7 @@ const JWT_ALGORITHM = 'HS256';
  * A middleware for routes that require user authentication.
  */
 export const userAuthRequired = jwtMiddlewareConstructor({
-  secret: process.env.jwtSecret,
+  secret: process.env.JWT_SECRET,
   algorithms: [JWT_ALGORITHM],
   getToken: function(req) {
     let signedToken;
@@ -58,12 +58,10 @@ userAuthAndPathRequired.unless = unless;
 export function generateJwt(username) {
   return jwt.sign(
       { username },
-      process.env.jwtSecret,
+      process.env.JWT_SECRET,
       {
         algorithm: JWT_ALGORITHM,
         expiresIn: '1h',
-        issuer: process.env.jwtIssuer,
-        audience: process.env.jwtAudience,
       },
   );
 }

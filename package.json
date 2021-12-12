@@ -1,18 +1,17 @@
 {
-    "name": "pennbook",
-    "description": "A mini-Facebook application",
-    "version": "0.0.1",
-    "scripts": {
-        "prepare": "husky install",
-        "lint": "./node_modules/.bin/eslint . --ext .js --fix",
-        "backend-test": "cd backend && npm run test",
-        "pre-commit": "npm-run-all lint backend-test"
-    },
-    "devDependencies": {
-        "eslint": "^8.3.0",
-        "eslint-config-google": "^0.14.0",
-        "eslint-plugin-vue": "^8.1.1",
-        "husky": "^7.0.0",
-        "npm-run-all": "^4.1.5"
-    }
+  "name": "pennbook",
+  "description": "A mini-Facebook application",
+  "version": "0.0.1",
+  "scripts": {
+    "prepare": "husky install",
+    "lint": "./node_modules/.bin/eslint . --ext .js --fix",
+    "pre-commit": "npm run lint"
+  },
+  "devDependencies": {
+    "eslint": "^8.3.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-vue": "^8.1.1",
+    "husky": "^7.0.0",
+    "npm-run-all": "^4.1.5"
+  }
 }

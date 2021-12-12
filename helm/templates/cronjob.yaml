@@ -1,0 +1,28 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+    name: {{ .Release.Name }}-recommend-articles
+spec:
+    schedule: "{{ .Values.recommend-articles-job.schedule }}"
+    successfulJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 1
+    jobTemplate:
+        spec:
+            template:
+                spec:
+                    containers:
+                        - name: {{ .Release.Name }}-worker
+                          image: '{{ .Values.backend.image }}:{{ .Values.backend.tag }}'
+                          command: ["npm"]
+                          args: ["run", "recommend-articles"]
+                          env:
+                              - name: REDIS_URL
+                                value: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.port }}/0"
+                              - name: UUID_NAMESPACE
+                                valueFrom:
+                                  secretKeyRef:
+                                    name: {{ .Release.Name }}-secret-tokens
+                                    key: uuid-namespace
+                    imagePullSecrets:
+                        - name: docker-registry-registrycreds
+                    restartPolicy: Never

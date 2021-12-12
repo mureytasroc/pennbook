@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: {{ .Release.Name }}-backend
+spec:
+    replicas: {{ .Values.backend.replicas }}
+    selector:
+        matchLabels:
+            app: {{ .Release.Name }}-backend
+    template:
+        metadata:
+            labels:
+                app: {{ .Release.Name }}-backend
+        spec:
+            containers:
+                - name: {{ .Release.Name }}-backend
+                  image: '{{ .Values.backend.image }}:{{ .Values.backend.tag }}'
+                  command: ["node"]
+                  args: ["app.js"]
+                  ports:
+                      - containerPort: {{ .Values.backend.port }}
+                  env:
+                      - name: REDIS_URL
+                        value: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.port }}/0"
+                      - name: BACKEND_PORT
+                        value: {{ .Values.backend.port }}
+                      - name: JWT_SECRET
+                        valueFrom:
+                          secretKeyRef:
+                            name: {{ .Release.Name }}-secret-tokens
+                            key: jwt
+                      - name: UUID_NAMESPACE
+                        valueFrom:
+                          secretKeyRef:
+                            name: {{ .Release.Name }}-secret-tokens
+                            key: uuid-namespace
+            imagePullSecrets:
+                - name: docker-registry-registrycreds
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: {{ .Release.Name }}-backend
+spec:
+    selector:
+        app: {{ .Release.Name }}-backend
+    ports:
+        - port: {{ .Values.backend.port }}

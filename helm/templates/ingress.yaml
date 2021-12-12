@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+    name: {{ .Release.Name }}-api-ingress
+    annotations:
+        kubernetes.io/ingress.class: "nginx"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+    rules:
+        - host: {{ .Values.application.ingress.host }}
+          http:
+              paths:
+                  - path: '{{ .Values.application.ingress.path }}'
+                    backend:
+                        serviceName: {{ .Release.Name }}-backend
+                        servicePort: {{ .Values.backend.port }}
+    tls:
+        - hosts:
+              - {{ .Values.application.ingress.host }}
+          secretName: {{ .Values.application.ingress.secretName }}

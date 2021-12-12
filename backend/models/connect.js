@@ -7,8 +7,7 @@ import { prod } from '../config/dotenv.js';
 const { default: redis } = await import(prod ? 'redis' : 'redis-mock');
 
 export const redisClient = redis.createClient({
-  host: process.env.redisHost,
-  port: process.env.redisPort,
+  url: process.env.REDIS_URL,
 });
 redisClient.on('error', function(err) {
   throw err;

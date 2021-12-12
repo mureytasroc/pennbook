@@ -59,3 +59,7 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+
+# Secrets
+*.pk
+*.crt

@@ -102,7 +102,7 @@ export async function validateUserProfile(profile, keysToCheck) {
       throw new BadRequest('Password does not meet strength requirements.');
     }
     validatedProfile.passwordHash = await bcrypt.hash(password,
-        parseInt(process.env.passwordSaltRounds));
+        parseInt(process.env.PASSWORD_SALT_ROUNDS));
   }
 
   if (!keysToCheck || 'affiliation' in keysToCheck) {

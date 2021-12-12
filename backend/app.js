@@ -16,5 +16,5 @@ app.use(logErrorMiddleware);
 app.use(returnError);
 
 // Run the server
-const server = app.listen(process.env.PORT);
+const server = app.listen(process.env.BACKEND_PORT);
 console.log(`Server running on port ${server.address().port}.`);
