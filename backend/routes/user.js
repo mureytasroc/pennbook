@@ -105,6 +105,7 @@ router.patch('/users/:username/profile', userAuthAndPathRequired, async function
  * Search users.
  */
 router.get('/users', async function(req, res) {
+  res.send('Unimplemented'); // TODO
 });
 
 

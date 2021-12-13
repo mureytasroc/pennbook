@@ -10,7 +10,7 @@ const router = new express.Router();
  * List chats by user.
  */
 router.get('/users/:username/chats', userAuthAndPathRequired, async function(req, res) {
-  // TODO
+  res.send('Unimplemented'); // TODO
 });
 
 
@@ -18,7 +18,7 @@ router.get('/users/:username/chats', userAuthAndPathRequired, async function(req
  * Start chat.
  */
 router.post('/chats', userAuthRequired, async function(req, res) {
-  // TODO
+  res.send('Unimplemented'); // TODO
 });
 
 
@@ -26,7 +26,7 @@ router.post('/chats', userAuthRequired, async function(req, res) {
  * Delete chat
  */
 router.delete('/chats/:chatUUID', userAuthRequired, async function(req, res) {
-  // TODO
+  res.send('Unimplemented'); // TODO
 });
 
 
@@ -34,7 +34,7 @@ router.delete('/chats/:chatUUID', userAuthRequired, async function(req, res) {
  * Chat history.
  */
 router.get('/chats/:chatUUID', userAuthRequired, async function(req, res) {
-  // TODO
+  res.send('Unimplemented'); // TODO
 });
 
 
@@ -42,7 +42,7 @@ router.get('/chats/:chatUUID', userAuthRequired, async function(req, res) {
  * Update chat details.
  */
 router.put('/chats/:chatUUID', userAuthRequired, async function(req, res) {
-  // TODO
+  res.send('Unimplemented'); // TODO
 });
 
 

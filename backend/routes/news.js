@@ -13,10 +13,6 @@ const MAX_ARTICLE_QUERY_LIMIT = 100;
 
 const router = new express.Router();
 
-// router.use(userAuthAndPathRequired.unless({
-//  path: ['/api/news/categories', '/api/news/articles'],
-// }));
-
 
 /**
  * News categories.

@@ -48,7 +48,6 @@ export function logErrorMiddleware(err, req, res, next) {
  */
 export function returnError(err, req, res, next) {
   res.status(err.statusCode || 500).json({ message: err.message });
-  next();
 }
 
 /**
