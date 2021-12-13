@@ -128,7 +128,7 @@ jobs:
 
       - name: Deploy code
         run: >-
-          cd k8s
+          cd helm
 
           aws eks --region us-east-1 update-kubeconfig --name pennbook-cluster
 
