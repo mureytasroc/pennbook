@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: {{ .Release.Name }}-frontend
+spec:
+    replicas: {{ .Values.frontend.replicas }}
+    selector:
+        matchLabels:
+            app: {{ .Release.Name }}-frontend
+    template:
+        metadata:
+            labels:
+                app: {{ .Release.Name }}-frontend
+        spec:
+            containers:
+                - name: {{ .Release.Name }}-frontend
+                  image: '{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}'
+                  ports:
+                      - containerPort: 80
+                      
+            imagePullSecrets:
+                - name: dockerconfigjson-github-com
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: {{ .Release.Name }}-frontend
+spec:
+    selector:
+        app: {{ .Release.Name }}-frontend
+    ports:
+        - port: {{ .Values.frontend.port }}
+          targetPort: 80

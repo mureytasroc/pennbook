@@ -3,18 +3,23 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}-api-ingress
-  kubernetes.io/ingress.class: "nginx"
-  nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
+  ingressClassName: nginx
   rules:
-    - host: {{ .Values.application.ingress.host | quote }}
+    - host: {{ .Values.application.host | quote }}
       http:
         paths:
-          - path: {{ .Values.application.ingress.path | quote }}
+          - pathType: Prefix
+            path: "/api"
             backend:
               serviceName: {{ .Release.Name }}-backend
               servicePort: {{ .Values.backend.port }}
+          - pathType: Prefix
+            path: "/"
+            backend:
+              serviceName: {{ .Release.Name }}-frontend
+              servicePort: {{ .Values.frontend.port }}
   tls:
     - hosts:
-        - {{ .Values.application.ingress.host }}
+        - {{ .Values.application.host }}
       secretName: cloudflare-tls

@@ -1,7 +1,5 @@
 application:
-  ingress:
-    host: pennbook.app
-    path: "/"
+  host: pennbook.app
 
 recommendArticlesJob:
   schedule: "*/5 * * * *" # "0 3 * * *"
@@ -15,4 +13,9 @@ redis:
 backend:
   image: ghcr.io/mureytasroc/pennbook/backend
   port: 8000
+  replicas: 1
+
+frontend:
+  image: ghcr.io/mureytasroc/pennbook/frontend
+  port: 3000
   replicas: 1
