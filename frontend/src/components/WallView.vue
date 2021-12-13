@@ -9,7 +9,46 @@
 
       <div> <!--TODO: v-else -->
         <div>
+           <q-bar dark class="bg-secondary text-white">
+            <div v-if="this.isSelf" class="col text-center text-weight-bold">{{this.username}} Wall!</div>
+            <div v-else class="col text-center text-weight-bold">{{this.username}}'s Wall!</div>
+          </q-bar>
+          <br>  <br v-if="!this.isSelf">
 
+        <q-card v-if="!this.isSelf"
+          style="
+            margin: auto;
+            border: 8px solid white;
+            border-radius: 20px;
+            overflow-y: hidden;
+            overflow-x: hidden; bottom: 20%;
+            width: 90%
+          "
+          >
+            <q-card style="border-radius: 20px; height: 190px; background: whitesmoke" >
+              <q-card-section style="font-size: 1rem;">
+                <q-input
+                  v-model="newPost"
+                  rounded
+                  autofocus
+                  :autogrow="false"
+                  placeholder="Your update!"
+                  standout="bg-white text-black"
+                  type="textarea"
+                  bg-color="white"
+                  style="height: 100%; opacity: 0.8;padding-top:10px"
+                  input-style="color: black; font-size: 1.2rem;">
+                </q-input>
+              </q-card-section>
+            </q-card>
+            <q-card-actions style="width: 100%; font-size: 1rem;margin-top:5px" class="row justify-between">
+
+              <q-btn label="Post Update!" color="primary" v-close-popup rounded @click="postUpdate()" style="padding:10px;margin:auto;">
+              </q-btn>
+
+            </q-card-actions>
+         </q-card>
+        <div v-if="!this.isSelf"><br> <br></div>
         </div>
         <q-list class="full-width">
           <div>
@@ -54,7 +93,7 @@ import { Notify } from "quasar";
 export default {
   data() {
     return {
-
+      newPost: ""
     };
   },
 
@@ -63,6 +102,12 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    username: {
+      type: String
+    },
+    isSelf: {
+      type: Boolean
+    }
   },
 
   components: {
@@ -73,10 +118,11 @@ export default {
 
   },
 
-
   methods: {
 
-
+    postUpdate() {
+      //TODO: post update (text in newPost variable) – have to store/fetch currently logged in user in local state (need creator data)
+    }
   },
 
 
