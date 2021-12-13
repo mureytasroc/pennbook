@@ -28,29 +28,87 @@
                 this.getActiveUserInfo.lastName
               }}
             </div>
-            <div class="text-subtitle2">
+            <div v-if="!this.editMode" class="text-subtitle2">
               {{ this.getActiveUserInfo.emailAddress + " " }}
             </div>
+
+            <q-input
+              class="text-white"
+              v-if="this.editMode"
+              filled
+              v-model="newEmailAddress"
+              :placeholder="this.getActiveUserInfo.emailAddress"
+              :dense="dense"
+              style="color: white; background: white; margin-top: 10px"
+            />
+            <q-input
+              class="text-white"
+              v-if="this.editMode"
+              filled
+              v-model="newPassword"
+              placeholder="******"
+              :dense="dense"
+              style="color: white; background: white; margin-top: 10px"
+            />
           </q-card-section>
 
           <q-card-actions>
-            <q-item style="font-size: 1.1rem; color: black">{{
-              "🎓: " + this.getActiveUserInfo.affiliation + " "
-            }}</q-item>
+            <q-item
+              v-if="!this.editMode"
+              style="font-size: 1.1rem; color: black"
+              >{{ "🎓: " + this.getActiveUserInfo.affiliation + " " }}</q-item
+            >
+
+            <br v-if="this.editMode"/>
+
+            <q-item
+              v-if="this.editMode"
+              style="font-size: 1.1rem; color: black"
+            >
+              🎓:
+              <q-input
+                filled
+                v-model="newAffiliation"
+                :placeholder="this.getActiveUserInfo.affiliation"
+                :dense="dense"
+                style="margin-left: 10px"
+              />
+            </q-item>
+
             <br />
 
             <q-separator color="orange" inset />
 
-            <q-item style="font-size: 1.1rem; color: black">{{
-              "❤️:  " + this.getActiveUserInfo.interests
-            }}</q-item>
-            <br />
+            <q-item
+              v-if="!this.editMode"
+              style="font-size: 1.1rem; color: black"
+              >{{ "❤️:  " + this.getActiveUserInfo.interests }}</q-item
+            >
+
+            <q-item
+              v-if="this.editMode"
+              style="font-size: 1.1rem; color: black"
+            >
+              ❤️:
+              <q-input
+                filled
+                v-model="newInterests"
+                :placeholder="this.getActiveUserInfo.interests"
+                :dense="dense"
+                style="margin-left: 10px"
+              />
+            </q-item>
 
             <br />
           </q-card-actions>
 
           <div style="padding: 10px; margin: auto; text-align: center">
-            <q-btn label="edit profile" />
+            <q-btn
+              v-if="!this.editMode"
+              label="edit profile"
+              @click="this.editMode = true"
+            />
+            <q-btn v-if="this.editMode" label="Submit" @click="updateProfile" />
             <!--this should open up og component to update settings?-->
           </div>
         </q-card>
@@ -59,7 +117,7 @@
 
       <hr style="height: 1px; background: grey; width: 100%" />
 
-      <Wall :wallPosts="getWallPosts"></Wall>
+      <WallView :wallPosts="getWallPosts" username="My Own" v-bind:isSelf="true"></WallView>
     </div>
   </q-page>
 </template>
@@ -68,16 +126,29 @@
 import { mapActions, mapGetters } from "vuex";
 export default {
   data() {
-    return {};
+    return {
+      editMode: false,
+      presetInterestOptions: [],
+      newAffiliation: "",
+      newInterests: [],
+      newEmailAddress: "",
+      newPassword: ""
+    };
   },
 
   components: {
-    Wall: require("components/Wall.vue").default,
+    WallView: require("components/WallView.vue").default,
   },
 
   methods: {
     //...mapActions("forms", ["fbReadCurrentUserData", "updateProfileNewUser"]),
     //...mapActions("auth", ["setNewUser", "setReturningUser"]),
+
+    updateProfile() {
+      this.editMode = false;
+      //TODO: compare new values (below line) with values from getActiveUserInfo, and update if necessary (make route call to update / make respective wall posts)
+      //this.newEmailAddress + this.newPassword + this.newAffiliation + this.newInterests
+    },
   },
 
   computed: {
@@ -134,7 +205,9 @@ export default {
 
   watch: {},
 
-  mounted() {},
+  mounted() {
+    //TODO: load preset interest options.., and set presetInterestOptions?
+  },
 };
 </script>
 

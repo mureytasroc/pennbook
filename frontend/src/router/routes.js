@@ -21,11 +21,24 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
-        path: '/:catchAll(.*)*',
+        path: '/chat/:catchAll(.*)*',
         component: () => import('pages/Chat.vue'),
       },
     ],
   },
+
+  {
+    path: '/wall',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '/wall/:catchAll(.*)*',
+        component: () => import('pages/Wall.vue'),
+      },
+    ],
+  },
+
+  //TODO: if user attempts to visit wall/(own user), should redirect to profile
 
   // Always leave this as last one,
   // but you can also remove it
