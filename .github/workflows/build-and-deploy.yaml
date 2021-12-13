@@ -80,13 +80,13 @@ jobs:
 
       - name: Deploy code
         run: >-
-          cd /k8s
+          cd k8s
 
           aws eks --region us-east-1 update-kubeconfig --name pennbook-cluster
 
           kubectl config set-context --current --namespace=default
 
-          helm upgrade --install --atomic pennbook ./pennbook-chart
+          helm upgrade --install --atomic pennbook ./pennbook-chart --timeout=10m
           --set application.secrets.jwtSecret=${{ secrets.JWT_SECRET }},application.secrets.uuidNamespace=${{ secrets.UUID_NAMESPACE }}
           --set application.secrets.dockerConfigJson=${{ secrets.DOCKER_CONFIG_JSON }}
           --set application.secrets.cloudflareApiKey=${{ secrets.CLOUDFLARE_API_KEY }},application.secrets.cloudflareApiEmail=${{ secrets.CLOUDFLARE_API_EMAIL }}
