@@ -1,10 +1,18 @@
-/* eslint-disable no-undef */
-import assert from 'assert';
+/* eslint-disable no-undef, no-invalid-this */
+import util from 'util';
+import { exec } from 'child_process';
 
-describe('Array', function() {
-  describe('#indexOf()', function() {
-    it('should return -1 when the value is not present', function() {
-      assert.equal([1, 2, 3].indexOf(4), -1);
+describe('server', function() {
+  describe('start app', function() {
+    it('should not fail', async function() {
+      this.timeout(6000);
+      try {
+        await util.promisify(exec)('node app.js', { timeout: 5000 });
+      } catch (error) {
+        if (!error.killed) {
+          throw error;
+        }
+      }
     });
   });
 });

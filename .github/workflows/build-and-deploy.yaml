@@ -28,6 +28,10 @@ jobs:
           cache: "npm"
       - run: npm install
       - run: npm test
+        env:
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
 
   build:
     name: Build and publish backend
