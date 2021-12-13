@@ -1,20 +1,20 @@
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: extensions/v1beta1
+kind: Ingress
 metadata:
-  name: {{ .Release.Name }}-ingress
+  name: {{ .Release.Name }}-api-ingress
+  kubernetes.io/ingress.class: "nginx"
+  nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  entryPoints:
-    - websecure
-  routes:
-    - kind: Rule
-      match: Host(`{{ .Values.application.host }}`)
-      services:
-        - kind: Service
-          name: {{ .Release.Name }}-backend
-          passHostHeader: true
-          port: {{ .Values.backend.port }}
-          responseForwarding:
-            flushInterval: 1ms
-          scheme: https
-          strategy: RoundRobin
+  rules:
+    - host: {{ .Values.application.ingress.host | quote }}
+      http:
+        paths:
+          - path: {{ .Values.application.ingress.path | quote }}
+            backend:
+              serviceName: {{ .Release.Name }}-backend
+              servicePort: {{ .Values.backend.port }}
+  tls:
+    - hosts:
+        - {{ .Values.application.ingress.host }}
+      secretName: cloudflare-tls
