@@ -9,16 +9,20 @@ spec:
     - host: {{ .Values.application.host | quote }}
       http:
         paths:
-          - pathType: Prefix
-            path: "/api"
+          - path: "/api"
+            pathType: Prefix
             backend:
-              serviceName: {{ .Release.Name }}-backend
-              servicePort: {{ .Values.backend.port }}
-          - pathType: Prefix
-            path: "/"
+              service:
+                name: {{ .Release.Name }}-backend
+                port:
+                  number: {{ .Values.backend.port }}
+          - path: "/"
+            pathType: Prefix
             backend:
-              serviceName: {{ .Release.Name }}-frontend
-              servicePort: {{ .Values.frontend.port }}
+              service:
+                name: {{ .Release.Name }}-frontend
+                port:
+                  number: {{ .Values.frontend.port }}
   tls:
     - hosts:
         - {{ .Values.application.host }}
