@@ -132,9 +132,9 @@ jobs:
 
           aws eks --region us-east-1 update-kubeconfig --name pennbook-cluster
 
-          kubectl config set-context --current --namespace=default
+          kubectl config set-context --current --namespace default
 
-          helm upgrade --install --atomic pennbook ./pennbook-chart --timeout=10m
+          helm upgrade --install --atomic pennbook ./pennbook-chart --timeout 10m
           --set application.secrets.jwtSecret=${{ secrets.JWT_SECRET }},application.secrets.uuidNamespace=${{ secrets.UUID_NAMESPACE }}
           --set application.secrets.dockerConfigJson=${{ secrets.DOCKER_CONFIG_JSON }}
           --set application.secrets.awsAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }},application.secrets.awsSecretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -145,10 +145,12 @@ jobs:
           --repo https://prometheus-community.github.io/helm-charts
           --values prometheus-values.yaml
           --namespace monitoring --create-namespace
-          --version=15.0.1
 
-          helm upgrade --install --atomic grafana ./grafana-chart
-          --set application.secrets.grafanaAdminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          helm upgrade --install --atomic grafana grafana 
+          --repo https://grafana.github.io/helm-charts
+          --values grafana-values.yaml
+          --set adminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          --namespace grafana --create-namespace
 
           helm upgrade --install --atomic ingress-nginx ingress-nginx
           --repo https://kubernetes.github.io/ingress-nginx

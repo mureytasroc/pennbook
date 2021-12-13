@@ -24,6 +24,18 @@ spec:
                                   secretKeyRef:
                                     name: {{ .Release.Name }}-secret-tokens
                                     key: uuid-namespace
+                              - name: AWS_REGION
+                                value: "us-east-1"
+                              - name: AWS_ACCESS_KEY_ID
+                                valueFrom:
+                                  secretKeyRef:
+                                    name: {{ .Release.Name }}-secret-tokens
+                                    key: aws-access-key-id
+                              - name: AWS_SECRET_ACCESS_KEY
+                                valueFrom:
+                                  secretKeyRef:
+                                    name: {{ .Release.Name }}-secret-tokens
+                                    key: aws-secret-access-key
                     imagePullSecrets:
                         - name: {{ .Release.Name }}-dockerconfigjson-github-com
                     restartPolicy: Never
