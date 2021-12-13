@@ -9,7 +9,7 @@ ingress:
       secretName: cloudflare-tls
 
 admin:
-  existingSecret: grafana
+  existingSecret: grafana-admin
 
 persistence:
   enabled: true
