@@ -1,7 +1,13 @@
-import dynamo from 'dynamodb';
 import { BadRequest, OperationalServerError, UnprocessableEntity } from '../error/errors.js';
 
-export const unmarshallAttributes = dynamo.AWS.DynamoDB.Converter.unmarshall;
+/**
+ * Converts a dynamodb returned object to a JSON object
+ * @param {*} dynamoObj 
+ * @returns {Object} JSON-ified dynamodb object
+ */
+export function unmarshallAttributes(dynamoObj) {
+  return JSON.parse(JSON.stringify(dynamoObj))
+}
 
 /**
  * Asserts the given toCheck variable is a string and (optionally) within the provided
@@ -51,8 +57,8 @@ export function cannotUpdate(object, field) {
  * @return {*}
  */
 export function executeAsync(q, callback) {
-  return new Promise(function(resolve, reject) {
-    q.exec(function(err, resp) {
+  return new Promise(function (resolve, reject) {
+    q.exec(function (err, resp) {
       if (err) {
         reject(err);
       }

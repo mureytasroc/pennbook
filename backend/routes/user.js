@@ -18,7 +18,7 @@ const router = new express.Router();
 /**
  * List affiliations.
  */
-router.get('/users/affiliations', async function(req, res) {
+router.get('/users/affiliations', async function (req, res) {
   const affiliationsSet = await getAffiliations();
   res.json(Array.from(affiliationsSet));
 });
@@ -35,7 +35,7 @@ owasp.config({
 /**
  * Create user.
  */
-router.post('/users', async function(req, res, next) {
+router.post('/users', async function (req, res, next) {
   try {
     const profile = await createUser(req.body);
     profile.token = generateJwt(profile.username);
@@ -57,7 +57,7 @@ const limitFailedLoginsByIP = new RateLimiterRedis({
 /**
  * Login.
  */
-router.post('/users/:username/login', async function(req, res) {
+router.post('/users/:username/login', async function (req, res) {
   const failedLoginLimit = await limitFailedLoginsByIP.get(req.ip);
   if (failedLoginLimit.remainingPoints <= 0) {
     throw new TooManyRequests('Too many failed login attempts from your IP.');
@@ -86,31 +86,47 @@ router.post('/users/:username/login', async function(req, res) {
 /**
  * Update user.
  */
-router.patch('/users/:username/profile', async function(req, res) {
-  cannotUpdate(req.body, 'username');
-  req.body.username = req.user.username;
-  cannotUpdate(req.body, 'firstName');
-  cannotUpdate(req.body, 'lastName');
-  const newProfile = await updateUser(req.body);
-  newProfile.token = req.signedToken; // do not refresh token; credentials have not been provided
-  res.json(newProfile);
+router.patch('/users/:username/profile', async function (req, res, next) {
+  try {
+    cannotUpdate(req.body, 'username');
+    req.body.username = req.params.username;
+    cannotUpdate(req.body, 'firstName');
+    cannotUpdate(req.body, 'lastName');
+    const newProfile = await updateUser(req.body);
+    newProfile.token = req.signedToken; // do not refresh token; credentials have not been provided
+    res.json(newProfile);
+  } catch (err) {
+    next(err)
+  }
 });
 
 
 /**
  * Search users.
  */
-router.get('/users', async function(req, res) {
+router.get('/users', async function (req, res) {
 });
 
 
 /**
  * Add friendship.
  */
-router.post('/users/:username/friends/:friendUsername', async function(req, res, next) {
+router.post('/users/:username/friends/:friendUsername', async function (req, res, next) {
   try {
     const friendship = await createFriendship(req.params.username, req.params.friendUsername);
     res.status(StatusCodes.CREATED).json(friendship);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Get friendship.
+ */
+router.get('/users/:username/friends/:friendUsername', async function (req, res, next) {
+  try {
+    const friendship = await getFriendship(req.params.username, req.params.friendUsername);
+    res.status(StatusCodes.OK).json(friendship);
   } catch (err) {
     next(err);
   }
@@ -120,7 +136,7 @@ router.post('/users/:username/friends/:friendUsername', async function(req, res,
 /**
  * Remove friendship. Only need to call this for one direction, code will handle other direction
  */
-router.delete('/users/:username/friends/:friendUsername', async function(req, res, next) {
+router.delete('/users/:username/friends/:friendUsername', async function (req, res, next) {
   try {
     deleteFriendship(req.params.username, req.params.friendUsername);
   } catch (err) {

@@ -5,6 +5,7 @@ import { getUser } from '../models/User.js';
 import { Conflict, NotFound } from '../error/errors.js';
 import Joi from 'joi';
 import _ from 'lodash';
+import { unmarshallAttributes, executeAsync } from '../util/utils.js';
 
 export const Friendship = dynamo.define('Friendship', {
   hashKey: 'username',
@@ -49,25 +50,44 @@ export async function createFriendship(username, friendUsername) {
         username: user.username,
         friendUsername: friend.username,
         friendFirstName: friend.firstName,
-        friendshipUUID: uuidv4(),
+        friendLastName: friend.lastName,
+        friendshipUUID: new Date().toISOString() + "#" + uuidv4(),
         timestamp: new Date().toISOString(),
       };
       return obj;
     }
 
     const friendship = await Friendship.create(createFriendshipHelper(user, friend),
-        { overwrite: false });
+      { overwrite: false });
     await Friendship.create(createFriendshipHelper(friend, user),
-        { overwrite: false });
+      { overwrite: false });
 
-    return JSON.parse(JSON.stringify(friendship));
+    return unmarshallAttributes(friendship);
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
       throw new Conflict(
-          `The specified friendship between '${username}' and '${friendUsername}' already exists.`,
+        `The specified friendship between '${username}' and '${friendUsername}' already exists.`,
       );
     }
     throw err;
+  }
+}
+
+/**
+ * Given a username and a friendUsername, get the friendship between them
+ * @param {*} username 
+ * @param {*} friendUsername 
+ * @returns {*}
+ */
+export async function getFriendship(username, friendUsername) {
+  try {
+    var friendship = await Friendship.get(username, friendUsername, { ConsistentRead: true })
+    return unmarshallAttributes(friendship)
+  } catch (err) {
+    if (err.code === 'ResourceNotFoundException') {
+      throw new NotFound(`The specified friendship between '${username}' and '${friendUsername}' was not found`);
+    }
+    throw err
   }
 }
 
@@ -83,14 +103,32 @@ export async function deleteFriendship(username, friendUsername) {
     throw new NotFound('At least one user does not exist');
   }
 
-  Friendship.destroy(user.username, friend.username, function(err) {
+  Friendship.destroy(user.username, friend.username, function (err) {
     if (err) {
       throw err;
     }
   });
-  Friendship.destroy(friend.username, user.username, function(err) {
+  Friendship.destroy(friend.username, user.username, function (err) {
     if (err) {
       throw err;
     }
   });
+}
+
+/**
+ * Given a username, get all friendships  corresponding to it
+ * @param {*} username 
+ * @param {*} friendUsername 
+ * @returns {Object} a list of friend usernames
+ */
+export async function getFriendships(username) {
+  try {
+    const callback = function (resp) {
+      return _.map(resp.Items, (x) => unmarshallAttributes(x));
+    };
+    var friendships = await executeAsync(Friendship.query(username), callback)
+    return friendships
+  } catch (err) {
+    throw err
+  }
 }
