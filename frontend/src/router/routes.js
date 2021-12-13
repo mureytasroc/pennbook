@@ -12,6 +12,18 @@ const routes = [
       { path: 'homepage', component: () => import('pages/Homepage.vue') },
       { path: 'profile', component: () => import('pages/Profile.vue') },
       { path: 'friends', component: () => import('pages/Friends.vue') },
+      { path: 'chat', component: () => import('pages/Chat.vue') },
+    ],
+  },
+
+  {
+    path: '/chat',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '/:catchAll(.*)*',
+        component: () => import('pages/Chat.vue'),
+      },
     ],
   },
 

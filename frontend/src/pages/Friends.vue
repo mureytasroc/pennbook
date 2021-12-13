@@ -2,6 +2,8 @@
 
 <template>
   <q-page style="overflow-y: hidden">
+      <!-- chat page -->
+
     <div
       class="flex q-pa-md"
       style="
@@ -97,7 +99,18 @@
 
                 <q-item-section side>
                 <!--TODO: on click, remove this friend -->
-                <q-btn
+                <q-btn style="margin-right: 20px"
+                    v-if="friend.loggedIn"
+                    dense
+                    round
+                    icon="textsms"
+                    color="light-green-6"
+                    @click="
+                        showChat(friend.username);
+                    "
+                  />
+        </q-item-section>
+                     <q-btn
                     icon="remove_circle_outline"
                     flat
                     dense
@@ -106,7 +119,6 @@
                     color="red"
                      @click="removeFriend(friend.username)"
                   />
-        </q-item-section>
       </q-item>
 
         </div>
@@ -140,6 +152,7 @@
         </div>
 
     </div>
+
   </q-page>
 </template>
 
@@ -149,11 +162,13 @@ export default {
   data() {
     return {
       tab: "friends",
-      searchPeopleQuery: ""
+      searchPeopleQuery: "",
     };
   },
   props: {},
-  components: {},
+  components: {
+
+  },
   computed: {
     getFriends() {
       //TODO: call route to fetch friendships
@@ -193,13 +208,6 @@ export default {
 
   },
 
-  methods: {
-      //TODO: make this route call
-      searchPeople() {
-          console.log(this.searchPeopleQuery)
-      }
-  },
-
   watch: {
 
 
@@ -229,6 +237,16 @@ export default {
       }
       */
     },
+    //TODO: make this route call
+      searchPeople() {
+          console.log(this.searchPeopleQuery)
+      },
+
+     showChat(otherUsername) {
+      //TODO: derive chatUUID from current user + other username
+      this.$router.push('/chat/'+otherUsername)
+    },
+
   },
   mounted() {},
   beforeUnmount() {},
