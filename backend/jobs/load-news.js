@@ -16,21 +16,21 @@ const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
 /**
  * A function to turn text into keywords.
- * @param {string} text - The text or query from which to extract keywords.
+ * @param {string} text - the text or query from which to extract keywords.
+ * @param {boolean} throwError - whether to throw an error upon encountering invalid keywords
  * @throws {BadRequest} if the text contains any invalid keywords
- * @return {Object} An object {originalKeywords, dbKeywords}, where originalKeywords refers to
- *                  an array of the cleaned keywords originally in the text, and dbKeywords
- *                  refers to the stemmed/filtered keywords for use in the db.
+ * @return {Array} the stemmed/filtered keywords for use in the db
 */
-export function turnTextToKeywords(text) {
+export function turnTextToKeywords(text, throwError) {
   // Split keywords by any whitespace (and trim)
   let keywords = text.trim().split(/s+/m).filter((keyw) => keyw);
 
   // Check for any non-alphabetic keywords
   const invalidKeywords = keywords.filter((keyw) => !isValidKeyword.test(keyw));
-  if (invalidKeywords.length) {
+  if (throwError && invalidKeywords.length) {
     throw new BadRequest('Invalid keywords: ' + JSON.stringify(invalidKeywords));
   }
+  keywords = keywords.filter((k) => !invalidKeywords.includes(k));
 
   // Convert keywords to lowercase and stem
   keywords = keywords.map((keyw) => keyw.toLowerCase());
@@ -47,10 +47,11 @@ export function turnTextToKeywords(text) {
  */
 export function parseAndCleanArticle(article) {
   const articleOb = JSON.parse(article);
-  const date = Date.parse(articleOb.date);
+  const date = new Date(articleOb.date);
   date.setFullYear(date.getFullYear() + 4);
   articleOb.date = date;
   articleOb.shortDescription = articleOb.short_description;
+  delete articleOb.short_description;
   articleOb.articleUUID = date.toISOString() + uuidv5(articleOb.link, process.env.UUID_NAMESPACE);
   return articleOb;
 }
@@ -59,12 +60,14 @@ export function parseAndCleanArticle(article) {
  * Loads new articles into DynamoDB
  */
 export function loadNews() {
-  const batch = [];
+  let batch = [];
   const uploadArticleBatch = () => {
+    batch = batch.filter((a) => a.authors !== '' && a.shortDescription !== ''); // TODO: fix
     Article.create(batch);
     ArticleKeyword.create(batch.flatMap((article) =>
-      turnTextToKeywords(article.title).dbKeywords.map(
-          (keyword) => ({ keyword, articleUUID: article.articleUUID }))));
+      turnTextToKeywords(article.headline).map(
+          (keyword) => ({ keyword, articleUUID: article.articleUUID }),
+      )));
     batch = [];
   };
   const s3 = new AWS.S3();
@@ -77,7 +80,6 @@ export function loadNews() {
       if (batch.length) {
         uploadArticleBatch(batch);
       }
-      lineReader.close();
       return;
     }
     batch.push(article);

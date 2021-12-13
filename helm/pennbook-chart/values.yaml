@@ -2,7 +2,7 @@ application:
   host: pennbook.app
 
 recommendArticlesJob:
-  schedule: "*/5 * * * *" # "0 3 * * *"
+  schedule: "*/10 * * * *"
 
 redis:
   image: redis
