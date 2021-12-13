@@ -62,7 +62,9 @@ export function parseAndCleanArticle(article) {
 export function loadNews() {
   let batch = [];
   const uploadArticleBatch = () => {
-    batch = batch.filter((a) => a.authors !== '' && a.shortDescription !== ''); // TODO: fix
+    batch = batch.filter((a) =>
+      a.authors !== '' && a.shortDescription !== '' && a.headline !== '',
+    ); // TODO: fix
     Article.create(batch);
     ArticleKeyword.create(batch.flatMap((article) =>
       turnTextToKeywords(article.headline).map(

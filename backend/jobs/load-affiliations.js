@@ -9,10 +9,11 @@ import { Affiliation } from '../models/User.js';
 export async function loadAffiliations() {
   const s3 = new AWS.S3();
   const res = await s3.getObject(
-      { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
+      { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'affiliations.json' },
   ).promise();
-  console.log(res);
-  Affiliation.create(JSON.parse(res.Body.toString('utf-8')).map((a) => ({ affiliation: a.name })));
+  console.log('Loading affiliations...');
+  const body = JSON.parse(res.Body.toString('utf-8'));
+  Affiliation.create(body.map((a) => ({ affiliation: a.name })), () => {
+    console.log('Done loading affiliations.');
+  });
 }
-
-loadAffiliations();
