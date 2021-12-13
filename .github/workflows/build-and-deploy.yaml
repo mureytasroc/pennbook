@@ -139,7 +139,7 @@ jobs:
           --set application.secrets.dockerConfigJson=${{ secrets.DOCKER_CONFIG_JSON }}
           --set application.secrets.awsAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }},application.secrets.awsSecretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           --set application.secrets.sentryUrl=${{ secrets.SENTRY_URL }}
-          --set backend.tag=${{ github.sha }}
+          --set backend.tag=${{ github.sha }},frontend.tag=${{ github.sha }}
 
           helm upgrade --install ingress-nginx ingress-nginx
           --repo https://kubernetes.github.io/ingress-nginx
