@@ -1,14 +1,5 @@
 application:
   host: pennbook.app
-  secrets: # injected by GitHub actions
-    jwtSecret: null
-    uuidNamespace: null
-    dockerConfigJson: null
-    cloudflareApiKey: null
-    cloudflareApiEmail: null
-    traefikAdminCreds: null
-    awsAccessKeyId: null
-    awsSecretAccessKey: null
 
 recommendArticlesJob:
   schedule: "*/5 * * * *" # "0 3 * * *"

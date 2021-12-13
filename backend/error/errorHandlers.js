@@ -4,13 +4,27 @@
  */
 
 import { BaseError } from './errors.js';
+import { prod } from '../config/dotenv.js';
+import * as Sentry from '@sentry/node';
+import '@sentry/tracing';
+
+if (prod) {
+  Sentry.init({
+    dsn: process.env.SENTRY_URL,
+    tracesSampleRate: 1.0,
+  });
+}
 
 /**
  * Log the given error appropriately, depending on environment.
  * @param {Object} err - The error object to log
  */
 export function logError(err) {
-  console.error(err);
+  if (prod) {
+    Sentry.captureException(err);
+  } else {
+    console.error(err);
+  }
 }
 
 /**

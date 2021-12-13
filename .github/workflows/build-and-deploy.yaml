@@ -96,6 +96,7 @@ jobs:
           --set application.secrets.cloudflareApiKey=${{ secrets.CLOUDFLARE_API_KEY }},application.secrets.cloudflareApiEmail=${{ secrets.CLOUDFLARE_API_EMAIL }}
           --set application.secrets.traefikAdminCreds=${{ secrets.TRAEFIK_ADMIN_CREDS }}
           --set application.secrets.awsAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }},application.secrets.awsSecretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          --set application.secrets.sentryUrl=${{ secrets.SENTRY_URL }}
           --set backend.tag=${{ github.sha }}
 
           kubectl config set-context --current --namespace=traefik
