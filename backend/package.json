@@ -8,6 +8,8 @@
     "test": "mocha"
   },
   "dependencies": {
+    "@sentry/node": "^6.16.1",
+    "@sentry/tracing": "^6.16.1",
     "async": "*",
     "aws-sdk": "^2.1043.0",
     "bcrypt": "^5.0.1",
