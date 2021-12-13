@@ -8,5 +8,5 @@ appVersion: "1.16.0"
 
 dependencies:
   - name: grafana
-    version: "5.1.4"
+    version: "5.5.7"
     repository: "https://charts.helm.sh/stable"
