@@ -7,7 +7,6 @@ import { stemmer } from 'stemmer';
 import sw from 'stopword';
 import { BadRequest } from '../error/errors.js';
 import AWS from 'aws-sdk';
-import linebyline from 'linebyline';
 import { Article, ArticleKeyword } from '../models/News.js';
 import { v5 as uuidv5 } from 'uuid';
 import { prod } from '../config/dotenv.js';
@@ -46,47 +45,44 @@ export function turnTextToKeywords(text, throwError) {
  * @return {Object} the parsed and cleaned article
  */
 export function parseAndCleanArticle(article) {
-  const articleOb = JSON.parse(article);
+  let articleOb;
+  try {
+    articleOb = JSON.parse(article);
+  } catch {
+    console.log('e');
+    return null;
+  }
   const date = new Date(articleOb.date);
   date.setFullYear(date.getFullYear() + 4);
   articleOb.date = date;
   articleOb.shortDescription = articleOb.short_description;
   delete articleOb.short_description;
   articleOb.articleUUID = date.toISOString() + uuidv5(articleOb.link, process.env.UUID_NAMESPACE);
+  if (articleOb.shortDescription === '' || articleOb.authors === '' || articleOb.headling === '') {
+    console.log('e');
+    return null; // filter out missing data
+  }
   return articleOb;
 }
 
 /**
  * Loads new articles into DynamoDB
  */
-export function loadNews() {
-  let batch = [];
-  const uploadArticleBatch = () => {
-    batch = batch.filter((a) =>
-      a.authors !== '' && a.shortDescription !== '' && a.headline !== '',
-    ); // TODO: fix
-    Article.create(batch);
-    ArticleKeyword.create(batch.flatMap((article) =>
-      turnTextToKeywords(article.headline).map(
-          (keyword) => ({ keyword, articleUUID: article.articleUUID }),
-      )));
-    batch = [];
-  };
+export async function loadNews() {
+  console.log('Loading news...');
   const s3 = new AWS.S3();
-  const lineReader = linebyline(s3.getObject(
+  const res = await s3.getObject(
       { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
-  ).createReadStream());
-  lineReader.on('line', function(line) {
-    const article = parseAndCleanArticle(line);
-    if (article.date > new Date()) {
-      if (batch.length) {
-        uploadArticleBatch(batch);
-      }
-      return;
-    }
-    batch.push(article);
-    if (batch.length === 20) {
-      uploadArticleBatch(batch);
-    }
-  });
+  ).promise();
+  const articles = res.Body.toString('utf-8').split('\\r?\\n').map(
+      (a) => parseAndCleanArticle(a),
+  ).filter((a) => a).filter((a) => a.date <= new Date());
+
+  await Article.create(articles);
+
+  await ArticleKeyword.create(articles.flatMap((a) =>
+    turnTextToKeywords(a.headline).map(
+        (keyword) => ({ keyword, articleUUID: a.articleUUID }),
+    )));
+  console.log('Done loading news.');
 }

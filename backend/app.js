@@ -1,7 +1,6 @@
 import './config/dotenv.js';
 import { logErrorMiddleware, returnError } from './error/errorHandlers.js';
 import './models/connect.js';
-import { loadAffiliations } from './jobs/load-affiliations.js';
 import express from 'express';
 import api from './routes/api.js';
 
@@ -15,9 +14,6 @@ app.use('/api', api);
 // Setup error handling middleware
 app.use(logErrorMiddleware);
 app.use(returnError);
-
-// Load affiliations
-loadAffiliations();
 
 // Run the server
 const server = app.listen(process.env.BACKEND_PORT);

@@ -33,7 +33,7 @@ router.get('/news/categories', routeCache.cacheSeconds(60 * 60), async function(
 router.get('/news/articles', userAuthRequired, async function(req, res) {
   let keywords;
   try {
-    keywords = turnTextToKeywords(req.query.q || '');
+    keywords = turnTextToKeywords(req.query.q || '', true);
   } catch (err) {
     if (err instanceof BadRequest) {
       throw new BadRequest(
