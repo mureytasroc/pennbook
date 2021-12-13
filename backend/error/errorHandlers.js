@@ -20,7 +20,7 @@ if (prod) {
  * @param {Object} err - The error object to log
  */
 export function logError(err) {
-  if (prod) {
+  if (prod && (!isOperationalError(err) || err.statusCode >= 500)) {
     Sentry.captureException(err);
   } else {
     console.error(err);

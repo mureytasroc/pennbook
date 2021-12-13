@@ -138,8 +138,18 @@ jobs:
           --set application.secrets.jwtSecret=${{ secrets.JWT_SECRET }},application.secrets.uuidNamespace=${{ secrets.UUID_NAMESPACE }}
           --set application.secrets.dockerConfigJson=${{ secrets.DOCKER_CONFIG_JSON }}
           --set application.secrets.awsAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }},application.secrets.awsSecretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          --set application.secrets.grafanaAdminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
           --set application.secrets.sentryUrl=${{ secrets.SENTRY_URL }}
           --set backend.tag=${{ github.sha }},frontend.tag=${{ github.sha }}
+
+          helm upgrade --install prometheus prometheus
+          --repo https://charts.helm.sh/stable
+          --namespace monitoring --create-namespace
+          --version=11.2.3
+
+          helm upgrade --install grafana grafana
+          --repo https://charts.helm.sh/stable
+          --version=5.1.4
 
           helm upgrade --install ingress-nginx ingress-nginx
           --repo https://kubernetes.github.io/ingress-nginx

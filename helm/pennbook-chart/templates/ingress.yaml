@@ -5,6 +5,11 @@ metadata:
   name: {{ .Release.Name }}-api-ingress
 spec:
   ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: {{ .Release.Name }}-frontend
+      port:
+        number: {{ .Values.frontend.port }}
   rules:
     - host: {{ .Values.application.host | quote }}
       http:
@@ -16,13 +21,6 @@ spec:
                 name: {{ .Release.Name }}-backend
                 port:
                   number: {{ .Values.backend.port }}
-          - path: "/"
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Release.Name }}-frontend
-                port:
-                  number: {{ .Values.frontend.port }}
   tls:
     - hosts:
         - {{ .Values.application.host }}

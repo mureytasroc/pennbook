@@ -25,5 +25,5 @@ spec:
                                     name: {{ .Release.Name }}-secret-tokens
                                     key: uuid-namespace
                     imagePullSecrets:
-                        - name: dockerconfigjson-github-com
+                        - name: {{ .Release.Name }}-dockerconfigjson-github-com
                     restartPolicy: Never
