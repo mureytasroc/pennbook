@@ -5,19 +5,15 @@ import {
   createComment, getCommentsOnPost,
 } from '../models/Post.js';
 import { StatusCodes } from 'http-status-codes';
+import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 
 const router = new express.Router();
 
-// router.use(userAuthRequired.unless({
-//  path: ['/api/users/:username/wall', '/api/users/:username/home'],
-// }));
-
-// TODO: ADD AUTH
 
 /**
  * Add post to wall.
  */
-router.post('/users/:username/wall', async function(req, res, next) {
+router.post('/users/:username/wall', userAuthRequired, async function(req, res, next) {
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.params.username) {
@@ -35,7 +31,7 @@ router.post('/users/:username/wall', async function(req, res, next) {
 /**
  * Get posts from wall.
  */
-router.get('/users/:username/wall', async function(req, res, next) {
+router.get('/users/:username/wall', userAuthRequired, async function(req, res, next) {
   try {
     const posts = await getPostsOnWall(req.params.username);
     res.status(StatusCodes.OK).json(posts);
@@ -48,7 +44,7 @@ router.get('/users/:username/wall', async function(req, res, next) {
 /**
  * Get home page posts.
  */
-router.get('/users/:username/home', async function(req, res, next) {
+router.get('/users/:username/home', userAuthAndPathRequired, async function(req, res, next) {
   try {
     const posts = await getPostsOnHomePage(req.params.username);
     res.status(StatusCodes.OK).json(posts);
@@ -61,7 +57,7 @@ router.get('/users/:username/home', async function(req, res, next) {
 /**
  * Post comment.
  */
-router.post('/users/:username/wall/:postUUID/comments', async function(req, res, next) {
+router.post('/users/:username/wall/:postUUID/comments', userAuthRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.params.username) {
@@ -79,7 +75,7 @@ router.post('/users/:username/wall/:postUUID/comments', async function(req, res,
 /**
  * Get comments.
  */
-router.get('/users/:username/wall/:postUUID/comments', async function(req, res, next) {
+router.get('/users/:username/wall/:postUUID/comments', userAuthRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.params.username) {
@@ -92,5 +88,6 @@ router.get('/users/:username/wall/:postUUID/comments', async function(req, res, 
     next(err);
   }
 });
+
 
 export default router;

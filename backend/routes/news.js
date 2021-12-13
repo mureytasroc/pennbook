@@ -6,7 +6,7 @@ import { turnTextToKeywords } from '../jobs/load-news.js';
 import {
   articleSearch, getCategories, likeArticle, recommendArticles, unlikeArticle,
 } from '../models/News.js';
-import { userAuthRequired } from './auth.js';
+import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 
 
 const MAX_ARTICLE_QUERY_LIMIT = 100;
@@ -53,7 +53,7 @@ router.get('/news/articles', userAuthRequired, async function(req, res) {
 /**
  * News recommendations.
  */
-router.get('/users/:username/recommended-articles', userAuthRequired, async function(req, res) {
+router.get('/users/:username/recommended-articles', userAuthAndPathRequired, async function(req, res) { // eslint-disable-line max-len
   const page = req.query.page || 'current';
   const limit = req.query.limit ? parseInt(req.query.limit) : 10;
   if (!limit || limit <= 0 || limit > MAX_ARTICLE_QUERY_LIMIT) {
@@ -69,7 +69,7 @@ router.get('/users/:username/recommended-articles', userAuthRequired, async func
 /**
  * Like article.
  */
-router.post('/users/:username/liked-articles/:articleUUID', async function(req, res) {
+router.post('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, async function(req, res) { // eslint-disable-line max-len
   await likeArticle(req.user.username, req.params.articleUUID);
   res.sendStatus(StatusCodes.CREATED);
 });
@@ -78,7 +78,7 @@ router.post('/users/:username/liked-articles/:articleUUID', async function(req, 
 /**
  * Unlike article.
  */
-router.delete('/users/:username/liked-articles/:articleUUID', async function(req, res) {
+router.delete('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, async function(req, res) { // eslint-disable-line max-len
   await unlikeArticle(req.user.username, req.params.articleUUID);
   res.sendStatus(StatusCodes.NO_CONTENT);
 });

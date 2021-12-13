@@ -1,9 +1,7 @@
 import express from 'express';
-import { userAuthAndPathRequired } from './auth.js';
+import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 
 const router = new express.Router();
-// router.use(userAuthRequired.unless({ path: ['/api/users/:username/chats/'] }));
-
 
 // TODO: setup socket.io?
 
@@ -19,7 +17,7 @@ router.get('/users/:username/chats', userAuthAndPathRequired, async function(req
 /**
  * Start chat.
  */
-router.post('/chats', async function(req, res) {
+router.post('/chats', userAuthRequired, async function(req, res) {
   // TODO
 });
 
@@ -27,7 +25,7 @@ router.post('/chats', async function(req, res) {
 /**
  * Delete chat
  */
-router.delete('/chats/:chatUUID', async function(req, res) {
+router.delete('/chats/:chatUUID', userAuthRequired, async function(req, res) {
   // TODO
 });
 
@@ -35,7 +33,7 @@ router.delete('/chats/:chatUUID', async function(req, res) {
 /**
  * Chat history.
  */
-router.get('/chats/:chatUUID', async function(req, res) {
+router.get('/chats/:chatUUID', userAuthRequired, async function(req, res) {
   // TODO
 });
 
@@ -43,7 +41,7 @@ router.get('/chats/:chatUUID', async function(req, res) {
 /**
  * Update chat details.
  */
-router.put('/chats/:chatUUID', async function(req, res) {
+router.put('/chats/:chatUUID', userAuthRequired, async function(req, res) {
   // TODO
 });
 

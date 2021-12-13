@@ -9,10 +9,9 @@ import { createUser, getAffiliations, getUser, updateUser } from '../models/User
 import { assertString, cannotUpdate } from '../util/utils.js';
 import { generateJwt } from './auth.js';
 import { createFriendship, getFriendship, deleteFriendship } from '../models/Friendship.js';
+import { userAuthAndPathRequired } from './auth.js';
 
 const router = new express.Router();
-
-// router.use(userAuthAndPathRequired.unless({ path: ['/api/users', '/api/users/affiliations'] }));
 
 
 /**
@@ -54,10 +53,11 @@ const limitFailedLoginsByIP = new RateLimiterRedis({
   blockDuration: 60 * 60 * 24,
 });
 
+
 /**
  * Login.
  */
-router.post('/users/:username/login', async function(req, res) {
+router.post('/users/:username/login', userAuthAndPathRequired, async function(req, res) {
   const failedLoginLimit = await limitFailedLoginsByIP.get(req.ip);
   if (failedLoginLimit.remainingPoints <= 0) {
     throw new TooManyRequests('Too many failed login attempts from your IP.');
@@ -86,7 +86,7 @@ router.post('/users/:username/login', async function(req, res) {
 /**
  * Update user.
  */
-router.patch('/users/:username/profile', async function(req, res, next) {
+router.patch('/users/:username/profile', userAuthAndPathRequired, async function(req, res, next) {
   try {
     cannotUpdate(req.body, 'username');
     req.body.username = req.params.username;
@@ -111,7 +111,7 @@ router.get('/users', async function(req, res) {
 /**
  * Add friendship.
  */
-router.post('/users/:username/friends/:friendUsername', async function(req, res, next) {
+router.post('/users/:username/friends/:friendUsername', userAuthAndPathRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const friendship = await createFriendship(req.params.username, req.params.friendUsername);
     res.status(StatusCodes.CREATED).json(friendship);
@@ -123,7 +123,7 @@ router.post('/users/:username/friends/:friendUsername', async function(req, res,
 /**
  * Get friendship.
  */
-router.get('/users/:username/friends/:friendUsername', async function(req, res, next) {
+router.get('/users/:username/friends/:friendUsername', userAuthAndPathRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const friendship = await getFriendship(req.params.username, req.params.friendUsername);
     res.status(StatusCodes.OK).json(friendship);
@@ -136,7 +136,7 @@ router.get('/users/:username/friends/:friendUsername', async function(req, res, 
 /**
  * Remove friendship. Only need to call this for one direction, code will handle other direction
  */
-router.delete('/users/:username/friends/:friendUsername', async function(req, res, next) {
+router.delete('/users/:username/friends/:friendUsername', userAuthAndPathRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     deleteFriendship(req.params.username, req.params.friendUsername);
   } catch (err) {
