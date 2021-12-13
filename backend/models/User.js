@@ -45,8 +45,8 @@ export const UserAutocomplete = dynamo.define('UserAutocomplete', {
 /**
  * @return {Set} a set of valid affiliations
  */
-const getAffiliationsUnmemoized = async function () {
-  const callback = function (resp) {
+const getAffiliationsUnmemoized = async function() {
+  const callback = function(resp) {
     return _.map(resp.Items, (x) => unmarshallAttributes(x).affiliation);
   };
   const affiliationsSet = new Set();
@@ -61,7 +61,7 @@ const isValidUsername = /^[a-zA-Z0-9-_]+$/;
 /**
  * Validates a user profile provided by a create or update user request.
  * @param {Object} profile the request body of a create or update user request
- * @param {Object} keysToExclude (optional) the keys to exclude from validation
+ * @param {Object} keysToCheck (optional) the keys to check during validation
  * @return {Object} an object containing only valid profile fields from profile
  */export async function validateUserProfile(profile, keysToCheck) {
   const {
@@ -101,7 +101,7 @@ const isValidUsername = /^[a-zA-Z0-9-_]+$/;
       throw new BadRequest('Password does not meet strength requirements.');
     }
     validatedProfile.passwordHash = await bcrypt.hash(password,
-      parseInt(process.env.PASSWORD_SALT_ROUNDS));
+        parseInt(process.env.PASSWORD_SALT_ROUNDS));
   }
 
   if (!keysToCheck || 'affiliation' in keysToCheck) {
@@ -156,18 +156,18 @@ export async function createUser(profile) {
  * @return {Object} the new profile object from the database
  */
 export async function updateUser(profile) {
-  delete profile.firstName
-  delete profile.lastName
+  delete profile.firstName;
+  delete profile.lastName;
   profile = await validateUserProfile(profile, profile);
   const username = profile.username;
   try {
     const newProfile = await User.update(
-      profile,
-      {
-        ConditionExpression: `username = :uname`,
-        ExpressionAttributeValues: { ':uname': username },
-        ReturnValues: 'ALL_NEW',
-      },
+        profile,
+        {
+          ConditionExpression: `username = :uname`,
+          ExpressionAttributeValues: { ':uname': username },
+          ReturnValues: 'ALL_NEW',
+        },
     );
     return unmarshallAttributes(newProfile);
   } catch (err) {
@@ -186,7 +186,7 @@ export async function updateUser(profile) {
 export async function getUser(username) {
   try {
     const profile = await User.get(username, { ConsistentRead: true });
-    return unmarshallAttributes(profile)
+    return unmarshallAttributes(profile);
   } catch (err) {
     if (err.code === 'ResourceNotFoundException') {
       throw new NotFound(`The username ${username} was not found.`);

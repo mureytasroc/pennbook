@@ -2,11 +2,11 @@ import { BadRequest, OperationalServerError, UnprocessableEntity } from '../erro
 
 /**
  * Converts a dynamodb returned object to a JSON object
- * @param {*} dynamoObj 
- * @returns {Object} JSON-ified dynamodb object
+ * @param {*} dynamoObj
+ * @return {Object} JSON-ified dynamodb object
  */
 export function unmarshallAttributes(dynamoObj) {
-  return JSON.parse(JSON.stringify(dynamoObj))
+  return JSON.parse(JSON.stringify(dynamoObj));
 }
 
 /**
@@ -57,8 +57,8 @@ export function cannotUpdate(object, field) {
  * @return {*}
  */
 export function executeAsync(q, callback) {
-  return new Promise(function (resolve, reject) {
-    q.exec(function (err, resp) {
+  return new Promise(function(resolve, reject) {
+    q.exec(function(err, resp) {
       if (err) {
         reject(err);
       }

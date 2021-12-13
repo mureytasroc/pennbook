@@ -1,12 +1,12 @@
 import dynamo from 'dynamodb';
 import Joi from 'joi';
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 import { getUser } from './User.js';
-import zlib from 'zlib'
-import _ from 'lodash'
+import zlib from 'zlib';
+import _ from 'lodash';
 import { executeAsync, unmarshallAttributes } from '../util/utils.js';
 import { BadRequest } from '../error/errors.js';
-import { getFriendship, getFriendships } from './Friendship.js';
+import { getFriendships } from './Friendship.js';
 
 export const Post = dynamo.define('Post', {
   hashKey: 'username',
@@ -42,57 +42,57 @@ export const Comment = dynamo.define('Comment', {
 });
 
 
-
 /**
  * Creates a Post item in DynamoDB from a create post request.
- * @param {Object} post the request body of the create post request
+ * @param {Object} postObj the request body of the create post request
+ * @param {Object} creatorUname the creator's username
+ * @param {Object} receiveUname the receiver's username
  * @return {Object} the new post object from the database
  */
 export async function createPost(postObj, creatorUname, receiveUname) {
-  const post = {}
+  const post = {};
   const [receiver, creator] = await Promise.all([getUser(receiveUname), getUser(creatorUname)]);
-  post.postUUID = new Date().toISOString() + "#" + uuidv4()
-  post.username = receiver.username
-  post.firstName = receiver.firstName
-  post.lastName = receiver.lastName
-  post.creatorUsername = creator.username
-  post.creatorFirstName = creator.firstName
-  post.creatorLastName = creator.lastName
-  post.type = postObj.type
-  post.content = zlib.gzipSync(postObj.content)
+  post.postUUID = new Date().toISOString() + '#' + uuidv4();
+  post.username = receiver.username;
+  post.firstName = receiver.firstName;
+  post.lastName = receiver.lastName;
+  post.creatorUsername = creator.username;
+  post.creatorFirstName = creator.firstName;
+  post.creatorLastName = creator.lastName;
+  post.type = postObj.type;
+  post.content = zlib.gzipSync(postObj.content);
 
 
-  if (post.type !== "Status Update" && post.type !== "Post") {
-    throw new BadRequest("Post type must be one of Post, Status Update")
+  if (post.type !== 'Status Update' && post.type !== 'Post') {
+    throw new BadRequest('Post type must be one of Post, Status Update');
   }
 
   try {
-    var created_post = await Post.create(post, { overwrite: false });
+    const createdPost = await Post.create(post, { overwrite: false });
+    return createdPost;
   } catch (err) {
     throw err;
   }
-  return created_post
 }
 
 /**
  * Get posts from wall corresponding to param wallUsername
- * @param {*} wallUsername 
- * @returns {*}
+ * @param {*} wallUsername Username of person whose wall to post on
+ * @return {*} posts from that wall
  */
 export async function getPostsOnWall(wallUsername) {
-
   try {
-    function uncompressData(obj) {
-      obj.content = zlib.gunzipSync(Buffer.from(obj.content.data)).toString()
-      return obj
-    }
-
-    const callback = function (resp) {
-      var mapped = _.map(resp.Items, (x) => unmarshallAttributes(x));
-      return _.map(mapped, (x) => uncompressData(x))
+    const uncompressData = function(obj) {
+      obj.content = zlib.gunzipSync(Buffer.from(obj.content.data)).toString();
+      return obj;
     };
-    var posts = await executeAsync(Post.query(wallUsername), callback)
-    return posts
+
+    const callback = function(resp) {
+      const mapped = _.map(resp.Items, (x) => unmarshallAttributes(x));
+      return _.map(mapped, (x) => uncompressData(x));
+    };
+    const posts = await executeAsync(Post.query(wallUsername), callback);
+    return posts;
   } catch (err) {
     throw err;
   }
@@ -100,95 +100,94 @@ export async function getPostsOnWall(wallUsername) {
 
 /**
  * Get home page posts (wall, friends' walls, friendships)
- * @param {*} wallUsername 
- * @returns {*}
+ * @param {*} username username whose home page to fetch
+ * @return {*} all posts corresponding to the home page
  */
 export async function getPostsOnHomePage(username) {
-
   try {
-    var self = await getUser(username)
-    var postsOnWall = await getPostsOnWall(username)
-    var postsOnFriends = []
-    var friendships = await getFriendships(username)
-    friendships = _.map(friendships, item => {
-      return { ...item, type: 'friendship', postUUID: item.friendshipUUID }
-    }
-    )
-    for (let item of friendships) {
-      postsOnFriends.push(...(await getPostsOnWall(item.friendUsername)))
+    const self = await getUser(username);
+    const postsOnWall = await getPostsOnWall(username);
+    const postsOnFriends = [];
+    let friendships = await getFriendships(username);
+    friendships = _.map(friendships, (item) => {
+      return { ...item, type: 'friendship', postUUID: item.friendshipUUID };
+    },
+    );
+    for (const item of friendships) {
+      postsOnFriends.push(...(await getPostsOnWall(item.friendUsername)));
     }
 
     // Display results in order of most recent to oldest
-    var allPosts = [...postsOnWall, ...postsOnFriends, ...friendships]
-    allPosts.sort((a, b) => a.postUUID < b.postUUID ? 1 : a.postUUID > b.postUUID ? -1 : 0)
+    const allPosts = [...postsOnWall, ...postsOnFriends, ...friendships];
+    allPosts.sort((a, b) => a.postUUID < b.postUUID ? 1 : a.postUUID > b.postUUID ? -1 : 0);
 
     /**
      * Format data to make it easier for the frontend to extract attributes
-     * @param {*} item 
-     * @returns {Object} formatted object
+     * @param {*} item
+     * @return {Object} formatted object
      */
     function formatData(item) {
-      if (item.type == "friendship") {
-        delete item.postUUID
-        item.firstName = self.firstName
-        item.lastName = self.lastName
+      if (item.type == 'friendship') {
+        delete item.postUUID;
+        item.firstName = self.firstName;
+        item.lastName = self.lastName;
       }
-      return item
+      return item;
     }
 
-    return _.map(allPosts, formatData)
+    return _.map(allPosts, formatData);
   } catch (err) {
-    throw err
+    throw err;
   }
-
 }
 
 /**
  * Creates a Comment item in DynamoDB from a create comment request.
- * @param {Object} comment the request body of the create comment request
+ * @param {Object} body the request body of the create comment request
+ * @param {Object} postUUID the UUID of the post to comment on
+ * @param {Object} creatorUname the comment creator's username
  * @return {Object} the new comment object from the database
  */
 export async function createComment(body, postUUID, creatorUname) {
-  const creator = await getUser(creatorUname)
-  var postUUID = decodeURIComponent(postUUID)
-  var creationTime = new Date().toISOString()
+  const creator = await getUser(creatorUname);
+  const postUUIDparsed = decodeURIComponent(postUUID);
+  const creationTime = new Date().toISOString();
   const comment = {
-    postUUID: postUUID,
+    postUUID: postUUIDparsed,
     creatorUsername: creator.username,
     creatorFirstName: creator.firstName,
     creatorLastName: creator.lastName,
     timestamp: creationTime,
-    commentUUID: creationTime + "#" + uuidv4(),
-    content: zlib.gzipSync(body.content)
-  }
+    commentUUID: creationTime + '#' + uuidv4(),
+    content: zlib.gzipSync(body.content),
+  };
 
   try {
-    var created_post = await Comment.create(comment, { overwrite: false });
+    const createdComment = await Comment.create(comment, { overwrite: false });
+    return createdComment;
   } catch (err) {
     throw err;
   }
-  return created_post
 }
 
 /**
  * Get comments on post corresponding to param postUUID
  * @param {*} postUUID
- * @returns {*}
+ * @return {*}
  */
 export async function getCommentsOnPost(postUUID) {
-
   try {
-    function uncompressData(obj) {
-      obj.content = zlib.gunzipSync(Buffer.from(obj.content.data)).toString()
-      return obj
-    }
-
-    const callback = function (resp) {
-      var mapped = _.map(resp.Items, (x) => unmarshallAttributes(x));
-      return _.map(mapped, (x) => uncompressData(x))
+    const uncompressData = function(obj) {
+      obj.content = zlib.gunzipSync(Buffer.from(obj.content.data)).toString();
+      return obj;
     };
-    var comments = await executeAsync(Comment.query(postUUID), callback)
-    return comments
+
+    const callback = function(resp) {
+      const mapped = _.map(resp.Items, (x) => unmarshallAttributes(x));
+      return _.map(mapped, (x) => uncompressData(x));
+    };
+    const comments = await executeAsync(Comment.query(postUUID), callback);
+    return comments;
   } catch (err) {
     throw err;
   }
