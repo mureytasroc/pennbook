@@ -138,7 +138,6 @@ jobs:
           --set application.secrets.jwtSecret=${{ secrets.JWT_SECRET }},application.secrets.uuidNamespace=${{ secrets.UUID_NAMESPACE }}
           --set application.secrets.dockerConfigJson=${{ secrets.DOCKER_CONFIG_JSON }}
           --set application.secrets.awsAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }},application.secrets.awsSecretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          --set application.secrets.tlsCrt=${{ secrets.TLS_CRT }},application.secrets.tlsKey=${{ secrets.TLS_KEY }}
           --set application.secrets.sentryUrl=${{ secrets.SENTRY_URL }}
           --set backend.tag=${{ github.sha }}
 
