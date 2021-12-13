@@ -13,6 +13,7 @@ jobs:
           cache: "npm"
       - run: npm install
       - run: npm run lint
+
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -27,6 +28,7 @@ jobs:
           cache: "npm"
       - run: npm install
       - run: npm test
+
   build:
     name: Build and publish backend
     runs-on: ubuntu-latest
@@ -57,3 +59,41 @@ jobs:
           context: backend
           push: ${{ github.ref == 'refs/heads/master' }}
           tags: ghcr.io/mureytasroc/pennbook/backend:${{ github.sha }}
+
+  deploy:
+    name: Deploy latest version of code
+    if: github.ref == 'refs/heads/master'
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy code
+        run: >-
+          cd /k8s
+
+          aws eks --region us-east-1 update-kubeconfig --name pennbook-cluster
+
+          kubectl config set-context --current --namespace=default
+
+          helm upgrade --install --atomic pennbook ./pennbook-chart
+          --set application.secrets.jwtSecret=${{ secrets.JWT_SECRET }},application.secrets.uuidNamespace=${{ secrets.UUID_NAMESPACE }}
+          --set application.secrets.dockerConfigJson=${{ secrets.DOCKER_CONFIG_JSON }}
+          --set application.secrets.cloudflareApiKey=${{ secrets.CLOUDFLARE_API_KEY }},application.secrets.cloudflareApiEmail=${{ secrets.CLOUDFLARE_API_EMAIL }}
+          --set application.secrets.traefikAdminCreds=${{ secrets.TRAEFIK_ADMIN_CREDS }}
+          --set application.secrets.awsAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }},application.secrets.awsSecretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          --set backend.tag=${{ github.sha }}
+
+          kubectl config set-context --current --namespace=traefik
+
+          helm upgrade --install --atomic traefik traefik --namespace=traefik --repo=https://helm.traefik.io/traefik --values=traefik-chart-values.yaml

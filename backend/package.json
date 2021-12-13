@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "start": "node app.js",
-    "recommend-articles": "run-func jobs/recommend-articles.js recommendArticles",
+    "recommend-articles": "node ./jobs/recommend-articles.js",
     "test": "mocha"
   },
   "dependencies": {
@@ -31,7 +31,6 @@
     "rate-limiter-flexible": "^2.3.6",
     "redis": "^4.0.0",
     "route-cache": "^0.4.5",
-    "run-func": "^1.0.5",
     "stemmer": "^2.0.0",
     "stopword": "^1.0.11",
     "uuid": "^8.3.2"

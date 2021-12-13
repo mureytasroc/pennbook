@@ -1,9 +1,12 @@
-import { loadNews } from './load-news.js';
+// import { loadNews } from './load-news.js';
 
 /**
  * Loads news and then runs the livy job to recommend articles.
  */
 export function recommendArticles() {
-  loadNews();
+  // loadNews();
   // TODO: start Livy job
+  console.log('Recommended.'); // TODO: remove
 }
+
+recommendArticles();

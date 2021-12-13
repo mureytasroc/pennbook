@@ -1,9 +1,10 @@
-apiVersion: batch/v1beta1
+---
+apiVersion: batch/v1
 kind: CronJob
 metadata:
     name: {{ .Release.Name }}-recommend-articles
 spec:
-    schedule: "{{ .Values.recommend-articles-job.schedule }}"
+    schedule: "{{ .Values.recommendArticlesJob.schedule }}"
     successfulJobsHistoryLimit: 1
     failedJobsHistoryLimit: 1
     jobTemplate:

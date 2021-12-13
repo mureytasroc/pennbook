@@ -10,6 +10,7 @@ import AWS from 'aws-sdk';
 import linebyline from 'linebyline';
 import { Article, ArticleKeyword } from '../models/News.js';
 import { v5 as uuidv5 } from 'uuid';
+import { prod } from '../config/dotenv.js';
 
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
@@ -68,7 +69,7 @@ export function loadNews() {
   };
   const s3 = new AWS.S3();
   const lineReader = linebyline(s3.getObject(
-      { Bucket: 'pennbook', Key: 'news.json' },
+      { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
   ).createReadStream());
   lineReader.on('line', function(line) {
     const article = parseAndCleanArticle(line);

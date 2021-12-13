@@ -1,0 +1,22 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}-ingress
+  namespace: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.application.host }}`)
+      services:
+        - kind: Service
+          name: {{ .Release.Name }}-backend
+          namespace: default
+          passHostHeader: true
+          port: {{ .Values.backend.port }}
+          responseForwarding:
+            flushInterval: 1ms
+          scheme: https
+          strategy: RoundRobin

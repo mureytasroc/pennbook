@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,7 +24,7 @@ spec:
                       - name: REDIS_URL
                         value: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.port }}/0"
                       - name: BACKEND_PORT
-                        value: {{ .Values.backend.port }}
+                        value: "{{ .Values.backend.port }}"
                       - name: JWT_SECRET
                         valueFrom:
                           secretKeyRef:
@@ -34,6 +35,18 @@ spec:
                           secretKeyRef:
                             name: {{ .Release.Name }}-secret-tokens
                             key: uuid-namespace
+                      - name: AWS_REGION
+                        value: "us-east-1"
+                      - name: AWS_ACCESS_KEY_ID
+                        valueFrom:
+                          secretKeyRef:
+                            name: {{ .Release.Name }}-secret-tokens
+                            key: aws-access-key-id
+                      - name: AWS_SECRET_ACCESS_KEY
+                        valueFrom:
+                          secretKeyRef:
+                            name: {{ .Release.Name }}-secret-tokens
+                            key: aws-secret-access-key
             imagePullSecrets:
                 - name: dockerconfigjson-github-com
 ---

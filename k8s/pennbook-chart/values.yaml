@@ -1,0 +1,25 @@
+application:
+  host: pennbook.app
+  secrets: # injected by GitHub actions
+    jwtSecret: null
+    uuidNamespace: null
+    dockerConfigJson: null
+    cloudflareApiKey: null
+    cloudflareApiEmail: null
+    traefikAdminCreds: null
+    awsAccessKeyId: null
+    awsSecretAccessKey: null
+
+recommendArticlesJob:
+  schedule: "* * * * *" # "0 3 * * *"
+
+redis:
+  image: redis
+  tag: "6.0"
+  port: 6379
+  replicas: 1
+
+backend:
+  image: ghcr.io/mureytasroc/pennbook/backend
+  port: 8000
+  replicas: 1
