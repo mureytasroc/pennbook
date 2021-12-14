@@ -14,6 +14,7 @@
     "aws-sdk": "^2.1043.0",
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
     "dotenv-defaults": "^3.0.0",
     "dotenv-expand": "^5.1.0",
     "dynamodb": "^1.3.0",
