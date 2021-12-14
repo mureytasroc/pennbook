@@ -24,6 +24,11 @@ spec:
                                   secretKeyRef:
                                     name: {{ .Release.Name }}-secret-tokens
                                     key: uuid-namespace
+                              - name: SENTRY_DSN
+                                valueFrom:
+                                  secretKeyRef:
+                                    name: {{ .Release.Name }}-secret-tokens
+                                    key: sentry-url
                               - name: AWS_REGION
                                 value: "us-east-1"
                               - name: AWS_ACCESS_KEY_ID

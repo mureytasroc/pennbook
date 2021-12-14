@@ -3,18 +3,8 @@
  * and sets up proper error handling, following https://sematext.com/blog/node-js-error-handling/.
  */
 
-import { prod } from '../config/dotenv.js';
-import * as Sentry from '@sentry/node';
-import '@sentry/tracing';
 import { BaseError } from './errors.js';
 
-// Connect to Sentry (if Prod)
-if (prod) {
-  Sentry.init({
-    dsn: process.env.SENTRY_URL,
-    tracesSampleRate: 1.0,
-  });
-}
 
 /**
  * A helper function to determine if the given error is an operational error.

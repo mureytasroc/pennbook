@@ -6,13 +6,10 @@ import api from './routes/api.js';
 import { prod } from './config/dotenv.js';
 import * as Sentry from '@sentry/node';
 
-setTimeout(() => {
-  try {
-    throw new Error('test');
-  } catch (e) {
-    Sentry.captureException(e);
-  }
-}, 10000);
+// Connect to Sentry (if Prod)
+if (prod) {
+  Sentry.init();
+}
 
 // Setup server
 const app = express();
