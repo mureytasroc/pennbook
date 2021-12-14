@@ -69,7 +69,7 @@
               <q-btn @click="visitWall(friend.username)" flat>
                 <q-item-section avatar>
                 <q-avatar color="primary" text-color="white">
-                    {{ friend.firstName.charAt(0).toUpperCase() }}
+                    {{ friend.firstName.charAt(0).toUpperCase() + friend.lastName.charAt(0).toUpperCase()}}
                 </q-avatar>
                 </q-item-section>
               </q-btn>
@@ -258,6 +258,8 @@ export default {
 
     showChat(otherUsername) {
       //TODO: derive chatUUID from current user + other username
+      //when calling startChat, chatName should be alphabetically sorted usernames separated by space (so can compare and see if chat exists).
+
       this.$router.push("/chat/" + otherUsername);
     },
 

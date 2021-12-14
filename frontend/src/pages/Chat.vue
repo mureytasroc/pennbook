@@ -9,7 +9,7 @@
       :style="
         $q.platform.is.mobile
           ? 'height: 85vh; margin-top: 3.5vh'
-          : 'height: 88.5vh'
+          : 'height: 86.5vh'
       "
       class="shadow-3 rounded-borders container"
     >
@@ -39,18 +39,41 @@
 
             <!-- for regular chat -->
             <q-toolbar-title
-              v-if="this.chatMode == 'chat'"
-              style="text-align: center"
+              style="text-align: center;"
               :style="$q.platform.is.mobile ? 'font-size: 5vw' : ''"
             >
-              <!--{{
-                this.chatUser.nickname ||
-                this.chatUser.info.adjective +
-                  " " +
-                  (this.chatUser.info.avatar.body.charAt(0).toUpperCase() +
-                    this.chatUser.info.avatar.body.slice(1))-->
-              }}
+              {{users.join(' and ')}}'s Hangout
             </q-toolbar-title>
+
+            <q-btn-dropdown flat round dense icon="add" @click="showOnlineFriends" label="Member">
+                <q-list bordered separator>
+
+                  <q-item v-for="friend in getOnlineFriends()" :key="friend" clickable @click="sendInvite(friend.username)">
+
+                    <q-item-section avatar>
+                      <q-avatar color="primary" text-color="white">
+                          {{ friend.firstName.charAt(0).toUpperCase() + friend.lastName.charAt(0).toUpperCase()}}
+                      </q-avatar>
+                    </q-item-section>
+
+                     <q-item-section avatar>
+                      <q-btn
+                          round
+                          dense
+                          unelevated
+                          style="font-size: 6px !important; margin-left: 5px"
+                          color="light-green-5"
+                        />
+                      </q-item-section>
+
+                      <q-item-section>
+                      <q-item-label>{{ friend.firstName + " " + friend.lastName }}</q-item-label>
+                      </q-item-section>
+
+                  </q-item>
+
+                </q-list>
+            </q-btn-dropdown>
 
           </q-toolbar>
         </q-header>
@@ -137,10 +160,9 @@ export default {
       newMessage: "",
       buttonShow: false,
       userOrder: "",
-
       popupMode: "",
-
       name: "",
+      users: []
     };
   },
 
@@ -157,7 +179,6 @@ export default {
   },
 
   methods: {
-
 
     sendMessage() {
       if (this.newMessage.replace(/\s/g, "") != "") {
@@ -191,6 +212,31 @@ export default {
        this.$router.push('/friends')
     },
 
+    getOnlineFriends() {
+
+      //TODO: return array of online friends (call route)
+      return [
+        {
+          username: "pat-liu",
+          firstName: "pat",
+          lastName: "liu",
+          confirmed: true,
+          loggedIn: true,
+        },
+        {
+          username: "online-user",
+          firstName: "online",
+          lastName: "user",
+          confirmed: true,
+          loggedIn: true,
+        },
+      ];
+    },
+
+   sendInvite(username){
+      //invite user with username to same chatUUID
+    }
+
   },
 
   watch: {
@@ -216,7 +262,9 @@ export default {
     let currentPath = this.$route.fullPath;
     let subdomains = currentPath.split('/');
     let chatUUID = subdomains[subdomains.length-1]
+
     //TODO: set chatUUID field and load all messages (route call)
+    //get involved users and set users variable
   },
 
   beforeDestroy() {
