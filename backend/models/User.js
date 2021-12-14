@@ -132,6 +132,7 @@ const isValidUsername = /^[a-zA-Z0-9-_]+$/;
   return validatedProfile;
 }
 
+
 /**
  * Creates a User item in DynamoDB from a create user request.
  * @param {Object} profile the request body of the create user request
@@ -147,8 +148,10 @@ export async function createUser(profile) {
     }
     throw err;
   }
+  delete profile.passwordHash;
   return profile;
 }
+
 
 /**
  * Given a marshalled AWS profile object, unmarshals it and removes any
@@ -161,6 +164,7 @@ function unmarshallProfile(profile) {
   delete profile.passwordHash;
   return profile;
 }
+
 
 /**
  * Updates a User item in DynamoDB from an update user request.

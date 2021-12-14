@@ -55,6 +55,7 @@ export function parseAndCleanArticle(article) {
   date.setFullYear(date.getFullYear() + 4);
   articleOb.date = date;
   articleOb.shortDescription = articleOb.short_description;
+  articleOb.category = articleOb.category.toLowerCase();
   delete articleOb.short_description;
   articleOb.articleUUID = date.toISOString() + uuidv5(articleOb.link, process.env.UUID_NAMESPACE);
   return articleOb;
