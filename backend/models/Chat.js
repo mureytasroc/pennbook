@@ -3,6 +3,8 @@ import Joi from 'joi';
 import { NotFound } from '../error/errors.js';
 import { executeAsync, unmarshallAttributes } from '../util/utils.js';
 import { getUser } from './User.js';
+import { _ } from 'lodash';
+import { v4 as uuidv4 } from 'uuid';
 
 export const Chat = dynamo.define('Chat', {
   hashKey: 'username',
@@ -141,7 +143,12 @@ export async function getChatInstance(chatUUID, username) {
  */
 export async function createChatMessage(body) {
   try {
-    const chatHistoryItem = { chatUUID: body.chatUUID, timestamp: new Date().toISOString(), message: body.message, sender: body.sender };
+    const chatHistoryItem = {
+      chatUUID: body.chatUUID,
+      timestamp: new Date().toISOString(),
+      message: body.message,
+      sender: body.sender,
+    };
     const chatHistoryCreated = await ChatHistory.create(chatHistoryItem, { overwrite: false });
     return chatHistoryCreated;
   } catch (err) {

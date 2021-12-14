@@ -9,6 +9,7 @@ import { redisClient } from './models/connect.js';
 import * as Sentry from '@sentry/node';
 import { prod } from './config/dotenv.js';
 import cors from 'cors';
+import { getChatInstance, createChatMessage } from './models/Chat.js';
 
 
 if (prod) {
@@ -70,7 +71,10 @@ io.on('connection', (socket) => {
 
   socket.on('leave', async ({ username, uuid }) => {
     socket.leave(uuid);
-    io.to(uuid).emit('message', { user: 'server', message: `User with username ${username} left!` });
+    io.to(uuid).emit('message', {
+      user: 'server',
+      message: `User with username ${username} left!`,
+    });
     try {
       await leaveChat(username, uuid);
     } catch (err) {
@@ -82,12 +86,15 @@ io.on('connection', (socket) => {
     const rooms = socket.rooms;
     const user = await redisClient.get(socket.id);
     for (const room of rooms) {
-      io.to(room).emit('message', { user: 'server', message: `User with username ${user} disconnected!` });
+      io.to(room).emit('message', {
+        user: 'server',
+        message: `User with username ${user} disconnected!`,
+      });
     }
   });
 
   socket.on('disconnect', async () => {
-    const name = await redisClient.GETDEL(socket.id);
+    const name = await redisClient.GETDEL(socket.id); // eslint-disable-line new-cap
     name;
     // TODO: set online status of user corresponding 2 username to be false
   });

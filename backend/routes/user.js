@@ -8,7 +8,10 @@ import { redisClient } from '../models/connect.js';
 import { createUser, getAffiliations, getUser, updateUser } from '../models/User.js';
 import { assertString, cannotUpdate } from '../util/utils.js';
 import { generateJwt } from './auth.js';
-import { createFriendship, getFriendship, deleteFriendship, getFriendships } from '../models/Friendship.js';
+import {
+  createFriendship, getFriendship,
+  deleteFriendship, getFriendships,
+} from '../models/Friendship.js';
 import { userAuthAndPathRequired } from './auth.js';
 
 const router = new express.Router();

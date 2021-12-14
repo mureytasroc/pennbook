@@ -1,5 +1,8 @@
-import express, { response } from 'express';
-import { getChatHistory, getChatInstance, getChatsOfUser } from '../models/Chat.js';
+import express from 'express';
+import {
+  getChatHistory, getChatInstance, getChatsOfUser,
+  createChat, deleteChat, leaveChat,
+} from '../models/Chat.js';
 import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 import { StatusCodes } from 'http-status-codes';
 import { Forbidden } from '../error/errors.js';
@@ -22,7 +25,7 @@ router.get('/users/:username/chats', userAuthAndPathRequired, async function(req
 /**
  * Start chat.
  */
-router.post('/chats', userAuthRequired, async function(req, res) {
+router.post('/chats', userAuthRequired, async function(req, res, next) {
   try {
     const chat = await createChat(req.body);
     res.status(StatusCodes.OK).json(chat);
@@ -35,11 +38,11 @@ router.post('/chats', userAuthRequired, async function(req, res) {
 /**
  * Delete chat
  */
-router.delete('/chats/:chatUUID', userAuthRequired, async function(req, res) {
+router.delete('/chats/:chatUUID', userAuthRequired, async function(req, res, next) {
   try {
     const chat = getChatInstance(req.params.chatUUID, req.user.username);
     if (chat.creatorUsername === req.user.username) {
-      await deleteChat(chatUUID);
+      await deleteChat(req.params.chatUUID);
       res.status(StatusCodes.OK).end();
     } else {
       throw new Forbidden('You can\'t delete this chat unless you are the creator!');
@@ -52,24 +55,25 @@ router.delete('/chats/:chatUUID', userAuthRequired, async function(req, res) {
 /**
  * Leave chat
  */
-router.delete('/chats/:chatUUID/:username', userAuthAndPathRequired, async function(req, res) {
-  try {
-    await leaveChat(req.user.username, chatUUID);
-    res.status(StatusCodes.OK).end();
-  } catch (err) {
-    next(err);
-  }
-});
+router.delete('/chats/:chatUUID/:username',
+    userAuthAndPathRequired, async function(req, res, next) {
+      try {
+        await leaveChat(req.user.username, req.params.chatUUID);
+        res.status(StatusCodes.OK).end();
+      } catch (err) {
+        next(err);
+      }
+    });
 
 
 /**
  * Chat history.
  */
-router.get('/chats/:chatUUID', userAuthRequired, async function(req, res) {
+router.get('/chats/:chatUUID', userAuthRequired, async function(req, res, next) {
   try {
     // Assert user is part of chat
     await getChatInstance(req.params.chatUUID, req.user.username);
-    const chatHistory = await getChatHistory(chatUUID);
+    const chatHistory = await getChatHistory(req.params.hatUUID);
     res.status(StatusCodes.OK).json(chatHistory);
   } catch (err) {
     next(err);
