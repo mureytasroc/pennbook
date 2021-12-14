@@ -4,7 +4,7 @@ import './News.js';
 import './Post.js';
 import './User.js';
 import { prod } from '../config/dotenv.js';
-import * as redis from 'redis'
+import * as redis from 'redis';
 
 export const redisClient = process.env.REDIS_URL ? redis.createClient({ url: process.env.REDIS_URL }) : redis.createClient();
 
@@ -14,7 +14,7 @@ export const redisClient = process.env.REDIS_URL ? redis.createClient({ url: pro
 })();
 
 
-dynamo.createTables(function (err) {
+dynamo.createTables(function(err) {
   if (err && err.code !== 'ResourceInUseException') {
     throw err;
   }

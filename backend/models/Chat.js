@@ -39,23 +39,23 @@ export const ChatHistory = dynamo.define('ChatHistory', {
 export async function createChat(chatObj) {
   try {
     const creator = await getUser(chatObj.creator);
-    const CHAT_UUID = uuidv4()
-    for (var user of chatObj.members) {
-      var userObj = await getUser(user)
-      var chat = {
+    const CHAT_UUID = uuidv4();
+    for (const user of chatObj.members) {
+      const userObj = await getUser(user);
+      const chat = {
         creatorUsername: creator.username,
         chatName: chatObj.name,
         username: userObj.username,
         firstName: userObj.firstName,
         lastName: userObj.lastName,
-        chatUUID: CHAT_UUID
-      }
+        chatUUID: CHAT_UUID,
+      };
       // Create chat record ("membership") for each user
       await Chat.create(chat, { overwrite: false });
     }
     // TODO: init socket io room?
 
-    return { chatUUID: CHAT_UUID }
+    return { chatUUID: CHAT_UUID };
   } catch (err) {
     throw err;
   }
@@ -68,7 +68,7 @@ export async function createChat(chatObj) {
  * @param {*} chatUUID UUID of chat to leave
  */
 export async function leaveChat(username, chatUUID) {
-  Chat.destroy(username, chatUUID, function (err) {
+  Chat.destroy(username, chatUUID, function(err) {
     if (err) {
       throw err;
     }
@@ -80,13 +80,12 @@ export async function leaveChat(username, chatUUID) {
  * @param {*} chatUUID UUID of chat to delete
  */
 export async function deleteChat(chatUUID) {
-
   const chatWithMembers = await getChatWithMembers(chatUUID);
-  const members = _.map(chatWithMembers, item => item.username)
+  const members = _.map(chatWithMembers, (item) => item.username);
 
   // Delete all instances of ChatUUID
-  for (var member of members) {
-    Chat.destroy(member, chatUUID, function (err) {
+  for (const member of members) {
+    Chat.destroy(member, chatUUID, function(err) {
       if (err) {
         throw err;
       }
@@ -97,43 +96,43 @@ export async function deleteChat(chatUUID) {
 
 /**
  * Get a chat object with its members' details
- * @param {*} chatUUID UUID of chat 
+ * @param {*} chatUUID UUID of chat
  * @return {*} list of Chat objects
  */
 export async function getChatWithMembers(chatUUID) {
-  const callback = function (resp) {
+  const callback = function(resp) {
     return _.map(resp.Items, (x) => unmarshallAttributes(x));
   };
-  const chats = await executeAsync(Chat.query(chatUUID).usingIndex('ChatMembersIndex'), callback)
-  return chats
+  const chats = await executeAsync(Chat.query(chatUUID).usingIndex('ChatMembersIndex'), callback);
+  return chats;
 }
 
 /**
  * Get all chats a user is part of
- * @param {*} user user to fetch details of 
+ * @param {*} user user to fetch details of
  * @return {*} list of Chat objects
  */
 export async function getChatsOfUser(user) {
-  const callback = function (resp) {
+  const callback = function(resp) {
     return _.map(resp.Items, (x) => unmarshallAttributes(x));
   };
-  const chats = await executeAsync(Chat.query(user), callback)
-  return chats
+  const chats = await executeAsync(Chat.query(user), callback);
+  return chats;
 }
 
 /**
  * Get a chat instance with a particular member, or throw an error
- * @param {*} chatUUID UUID of chat 
+ * @param {*} chatUUID UUID of chat
  * @param {*} username username of potential member
  * @return {*} corresponding chat object
  */
 export async function getChatInstance(chatUUID, username) {
-  const chat = await Chat.get(chatUUID, username, { ConsistentRead: true })
+  const chat = await Chat.get(chatUUID, username, { ConsistentRead: true });
 
   if (!chat) {
-    throw new NotFound("Chat instance doesn't exist!")
+    throw new NotFound('Chat instance doesn\'t exist!');
   }
-  return unmarshallAttributes(chat)
+  return unmarshallAttributes(chat);
 }
 
 /**
@@ -143,9 +142,9 @@ export async function getChatInstance(chatUUID, username) {
  */
 export async function createChatMessage(body) {
   try {
-    const chatHistoryItem = { chatUUID: body.chatUUID, timestamp: new Date().toISOString(), message: body.message, sender: body.sender }
+    const chatHistoryItem = { chatUUID: body.chatUUID, timestamp: new Date().toISOString(), message: body.message, sender: body.sender };
     const chatHistoryCreated = await ChatHistory.create(chatHistoryItem, { overwrite: false });
-    return chatHistoryCreated
+    return chatHistoryCreated;
   } catch (err) {
     throw err;
   }
@@ -153,13 +152,13 @@ export async function createChatMessage(body) {
 
 /**
  * Get a chat's history
- * @param {*} chatUUID UUID of chat 
+ * @param {*} chatUUID UUID of chat
  * @return {*} list of ChatHistory objects
  */
 export async function getChatHistory(chatUUID) {
-  const callback = function (resp) {
+  const callback = function(resp) {
     return _.map(resp.Items, (x) => unmarshallAttributes(x));
   };
-  const chats = await executeAsync(ChatHistory.query(chatUUID).descending(), callback)
-  return chats
+  const chats = await executeAsync(ChatHistory.query(chatUUID).descending(), callback);
+  return chats;
 }

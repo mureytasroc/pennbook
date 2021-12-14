@@ -3,18 +3,18 @@ import { getChatHistory, getChatInstance, getChatsOfUser } from '../models/Chat.
 import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 import { StatusCodes } from 'http-status-codes';
 import { Forbidden } from '../error/errors.js';
-import * as fs from 'fs'
+import * as fs from 'fs';
 const router = new express.Router();
 
 /**
  * List chats by user.
  */
-router.get('/users/:username/chats', userAuthAndPathRequired, async function (req, res, next) {
+router.get('/users/:username/chats', userAuthAndPathRequired, async function(req, res, next) {
   try {
-    const chats = await getChatsOfUser(req.params.username)
-    res.status(StatusCodes.OK).json(chats)
+    const chats = await getChatsOfUser(req.params.username);
+    res.status(StatusCodes.OK).json(chats);
   } catch (err) {
-    next(err)
+    next(err);
   }
 });
 
@@ -22,12 +22,12 @@ router.get('/users/:username/chats', userAuthAndPathRequired, async function (re
 /**
  * Start chat.
  */
-router.post('/chats', userAuthRequired, async function (req, res) {
+router.post('/chats', userAuthRequired, async function(req, res) {
   try {
-    const chat = await createChat(req.body)
-    res.status(StatusCodes.OK).json(chat)
+    const chat = await createChat(req.body);
+    res.status(StatusCodes.OK).json(chat);
   } catch (err) {
-    next(err)
+    next(err);
   }
 });
 
@@ -35,30 +35,29 @@ router.post('/chats', userAuthRequired, async function (req, res) {
 /**
  * Delete chat
  */
-router.delete('/chats/:chatUUID', userAuthRequired, async function (req, res) {
+router.delete('/chats/:chatUUID', userAuthRequired, async function(req, res) {
   try {
-    const chat = getChatInstance(req.params.chatUUID, req.user.username)
+    const chat = getChatInstance(req.params.chatUUID, req.user.username);
     if (chat.creatorUsername === req.user.username) {
       await deleteChat(chatUUID);
-      res.status(StatusCodes.OK).end()
-    }
-    else {
-      throw new Forbidden("You can't delete this chat unless you are the creator!")
+      res.status(StatusCodes.OK).end();
+    } else {
+      throw new Forbidden('You can\'t delete this chat unless you are the creator!');
     }
   } catch (err) {
-    next(err)
+    next(err);
   }
 });
 
 /**
  * Leave chat
  */
-router.delete('/chats/:chatUUID/:username', userAuthAndPathRequired, async function (req, res) {
+router.delete('/chats/:chatUUID/:username', userAuthAndPathRequired, async function(req, res) {
   try {
     await leaveChat(req.user.username, chatUUID);
-    res.status(StatusCodes.OK).end()
+    res.status(StatusCodes.OK).end();
   } catch (err) {
-    next(err)
+    next(err);
   }
 });
 
@@ -66,14 +65,14 @@ router.delete('/chats/:chatUUID/:username', userAuthAndPathRequired, async funct
 /**
  * Chat history.
  */
-router.get('/chats/:chatUUID', userAuthRequired, async function (req, res) {
+router.get('/chats/:chatUUID', userAuthRequired, async function(req, res) {
   try {
     // Assert user is part of chat
-    await getChatInstance(req.params.chatUUID, req.user.username)
-    const chatHistory = await getChatHistory(chatUUID)
-    res.status(StatusCodes.OK).json(chatHistory)
+    await getChatInstance(req.params.chatUUID, req.user.username);
+    const chatHistory = await getChatHistory(chatUUID);
+    res.status(StatusCodes.OK).json(chatHistory);
   } catch (err) {
-    next(err)
+    next(err);
   }
 });
 
@@ -81,17 +80,16 @@ router.get('/chats/:chatUUID', userAuthRequired, async function (req, res) {
 /**
  * Test route for chats
  */
-router.get('/chattest/', async function (req, res) {
-
-  fs.readFile('./models/client/chat_example.html', function (err, content) {
+router.get('/chattest/', async function(req, res) {
+  fs.readFile('./models/client/chat_example.html', function(err, content) {
     if (err) {
-      console.log(err)
-      res.status(404).end()
+      console.log(err);
+      res.status(404).end();
     } else {
-      res.writeHead(200, { 'Content-Type': "text/html" })
-      res.end(content, 'utf-8')
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(content, 'utf-8');
     }
-  })
-})
+  });
+});
 
 export default router;

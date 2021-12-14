@@ -13,7 +13,7 @@ const router = new express.Router();
 /**
  * Add post to wall.
  */
-router.post('/users/:username/wall', userAuthRequired, async function (req, res, next) {
+router.post('/users/:username/wall', userAuthRequired, async function(req, res, next) {
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.user.username) {
@@ -31,7 +31,7 @@ router.post('/users/:username/wall', userAuthRequired, async function (req, res,
 /**
  * Get posts from wall.
  */
-router.get('/users/:username/wall', userAuthRequired, async function (req, res, next) {
+router.get('/users/:username/wall', userAuthRequired, async function(req, res, next) {
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.user.username) {
@@ -49,7 +49,7 @@ router.get('/users/:username/wall', userAuthRequired, async function (req, res, 
 /**
  * Get home page posts.
  */
-router.get('/users/:username/home', userAuthAndPathRequired, async function (req, res, next) {
+router.get('/users/:username/home', userAuthAndPathRequired, async function(req, res, next) {
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.user.username) {
@@ -67,7 +67,7 @@ router.get('/users/:username/home', userAuthAndPathRequired, async function (req
 /**
  * Post comment.
  */
-router.post('/users/:username/wall/:postUUID/comments', userAuthRequired, async function (req, res, next) { // eslint-disable-line max-len
+router.post('/users/:username/wall/:postUUID/comments', userAuthRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.user.username) {
@@ -85,7 +85,7 @@ router.post('/users/:username/wall/:postUUID/comments', userAuthRequired, async 
 /**
  * Get comments.
  */
-router.get('/users/:username/wall/:postUUID/comments', userAuthRequired, async function (req, res, next) { // eslint-disable-line max-len
+router.get('/users/:username/wall/:postUUID/comments', userAuthRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const wallUsername = req.params.username;
     if (wallUsername != req.user.username) {
