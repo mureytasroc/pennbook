@@ -14,7 +14,7 @@ datasources:
     datasources:
       - name: Prometheus
         type: prometheus
-        url: http://prometheus-service.monitoring.svc:8080
+        url: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
         access: proxy
         isDefault: true
 

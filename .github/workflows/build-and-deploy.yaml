@@ -150,7 +150,7 @@ jobs:
           --repo https://grafana.github.io/helm-charts
           --values grafana-values.yaml
           --set adminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-          --namespace grafana --create-namespace
+          --namespace monitoring
 
           helm upgrade --install --atomic ingress-nginx ingress-nginx
           --repo https://kubernetes.github.io/ingress-nginx
