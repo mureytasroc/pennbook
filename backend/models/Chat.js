@@ -67,7 +67,7 @@ export async function createChat(chatObj) {
  * @param {*} chatUUID UUID of chat to leave
  */
 export async function leaveChat(username, chatUUID) {
-  Chat.destroy(username, chatUUID, function (err) {
+  Chat.destroy(username, chatUUID, function(err) {
     if (err) {
       throw err;
     }
@@ -84,7 +84,7 @@ export async function deleteChat(chatUUID) {
 
   // Delete all instances of ChatUUID
   for (const member of members) {
-    Chat.destroy(member, chatUUID, function (err) {
+    Chat.destroy(member, chatUUID, function(err) {
       if (err) {
         throw err;
       }
@@ -99,7 +99,7 @@ export async function deleteChat(chatUUID) {
  * @return {*} list of Chat objects
  */
 export async function getChatWithMembers(chatUUID) {
-  const callback = function (resp) {
+  const callback = function(resp) {
     return _.map(resp.Items, (x) => unmarshallAttributes(x));
   };
   const chats = await executeAsync(Chat.query(chatUUID).usingIndex('ChatMembersIndex'), callback);
@@ -112,7 +112,7 @@ export async function getChatWithMembers(chatUUID) {
  * @return {*} list of Chat objects
  */
 export async function getChatsOfUser(user) {
-  const callback = function (resp) {
+  const callback = function(resp) {
     return _.map(resp.Items, (x) => unmarshallAttributes(x));
   };
   const chats = await executeAsync(Chat.query(user), callback);
@@ -155,7 +155,7 @@ export async function createChatMessage(body) {
  * @return {*} list of ChatHistory objects
  */
 export async function getChatHistory(chatUUID) {
-  const callback = function (resp) {
+  const callback = function(resp) {
     return _.map(resp.Items, (x) => unmarshallAttributes(x));
   };
   const chats = await executeAsync(ChatHistory.query(chatUUID).descending(), callback);
