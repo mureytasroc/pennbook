@@ -41,6 +41,10 @@ export const Comment = dynamo.define('Comment', {
   },
 });
 
+const uncompressData = function(obj) {
+  obj.content = zlib.gunzipSync(Buffer.from(obj.content.data)).toString();
+  return obj;
+};
 
 /**
  * Creates a Post item in DynamoDB from a create post request.
@@ -69,7 +73,7 @@ export async function createPost(postObj, creatorUname, receiveUname) {
 
   try {
     const createdPost = await Post.create(post, { overwrite: false });
-    return createdPost;
+    return uncompressData(createdPost);
   } catch (err) {
     throw err;
   }
@@ -82,11 +86,6 @@ export async function createPost(postObj, creatorUname, receiveUname) {
  */
 export async function getPostsOnWall(wallUsername) {
   try {
-    const uncompressData = function(obj) {
-      obj.content = zlib.gunzipSync(Buffer.from(obj.content.data)).toString();
-      return obj;
-    };
-
     const callback = function(resp) {
       const mapped = _.map(resp.Items, (x) => unmarshallAttributes(x));
       return _.map(mapped, (x) => uncompressData(x));

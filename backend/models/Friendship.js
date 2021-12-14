@@ -82,11 +82,15 @@ export async function createFriendship(username, friendUsername) {
 export async function getFriendship(username, friendUsername) {
   try {
     const friendship = await Friendship.get(username, friendUsername, { ConsistentRead: true });
+    if (!friendship) {
+      throw new NotFound(`The specified friendship between '${username}' and ` +
+        `'${friendUsername}' was not found`);
+    }
     return unmarshallAttributes(friendship);
   } catch (err) {
     if (err.code === 'ResourceNotFoundException') {
-      throw new NotFound(`The specified friendship between '${username}' and 
-      '${friendUsername}' was not found`);
+      throw new NotFound(`The specified friendship between '${username}' ` +
+        `and '${friendUsername}' was not found`);
     }
     throw err;
   }

@@ -16,8 +16,8 @@ const router = new express.Router();
 router.post('/users/:username/wall', userAuthRequired, async function(req, res, next) {
   try {
     const wallUsername = req.params.username;
-    if (wallUsername != req.params.username) {
-      await getFriendship(wallUsername, req.params.username);
+    if (wallUsername != req.user.username) {
+      await getFriendship(wallUsername, req.user.username);
     }
 
     const post = await createPost(req.body, wallUsername, req.params.username);
@@ -33,7 +33,12 @@ router.post('/users/:username/wall', userAuthRequired, async function(req, res, 
  */
 router.get('/users/:username/wall', userAuthRequired, async function(req, res, next) {
   try {
-    const posts = await getPostsOnWall(req.params.username);
+    const wallUsername = req.params.username;
+    if (wallUsername != req.user.username) {
+      await getFriendship(wallUsername, req.user.username);
+    }
+
+    const posts = await getPostsOnWall(wallUsername);
     res.status(StatusCodes.OK).json(posts);
   } catch (err) {
     next(err);
@@ -46,7 +51,12 @@ router.get('/users/:username/wall', userAuthRequired, async function(req, res, n
  */
 router.get('/users/:username/home', userAuthAndPathRequired, async function(req, res, next) {
   try {
-    const posts = await getPostsOnHomePage(req.params.username);
+    const wallUsername = req.params.username;
+    if (wallUsername != req.user.username) {
+      await getFriendship(wallUsername, req.user.username);
+    }
+
+    const posts = await getPostsOnHomePage(wallUsername);
     res.status(StatusCodes.OK).json(posts);
   } catch (err) {
     next(err);
@@ -60,11 +70,11 @@ router.get('/users/:username/home', userAuthAndPathRequired, async function(req,
 router.post('/users/:username/wall/:postUUID/comments', userAuthRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const wallUsername = req.params.username;
-    if (wallUsername != req.params.username) {
-      await getFriendship(wallUsername, req.params.username);
+    if (wallUsername != req.user.username) {
+      await getFriendship(wallUsername, req.user.username);
     }
 
-    const comment = await createComment(req.body, req.params.postUUID, req.params.username);
+    const comment = await createComment(req.body, req.params.postUUID, wallUsername);
     res.status(StatusCodes.CREATED).json(comment);
   } catch (err) {
     next(err);
@@ -78,8 +88,8 @@ router.post('/users/:username/wall/:postUUID/comments', userAuthRequired, async 
 router.get('/users/:username/wall/:postUUID/comments', userAuthRequired, async function(req, res, next) { // eslint-disable-line max-len
   try {
     const wallUsername = req.params.username;
-    if (wallUsername != req.params.username) {
-      await getFriendship(wallUsername, req.params.username);
+    if (wallUsername != req.user.username) {
+      await getFriendship(wallUsername, req.user.username);
     }
 
     const comments = await getCommentsOnPost(req.params.postUUID);

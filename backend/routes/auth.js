@@ -42,7 +42,7 @@ export function userAuthAndPathRequired(req, res, next) {
     if (error) {
       next(error);
     }
-    if (req.params.username !== req.user.username) {
+    if (!req.user || req.params.username !== req.user.username) {
       throw new Forbidden('Authenticated user does not match username in path.');
     }
     next();
