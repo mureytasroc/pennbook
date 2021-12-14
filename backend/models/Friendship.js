@@ -58,15 +58,15 @@ export async function createFriendship(username, friendUsername) {
     }
 
     const friendship = await Friendship.create(createFriendshipHelper(user, friend),
-        { overwrite: false });
+      { overwrite: false });
     await Friendship.create(createFriendshipHelper(friend, user),
-        { overwrite: false });
+      { overwrite: false });
 
     return unmarshallAttributes(friendship);
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
       throw new Conflict(
-          `The specified friendship between '${username}' and '${friendUsername}' already exists.`,
+        `The specified friendship between '${username}' and '${friendUsername}' already exists.`,
       );
     }
     throw err;
@@ -81,12 +81,16 @@ export async function createFriendship(username, friendUsername) {
  */
 export async function getFriendship(username, friendUsername) {
   try {
-    const friendship = await Friendship.get(username, friendUsername, { ConsistentRead: true });
+    const friendship = await Friendship.get(username, friendUsername, { ConsistentRead: true })
+    if (!friendship) {
+      throw new NotFound(`The specified friendship between '${username}' and ` +
+        `'${friendUsername}' was not found`);
+    }
     return unmarshallAttributes(friendship);
   } catch (err) {
     if (err.code === 'ResourceNotFoundException') {
-      throw new NotFound(`The specified friendship between '${username}' and 
-      '${friendUsername}' was not found`);
+      throw new NotFound(`The specified friendship between '${username}' ` +
+        `and '${friendUsername}' was not found`);
     }
     throw err;
   }
@@ -104,12 +108,12 @@ export async function deleteFriendship(username, friendUsername) {
     throw new NotFound('At least one user does not exist');
   }
 
-  Friendship.destroy(user.username, friend.username, function(err) {
+  Friendship.destroy(user.username, friend.username, function (err) {
     if (err) {
       throw err;
     }
   });
-  Friendship.destroy(friend.username, user.username, function(err) {
+  Friendship.destroy(friend.username, user.username, function (err) {
     if (err) {
       throw err;
     }
@@ -124,7 +128,7 @@ export async function deleteFriendship(username, friendUsername) {
  */
 export async function getFriendships(username) {
   try {
-    const callback = function(resp) {
+    const callback = function (resp) {
       return _.map(resp.Items, (x) => unmarshallAttributes(x));
     };
     const friendships = await executeAsync(Friendship.query(username), callback);

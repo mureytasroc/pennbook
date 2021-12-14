@@ -4,16 +4,17 @@ import './News.js';
 import './Post.js';
 import './User.js';
 import { prod } from '../config/dotenv.js';
-const { default: redis } = await import(prod ? 'redis' : 'redis-mock');
+import * as redis from 'redis'
 
-export const redisClient = redis.createClient({
-  url: process.env.REDIS_URL,
-});
-redisClient.on('error', function(err) {
-  throw err;
-});
+export const redisClient = process.env.REDIS_URL ? redis.createClient({ url: process.env.REDIS_URL }) : redis.createClient();
 
-dynamo.createTables(function(err) {
+(async () => {
+  redisClient.on('error', (err) => console.log('Redis Client Error', err));
+  await redisClient.connect();
+})();
+
+
+dynamo.createTables(function (err) {
   if (err && err.code !== 'ResourceInUseException') {
     throw err;
   }
