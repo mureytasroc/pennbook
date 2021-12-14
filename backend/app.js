@@ -1,18 +1,28 @@
 import './config/dotenv.js';
-import { logErrorMiddleware, returnError } from './error/errorHandlers.js';
+import { returnError } from './error/errorHandlers.js';
 import './models/connect.js';
 import express from 'express';
 import api from './routes/api.js';
+import { prod } from './config/dotenv.js';
+import * as Sentry from '@sentry/node';
 
 // Setup server
 const app = express();
-app.use(express.urlencoded());
+
+// Sentry Requests Hook
+if (prod) {
+  app.use(Sentry.Handlers.requestHandler());
+}
+
+app.use(express.json());
 
 // Routing
 app.use('/api', api);
 
 // Setup error handling middleware
-app.use(logErrorMiddleware);
+if (prod) {
+  app.use(Sentry.Handlers.errorHandler());
+}
 app.use(returnError);
 
 // Run the server

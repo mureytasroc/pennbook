@@ -3,51 +3,17 @@
  * and sets up proper error handling, following https://sematext.com/blog/node-js-error-handling/.
  */
 
-import { BaseError } from './errors.js';
 import { prod } from '../config/dotenv.js';
 import * as Sentry from '@sentry/node';
 import '@sentry/tracing';
+import { BaseError } from './errors.js';
 
+// Connect to Sentry (if Prod)
 if (prod) {
   Sentry.init({
     dsn: process.env.SENTRY_URL,
     tracesSampleRate: 1.0,
   });
-}
-
-/**
- * Log the given error appropriately, depending on environment.
- * @param {Object} err - The error object to log
- */
-export function logError(err) {
-  if (prod && (!isOperationalError(err) || err.statusCode >= 500)) {
-    Sentry.captureException(err);
-  } else {
-    console.error(err);
-  }
-}
-
-/**
- * A middleware wrapper around {@link logError}.
- * @param {Object} err - The error object to log
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @param {function} next - The next middleware callback
- */
-export function logErrorMiddleware(err, req, res, next) {
-  logError(err);
-  next(err);
-}
-
-/**
- * A middleware wrapper to return the appropriate response for an error.
- * @param {Object} err - The error object
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @param {function} next - The next middleware callback
- */
-export function returnError(err, req, res, next) {
-  res.status(err.statusCode || 500).json({ message: err.message });
 }
 
 /**
@@ -62,15 +28,21 @@ export function isOperationalError(error) {
   return false;
 }
 
+/**
+ * A middleware wrapper to return the appropriate response for an error.
+ * @param {Object} err - The error object
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @param {function} next - The next middleware callback
+ */
+export function returnError(err, req, res, next) {
+  if (!isOperationalError(err)) {
+    console.error(err);
+  }
+  res.status(err.statusCode || 500).json({ message: err.message });
+}
+
 // Throw an error on unhandled promise rejection
 process.on('unhandledRejection', (error) => {
   throw error;
-});
-
-// Decide whether to restart server on unhandled error
-process.on('uncaughtException', (error) => {
-  logError(error);
-  if (!isOperationalError(error)) {
-    process.exit(1);
-  }
 });

@@ -151,6 +151,18 @@ export async function createUser(profile) {
 }
 
 /**
+ * Given a marshalled AWS profile object, unmarshals it and removes any
+ * sensitive information (like password hash).
+ * @param {Object} profile a marshalled profile
+ * @return {Object} a profile object that is safe to return to the user
+ */
+function unmarshallProfile(profile) {
+  profile = unmarshallAttributes(profile);
+  delete profile.passwordHash;
+  return profile;
+}
+
+/**
  * Updates a User item in DynamoDB from an update user request.
  * @param {Object} profile the request body of the update user request
  * @return {Object} the new profile object from the database
@@ -169,7 +181,7 @@ export async function updateUser(profile) {
           ReturnValues: 'ALL_NEW',
         },
     );
-    return unmarshallAttributes(newProfile);
+    return unmarshallProfile(newProfile);
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
       throw new NotFound(`The username ${username} was not found.`);
@@ -186,7 +198,7 @@ export async function updateUser(profile) {
 export async function getUser(username) {
   try {
     const profile = await User.get(username, { ConsistentRead: true });
-    return unmarshallAttributes(profile);
+    return unmarshallProfile(profile);
   } catch (err) {
     if (err.code === 'ResourceNotFoundException') {
       throw new NotFound(`The username ${username} was not found.`);
