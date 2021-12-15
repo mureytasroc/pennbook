@@ -58,7 +58,7 @@ export function parseAndCleanArticle(article) {
   articleOb.articleUUID = date.toISOString() + uuidv5(articleOb.link, process.env.UUID_NAMESPACE);
   for (const key in articleOb) {
     if (articleOb[key] === '') {
-      articleOb[key] = null;
+      articleOb[key] = undefined;
     }
   }
   return articleOb;
