@@ -3,12 +3,12 @@
  */
 import '../models/connect.js';
 import { stemmer } from 'stemmer';
-import sw from 'stopword';
 import { BadRequest } from '../error/errors.js';
 import AWS from 'aws-sdk';
 import { Category, Article, ArticleKeyword } from '../models/News.js';
 import { v5 as uuidv5 } from 'uuid';
 import { prod } from '../config/dotenv.js';
+import keywordExtractor from 'keyword-extractor';
 
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
@@ -21,7 +21,7 @@ const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 */
 export function turnTextToKeywords(text, throwError) {
   // Split keywords by any whitespace (and trim)
-  let keywords = text.trim().split(/\s+/m).filter((keyw) => keyw);
+  let keywords = keywordExtractor.extract(text, { remove_duplicates: true });
 
   // Check for any non-alphabetic keywords
   const invalidKeywords = keywords.filter((keyw) => !isValidKeyword.test(keyw));
@@ -31,11 +31,9 @@ export function turnTextToKeywords(text, throwError) {
   keywords = keywords.filter((k) => !invalidKeywords.includes(k));
 
   // Convert keywords to lowercase and stem
-  keywords = keywords.map((keyw) => keyw.toLowerCase());
   const stemmedKeywords = keywords.map((keyw) => stemmer(keyw));
 
-  // Remove stop words
-  return sw.removeStopwords(stemmedKeywords);
+  return stemmedKeywords;
 }
 
 /**

@@ -2,7 +2,7 @@ application:
   host: pennbook.app
 
 recommendArticlesJob:
-  schedule: "00 7 * * *"
+  schedule: "00 7 * * *" # TODO: change to 0 * * * *
 
 redis:
   image: redis

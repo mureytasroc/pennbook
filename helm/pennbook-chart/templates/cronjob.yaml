@@ -18,9 +18,9 @@ spec:
                           args: ["run", "recommend-articles"]
                           resources:
                             requests:
-                              memory: "256Mi"
+                              memory: "1Gi"
                             limits:
-                              memory: "256Mi"
+                              memory: "1Gi"
                           env:
                               - name: REDIS_URL
                                 value: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.port }}/0"
