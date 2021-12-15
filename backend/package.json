@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "start": "node app.js",
+    "load-data": "node ./jobs/run-load-data.js",
     "recommend-articles": "node ./jobs/run-recommend-articles.js",
     "test": "mocha"
   },

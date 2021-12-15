@@ -1,10 +1,11 @@
+{{ range .Values.jobs }}
 ---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-    name: {{ .Release.Name }}-recommend-articles
+    name: "{{ $.Release.Name }}-{{ .name }}"
 spec:
-    schedule: "{{ .Values.recommendArticlesJob.schedule }}"
+    schedule: {{ .schedule }}
     successfulJobsHistoryLimit: 1
     failedJobsHistoryLimit: 1
     jobTemplate:
@@ -12,35 +13,36 @@ spec:
             template:
                 spec:
                     containers:
-                        - name: {{ .Release.Name }}-worker
-                          image: '{{ .Values.backend.image }}:{{ .Values.backend.tag }}'
-                          command: ["npm"]
-                          args: ["run", "recommend-articles"]
+                        - name: "{{ $.Release.Name }}-{{ .name }}-worker"
+                          image: "{{ $.Values.backend.image }}:{{ $.Values.backend.tag }}"
+                          command: {{ .command }}
+                          args: {{ .args }}
                           env:
                               - name: REDIS_URL
-                                value: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.port }}/0"
+                                value: "redis://{{ $.Release.Name }}-redis:{{ $.Values.redis.port }}/0"
                               - name: UUID_NAMESPACE
                                 valueFrom:
                                   secretKeyRef:
-                                    name: {{ .Release.Name }}-secret-tokens
+                                    name: "{{ $.Release.Name }}-secret-tokens"
                                     key: uuid-namespace
                               - name: SENTRY_DSN
                                 valueFrom:
                                   secretKeyRef:
-                                    name: {{ .Release.Name }}-secret-tokens
+                                    name: "{{ $.Release.Name }}-secret-tokens"
                                     key: sentry-url
                               - name: AWS_REGION
                                 value: "us-east-1"
                               - name: AWS_ACCESS_KEY_ID
                                 valueFrom:
                                   secretKeyRef:
-                                    name: {{ .Release.Name }}-secret-tokens
+                                    name: "{{ $.Release.Name }}-secret-tokens"
                                     key: aws-access-key-id
                               - name: AWS_SECRET_ACCESS_KEY
                                 valueFrom:
                                   secretKeyRef:
-                                    name: {{ .Release.Name }}-secret-tokens
+                                    name: "{{ $.Release.Name }}-secret-tokens"
                                     key: aws-secret-access-key
                     imagePullSecrets:
-                        - name: {{ .Release.Name }}-dockerconfigjson-github-com
+                        - name: "{{ $.Release.Name }}-dockerconfigjson-github-com"
                     restartPolicy: Never
+{{ end }}

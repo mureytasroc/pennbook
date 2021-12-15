@@ -86,7 +86,7 @@ export async function loadNews() {
   const s3 = new AWS.S3({
     region: process.env.AWS_REGION,
     httpOptions: {
-      timeout: 3600000, // 1 hour
+      timeout: 86400000, // 24 hours
     },
   });
   const lineReader = new LineByLineReader(s3.getObject(

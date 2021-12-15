@@ -1,8 +1,15 @@
 application:
   host: pennbook.app
 
-recommendArticlesJob:
-  schedule: "00 7 * * *" # TODO: change to 0 * * * *
+jobs:
+  - name: load-data
+    schedule: "00 7 * * *"
+    command: ["npm"]
+    args: ["run", "load-data"]
+  - name: recommend-articles
+    schedule: "0 * * * *"
+    command: ["npm"]
+    args: ["run", "recommend-articles"]
 
 redis:
   image: redis

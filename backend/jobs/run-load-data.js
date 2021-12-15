@@ -1,6 +1,7 @@
 import '../config/dotenv.js';
 import '../error/errorHandlers.js';
-import { recommendArticles } from './recommend-articles.js';
+import { loadAffiliations } from './load-affiliations.js';
+import { loadNews } from './load-news.js';
 import { prod } from '../config/dotenv.js';
 import * as Sentry from '@sentry/node';
 
@@ -9,8 +10,7 @@ if (prod) {
   Sentry.init();
 }
 
-// TODO: check if job is currently running
-
-await recommendArticles();
+await loadAffiliations();
+await loadNews();
 
 process.exit(0);
