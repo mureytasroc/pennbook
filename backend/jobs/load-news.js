@@ -56,6 +56,11 @@ export function parseAndCleanArticle(article) {
   articleOb.category = articleOb.category.toLowerCase();
   delete articleOb.short_description;
   articleOb.articleUUID = date.toISOString() + uuidv5(articleOb.link, process.env.UUID_NAMESPACE);
+  for (const key in articleOb) {
+    if (articleOb[key] === '') {
+      articleOb[key] = null;
+    }
+  }
   return articleOb;
 }
 
