@@ -9,6 +9,7 @@ import { Category, Article, ArticleKeyword } from '../models/News.js';
 import { v5 as uuidv5 } from 'uuid';
 import { prod } from '../config/dotenv.js';
 import keywordExtractor from 'keyword-extractor';
+import LineByLineReader from 'line-by-line';
 
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
@@ -58,28 +59,52 @@ export function parseAndCleanArticle(article) {
   return articleOb;
 }
 
-const nonEscapedLineBreakSplit = /(?<!\\)\n/m;
-
 /**
  * Loads new articles into DynamoDB
  */
 export async function loadNews() {
   console.log('Loading news...');
-  const s3 = new AWS.S3();
-  const res = await s3.getObject(
-      { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
-  ).promise();
-  const body = res.Body.toString('utf-8').split(nonEscapedLineBreakSplit);
-  const currDate = new Date();
-  const articles = body.map((a) => parseAndCleanArticle(a)).filter((a) => a && a.date <= currDate);
-  await Article.create(articles);
-  const keywords = articles.flatMap((article) =>
-    turnTextToKeywords(article.headline).map(
-        (keyword) => ({ keyword, articleUUID: article.articleUUID }),
-    ));
-  await ArticleKeyword.create(keywords);
+  let batch = [];
+  /**
+   * Uploads the given batch of articles to DynamoDB
+   * @param {Array} batch the batch of articles to upload
+   */
+  async function uploadArticleBatch() {
+    await Article.create(batch);
+    await ArticleKeyword.create(batch.flatMap((article) =>
+      turnTextToKeywords(article.headline).map(
+          (keyword) => ({ keyword, articleUUID: article.articleUUID }),
+      )));
+    batch = [];
+  };
   const categoriesSet = new Set();
-  articles.forEach((a) => categoriesSet.add(a.category));
+  const s3 = new AWS.S3();
+  const lineReader = new LineByLineReader(s3.getObject(
+      { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
+  ).createReadStream());
+  lineReader.on('line', async function(line) {
+    const article = parseAndCleanArticle(line);
+    if (!article) {
+      process.stdout.write('e');
+      return;
+    }
+    if (article.date > new Date()) {
+      if (batch.length) {
+        await uploadArticleBatch();
+      }
+      return;
+    }
+    batch.push(article);
+    if (batch.length >= 20) {
+      lineReader.pause();
+      await uploadArticleBatch();
+      lineReader.resume();
+    }
+  });
+  await new Promise((resolve, reject) => {
+    lineReader.on('end', resolve);
+    lineReader.on('error', reject);
+  });
   await Category.create(Array.from(categoriesSet).map((c) => ({ category: c })));
   console.log('Done loading news.');
 }
