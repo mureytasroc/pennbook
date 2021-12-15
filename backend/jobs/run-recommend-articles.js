@@ -9,4 +9,6 @@ if (prod) {
   Sentry.init();
 }
 
-recommendArticles();
+await recommendArticles();
+
+process.exit(0);

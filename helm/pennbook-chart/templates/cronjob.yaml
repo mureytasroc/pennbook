@@ -16,6 +16,11 @@ spec:
                           image: '{{ .Values.backend.image }}:{{ .Values.backend.tag }}'
                           command: ["npm"]
                           args: ["run", "recommend-articles"]
+                          resources:
+                            requests:
+                              memory: "128Mi"
+                            limits:
+                              memory: "128Mi"
                           env:
                               - name: REDIS_URL
                                 value: "redis://{{ .Release.Name }}-redis:{{ .Values.redis.port }}/0"

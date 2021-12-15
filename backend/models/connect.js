@@ -8,11 +8,10 @@ import * as redis from 'redis';
 export const redisClient = process.env.REDIS_URL ?
   redis.createClient({ url: process.env.REDIS_URL }) : redis.createClient();
 
-(async () => {
-  redisClient.on('error', (err) => console.log('Redis Client Error', err));
-  await redisClient.connect();
-})();
-
+redisClient.on('error', (err) => {
+  throw err;
+});
+await redisClient.connect();
 
 dynamo.createTables(function(err) {
   if (err && err.code !== 'ResourceInUseException') {

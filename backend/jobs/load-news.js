@@ -9,7 +9,6 @@ import AWS from 'aws-sdk';
 import { Category, Article, ArticleKeyword } from '../models/News.js';
 import { v5 as uuidv5 } from 'uuid';
 import { prod } from '../config/dotenv.js';
-import es from 'event-stream';
 
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
@@ -22,7 +21,7 @@ const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 */
 export function turnTextToKeywords(text, throwError) {
   // Split keywords by any whitespace (and trim)
-  let keywords = text.trim().split(/s+/m).filter((keyw) => keyw);
+  let keywords = text.trim().split(/\s+/m).filter((keyw) => keyw);
 
   // Check for any non-alphabetic keywords
   const invalidKeywords = keywords.filter((keyw) => !isValidKeyword.test(keyw));
@@ -61,54 +60,28 @@ export function parseAndCleanArticle(article) {
   return articleOb;
 }
 
+const nonEscapedLineBreakSplit = /(?<!\\)\n/m;
+
 /**
  * Loads new articles into DynamoDB
  */
 export async function loadNews() {
   console.log('Loading news...');
-  const batch = [];
-  /**
-   * Uploads the given batch of articles to DynamoDB
-   * @param {Array} batch the batch of articles to upload
-   */
-  async function uploadArticleBatch(batch) {
-    await Article.create(batch);
-    await ArticleKeyword.create(batch.flatMap((article) =>
-      turnTextToKeywords(article.headline).map(
-          (keyword) => ({ keyword, articleUUID: article.articleUUID }),
-      )));
-    batch = [];
-  };
-  const categories = new Set();
   const s3 = new AWS.S3();
-  const s = s3.getObject(
+  const res = await s3.getObject(
       { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
-  ).createReadStream().pipe(es.split()).pipe(es.map(async function(line) {
-    const article = parseAndCleanArticle(line);
-    if (!article) {
-      process.stdout.write('e');
-      return;
-    }
-    if (article.date > new Date()) {
-      if (batch.length) {
-        await uploadArticleBatch(batch);
-      }
-      return;
-    }
-    if (article.category) {
-      categories.add(article.category.toLowerCase());
-    }
-    batch.push(article);
-    if (batch.length === 20) {
-      await uploadArticleBatch(batch);
-    }
-  }));
-  await new Promise((resolve, reject) => {
-    s.on('end', resolve);
-    s.on('error', reject);
-  });
-  console.log(`Done loading news.`);
-  console.log('Loading categories...');
-  await Category.create(Array.from(categories).map((c) => ({ category: c })));
-  console.log(`Done loading categories.`);
+  ).promise();
+  const body = res.Body.toString('utf-8').split(nonEscapedLineBreakSplit);
+  const currDate = new Date();
+  const articles = body.map((a) => parseAndCleanArticle(a)).filter((a) => a && a.date <= currDate);
+  await Article.create(articles);
+  const keywords = articles.flatMap((article) =>
+    turnTextToKeywords(article.headline).map(
+        (keyword) => ({ keyword, articleUUID: article.articleUUID }),
+    ));
+  await ArticleKeyword.create(keywords);
+  const categoriesSet = new Set();
+  articles.forEach((a) => categoriesSet.add(a.category));
+  await Category.create(Array.from(categoriesSet).map((c) => ({ category: c })));
+  console.log('Done loading news.');
 }
