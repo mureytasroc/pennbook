@@ -10,6 +10,8 @@ if (prod) {
   Sentry.init();
 }
 
+// Run manually with kubectl create job --from=cronjob/pennbook-load-data load-data
+
 await loadAffiliations();
 await loadNews();
 

@@ -3,9 +3,10 @@ application:
 
 jobs:
   - name: load-data
-    schedule: "0 0 31 2 *" # never execute (only run manually)
+    schedule: "0 0 31 2 *" # never execute (can only run manually)
     command: '["npm"]'
     args: '["run", "load-data"]'
+    maxMemory: "1Gi"
   - name: recommend-articles
     schedule: "0 * * * *"
     command: '["npm"]'

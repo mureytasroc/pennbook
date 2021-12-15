@@ -9,7 +9,6 @@ import { Category, Article, ArticleKeyword } from '../models/News.js';
 import { v5 as uuidv5 } from 'uuid';
 import { prod } from '../config/dotenv.js';
 import keywordExtractor from 'keyword-extractor';
-import LineByLineReader from 'line-by-line';
 
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
@@ -64,61 +63,34 @@ export function parseAndCleanArticle(article) {
   return articleOb;
 }
 
+const nonEscapedLineBreakSplit = /(?<!\\)\n/m;
+
 /**
  * Loads new articles into DynamoDB
  * @param {Date} minDate (optional) a minimum date cutoff after which to load articles
  */
 export async function loadNews(minDate) {
   console.log('Loading news...');
-  let batch = [];
-  /**
-   * Uploads the given batch of articles to DynamoDB
-   * @param {Array} batch the batch of articles to upload
-   */
-  async function uploadArticleBatch() {
-    if (!batch.length) {
-      return;
-    }
-    await Article.create(batch);
-    await ArticleKeyword.create(batch.flatMap((article) =>
-      turnTextToKeywords(article.headline).map(
-          (keyword) => ({ keyword, articleUUID: article.articleUUID }),
-      )));
-    batch = [];
-  };
-  const categoriesSet = new Set();
-  const s3 = new AWS.S3({
-    region: process.env.AWS_REGION,
-    httpOptions: {
-      timeout: 86400000, // 24 hours
-    },
-  });
-  const lineReader = new LineByLineReader(s3.getObject(
+  const s3 = new AWS.S3();
+  let res = await s3.getObject(
       { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
-  ).createReadStream());
-  lineReader.on('line', async function(line) {
-    const article = parseAndCleanArticle(line);
-    if (!article) {
-      process.stdout.write('e');
-      return;
-    }
-    if (article.date > new Date() || (minDate && article.date < minDate)) {
-      if (batch.length) {
-        await uploadArticleBatch();
-      }
-      return;
-    }
-    batch.push(article);
-    if (batch.length >= 20) {
-      lineReader.pause();
-      await uploadArticleBatch();
-      lineReader.resume();
-    }
-  });
-  await new Promise((resolve, reject) => {
-    lineReader.on('end', resolve);
-    lineReader.on('error', reject);
-  });
+  ).promise();
+  let body = res.Body.toString('utf-8').split(nonEscapedLineBreakSplit);
+  res = null;
+  const currDate = new Date();
+  let articles = body.map((a) => parseAndCleanArticle(a)).filter(
+      (a) => a && a.date <= currDate && (!minDate || a.date >= minDate));
+  body = null;
+  await Article.create(articles);
+  let keywords = articles.flatMap((article) =>
+    turnTextToKeywords(article.headline).map(
+        (keyword) => ({ keyword, articleUUID: article.articleUUID }),
+    ));
+  await ArticleKeyword.create(keywords);
+  keywords = null;
+  const categoriesSet = new Set();
+  articles.forEach((a) => categoriesSet.add(a.category));
+  articles = null;
   await Category.create(Array.from(categoriesSet).map((c) => ({ category: c })));
-  console.log('Done loading news.');
+  console.log('\nDone loading news.');
 }

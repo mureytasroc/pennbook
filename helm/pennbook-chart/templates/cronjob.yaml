@@ -17,6 +17,13 @@ spec:
                           image: "{{ $.Values.backend.image }}:{{ $.Values.backend.tag }}"
                           command: {{ .command }}
                           args: {{ .args }}
+                          {{ if .maxMemory }}
+                          resources:
+                            requests:
+                              memory: {{ .maxMemory }}
+                            limits:
+                              memory: {{ .maxMemory }}
+                          {{ end }}
                           env:
                               - name: REDIS_URL
                                 value: "redis://{{ $.Release.Name }}-redis:{{ $.Values.redis.port }}/0"
