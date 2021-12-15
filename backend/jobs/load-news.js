@@ -66,8 +66,9 @@ export function parseAndCleanArticle(article) {
 
 /**
  * Loads new articles into DynamoDB
+ * @param {Date} minDate (optional) a minimum date cutoff after which to load articles
  */
-export async function loadNews() {
+export async function loadNews(minDate) {
   console.log('Loading news...');
   let batch = [];
   /**
@@ -75,6 +76,9 @@ export async function loadNews() {
    * @param {Array} batch the batch of articles to upload
    */
   async function uploadArticleBatch() {
+    if (!batch.length) {
+      return;
+    }
     await Article.create(batch);
     await ArticleKeyword.create(batch.flatMap((article) =>
       turnTextToKeywords(article.headline).map(
@@ -98,7 +102,7 @@ export async function loadNews() {
       process.stdout.write('e');
       return;
     }
-    if (article.date > new Date()) {
+    if (article.date > new Date() || (minDate && article.date < minDate)) {
       if (batch.length) {
         await uploadArticleBatch();
       }

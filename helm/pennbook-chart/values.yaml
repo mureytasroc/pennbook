@@ -3,13 +3,13 @@ application:
 
 jobs:
   - name: load-data
-    schedule: "00 7 * * *"
-    command: ["npm"]
-    args: ["run", "load-data"]
+    schedule: "0 0 31 2 *" # never execute (only run manually)
+    command: '["npm"]'
+    args: '["run", "load-data"]'
   - name: recommend-articles
     schedule: "0 * * * *"
-    command: ["npm"]
-    args: ["run", "recommend-articles"]
+    command: '["npm"]'
+    args: '["run", "recommend-articles"]'
 
 redis:
   image: redis
