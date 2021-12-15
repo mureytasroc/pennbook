@@ -6,7 +6,7 @@ recommendArticlesJob:
 
 redis:
   image: redis
-  tag: "6.0"
+  tag: "6.2"
   port: 6379
   replicas: 1
 
