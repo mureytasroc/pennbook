@@ -83,7 +83,12 @@ export async function loadNews() {
     batch = [];
   };
   const categoriesSet = new Set();
-  const s3 = new AWS.S3();
+  const s3 = new AWS.S3({
+    region: process.env.AWS_REGION,
+    httpOptions: {
+      timeout: 3600000, // 1 hour
+    },
+  });
   const lineReader = new LineByLineReader(s3.getObject(
       { Bucket: prod ? 'pennbook' : 'pennbook-dev', Key: 'news.json' },
   ).createReadStream());
