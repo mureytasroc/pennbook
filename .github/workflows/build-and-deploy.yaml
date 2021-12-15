@@ -27,6 +27,13 @@ jobs:
           node-version: "17"
           cache: "npm"
       - run: npm install
+      - run: |
+          wget http://download.redis.io/redis-stable.tar.gz
+          tar xvzf redis-stable.tar.gz
+          cd redis-stable
+          make
+          make install
+          redis-server &
       - run: npm test
         env:
           AWS_REGION: us-east-1
