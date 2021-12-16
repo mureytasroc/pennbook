@@ -8,8 +8,10 @@ spec:
     schedule: {{ .schedule }}
     successfulJobsHistoryLimit: 1
     failedJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
     jobTemplate:
         spec:
+            backoffLimit: 0
             template:
                 spec:
                     containers:
