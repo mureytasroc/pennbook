@@ -32,7 +32,14 @@ export function returnError(err, req, res, next) {
   res.status(err.statusCode || 500).json({ message: err.message });
 }
 
-// Throw an error on unhandled promise rejection
-process.on('unhandledRejection', (error) => {
-  throw error;
-});
+/**
+ * Converts an async function to a synchronous express route handler function,
+ * properly handling rejected promises.
+ * @param {function} fn an async route handler function to handle
+ * @return {function} a route handler function
+ */
+export const asyncHandler = (fn) => (req, res, next) => {
+  return Promise
+      .resolve(fn(req, res, next))
+      .catch(next);
+};

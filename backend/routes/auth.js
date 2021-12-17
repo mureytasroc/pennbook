@@ -6,10 +6,7 @@ import { Forbidden, Unauthenticated } from '../error/errors.js';
 
 const JWT_ALGORITHM = 'HS256';
 
-/**
- * A middleware for routes that require user authentication.
- */
-export const userAuthRequired = jwtMiddlewareConstructor({
+const jwtMiddleware = jwtMiddlewareConstructor({
   secret: process.env.JWT_SECRET,
   algorithms: [JWT_ALGORITHM],
   getToken: function(req) {
@@ -31,6 +28,21 @@ export const userAuthRequired = jwtMiddlewareConstructor({
 
 /**
  * A middleware for routes that require user authentication.
+ * @param {Object} req the request object
+ * @param {Object} res the response object
+ * @param {function} next the express next function
+ */
+export function userAuthRequired(req, res, next) {
+  jwtMiddleware(req, res, function(error) {
+    if (error) {
+      next(new Unauthenticated(error.message));
+    }
+    next();
+  });
+};
+
+/**
+ * A middleware for routes that require user authentication.
  * The username field of the JWT will be checked against the username path parameter,
  * and a 403 will be returned if they do not match.
  * @param {Object} req the request object
@@ -43,7 +55,7 @@ export function userAuthAndPathRequired(req, res, next) {
       next(error);
     }
     if (!req.user || req.params.username !== req.user.username) {
-      throw new Forbidden('Authenticated user does not match username in path.');
+      next(new Forbidden('Authenticated user does not match username in path.'));
     }
     next();
   });

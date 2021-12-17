@@ -1,9 +1,9 @@
 import dynamo from 'dynamodb';
 import Joi from 'joi';
 import memoize from 'memoizee';
-import _ from 'lodash';
 import { BadRequest, Conflict, NotFound, UnprocessableEntity } from '../error/errors.js';
-import { unmarshallAttributes, executeAsync } from '../util/utils.js';
+import { unmarshallItem, unmarshallItems, queryGetList,
+  checkThrowAWSError, queryGetListPageLimit } from '../util/utils.js';
 
 
 export const Category = dynamo.define('Category', {
@@ -71,12 +71,9 @@ export const RecommendedArticle = dynamo.define('RecommendedArticle', {
  * @return {Set} a set of valid news categories
  */
 const getCategoriesUnmemoized = async function() {
-  const callback = function(resp) {
-    return _.map(resp.Items, (x) => JSON.parse(JSON.stringify(x)).category);
-  };
   const categoriesSet = new Set();
-  const data = await executeAsync(Category.scan().loadAll(), callback);
-  data.forEach((x, i) => categoriesSet.add(x));
+  const data = await queryGetList(Category.scan().loadAll());
+  data.forEach(({ category }) => categoriesSet.add(category));
   return categoriesSet;
 };
 export const getCategories = memoize(getCategoriesUnmemoized, { maxAge: 1000 * 60 * 60 });
@@ -88,15 +85,11 @@ export const getCategories = memoize(getCategoriesUnmemoized, { maxAge: 1000 * 6
  * @return {Object} the article object
  */
 export async function getArticle(articleUUID) {
-  try {
-    const article = await Article.get(articleUUID);
-    return unmarshallAttributes(article.Attributes);
-  } catch (err) {
-    if (err.code === 'ResourceNotFoundException') {
-      throw new NotFound(`The article with UUID ${articleUUID} was not found.`);
-    }
-    throw err;
-  }
+  const article = await checkThrowAWSError(
+      Article.get(articleUUID),
+      'ResourceNotFoundException',
+      new NotFound(`The article with UUID ${articleUUID} was not found.`));
+  return unmarshallItem(article);
 }
 
 
@@ -124,7 +117,7 @@ export async function articleSearch(username, keywords, page, limit) {
   const articleUUIDtoArticle = new Map();
   let maxMatchCount = 0;
   for (const res of matchingArticles) {
-    for (const article of res.Items.map((item) => unmarshallAttributes(item))) {
+    for (const article of unmarshallItems(res)) {
       const uuid = article.articleUUID;
       const count = articleUUIDtoMatchCount.get(uuid) || 0;
       articleUUIDtoMatchCount.set(uuid, count + 1);
@@ -133,15 +126,15 @@ export async function articleSearch(username, keywords, page, limit) {
     }
   }
 
-  if (page !== 'current' && !articleUUIDtoMatchCount.has(page)) {
+  if (page && !articleUUIDtoMatchCount.has(page)) {
     throw new BadRequest('Invalid page for given keywords: ' + page);
   }
-  const startMatchCount = (page === 'current' ? maxMatchCount : articleUUIDtoMatchCount.get(page));
+  const startMatchCount = (page ? maxMatchCount : articleUUIDtoMatchCount.get(page));
 
   const sortedEntries = articleUUIDtoMatchCount.entries().filter(
       ([_, matches]) => matches <= currMatchCount,
   );
-  sortedEntries.sort((a, b) => b[1] - a[1]); // sort in descending order
+  sortedEntries.sort((a, b) => b[1] - a[1]); // sort in descending order by num matches
   if (!sortedEntries.length) {
     return [];
   }
@@ -174,13 +167,13 @@ export async function articleSearch(username, keywords, page, limit) {
   );
 
   const articleUUIDtoWeight = new Map();
-  for (const { articleUUID, adsorptionWeight } of
-    articleRatings.Items.map((item) => unmarshallAttributes(item))) {
+  for (const { articleUUID, adsorptionWeight } of unmarshallItems(articleRatings)) {
     articleUUIDtoWeight.set(articleUUID, adsorptionWeight);
   }
 
   for (const section of matchCountSections) {
-    section.sort((a, b) => articleUUIDtoWeight.get(b) - articleUUIDtoWeight.get(a)); // descending
+    // sort section in descending order by adsorption weight
+    section.sort((a, b) => articleUUIDtoWeight.get(b) - articleUUIDtoWeight.get(a));
   }
 
   return matchCountSections.flat().slice(0, limit);
@@ -195,27 +188,15 @@ export async function articleSearch(username, keywords, page, limit) {
  * @return {Array} an array of article objects (recommended)
  */
 export async function recommendArticles(username, page, limit) {
-  let recsResult;
-  if (page === 'current') {
-    recsResult = await RecommendedArticle.query(username)
-        .limit(limit)
-        .descending()
-        .loadAll()
-        .exec();
-  } else {
-    recsResult = await RecommendedArticle.query(username)
-        .where('recUUID').lt(page)
-        .limit(limit)
-        .descending()
-        .loadAll()
-        .exec();
-  }
+  const recsResult = await queryGetListPageLimit(
+      RecommendedArticle.query(username), 'recUUID', page, limit,
+  );
   const articleUUIDtoRecUUID = new Map();
-  for (const rec of recsResult.Items.map((item) => unmarshallAttributes(item))) {
+  for (const rec of unmarshallItems(recsResult)) {
     articleUUIDtoRecUUID.set(rec.articleUUID, rec.recUUID);
   }
   const articlesResult = await Article.getItems(articleUUIDtoRecUUID.keys());
-  return articlesResult.Items.map((item) => unmarshallAttributes(item)).map(
+  return unmarshallItems(articlesResult).map(
       (article) => ({ recUUID: articleUUIDtoRecUUID.get(article.articleUUID), ...article }),
   );
 }
@@ -227,13 +208,7 @@ export async function recommendArticles(username, page, limit) {
  */
 export async function likeArticle(username, articleUUID) {
   try {
-    await ArticleLike.create(
-        { articleUUID, username },
-        {
-          ConditionExpression: `(articleUUID <> :auuid) or (username <> :uname)`,
-          ExpressionAttributeValues: { ':auuid': articleUUID, ':uname': username },
-        },
-    );
+    await ArticleLike.create({ articleUUID, username }, { overwrite: false });
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
       throw new Conflict(`The username ${username} has already liked the article ${articleUUID}.`);
@@ -248,11 +223,11 @@ export async function likeArticle(username, articleUUID) {
  * @param {string} articleUUID the UUID of the article to unlike
  */
 export async function unlikeArticle(username, articleUUID) {
-  const oldLike = await ArticleLike.destroy(
+  const existingArticles = await ArticleLike.destroy(
       { articleUUID, username },
-      { ReturnValues: true },
+      { ReturnValues: 'ALL_OLD' },
   );
-  if (!oldLike.Attributes) {
+  if (!existingArticles) {
     throw new Conflict(`The username ${username} has not liked the article ${articleUUID}.`);
   }
 }

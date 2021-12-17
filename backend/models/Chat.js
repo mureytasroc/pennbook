@@ -1,9 +1,8 @@
 import dynamo from 'dynamodb';
 import Joi from 'joi';
 import { NotFound } from '../error/errors.js';
-import { executeAsync, unmarshallAttributes } from '../util/utils.js';
+import { checkThrowAWSError, queryGetList, unmarshallItem } from '../util/utils.js';
 import { getUser } from './User.js';
-import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
 export const Chat = dynamo.define('Chat', {
@@ -27,7 +26,7 @@ export const ChatHistory = dynamo.define('ChatHistory', {
   rangeKey: 'timestamp',
   schema: {
     chatUUID: Joi.string(),
-    timestamp: Joi.date(),
+    timestamp: Joi.string(),
     message: Joi.string(),
     sender: Joi.string(),
   },
@@ -39,27 +38,23 @@ export const ChatHistory = dynamo.define('ChatHistory', {
  * @return {Object} the new post object from the database
  */
 export async function createChat(chatObj) {
-  try {
-    const creator = await getUser(chatObj.creator);
-    const CHAT_UUID = uuidv4();
-    for (const user of chatObj.members) {
-      const userObj = await getUser(user);
-      const chat = {
-        creatorUsername: creator.username,
-        chatName: chatObj.name,
-        username: userObj.username,
-        firstName: userObj.firstName,
-        lastName: userObj.lastName,
-        chatUUID: CHAT_UUID,
-      };
+  const creator = await getUser(chatObj.creator);
+  const CHAT_UUID = uuidv4();
+  for (const user of chatObj.members) {
+    const userObj = await getUser(user);
+    const chat = {
+      creatorUsername: creator.username,
+      chatName: chatObj.name,
+      username: userObj.username,
+      firstName: userObj.firstName,
+      lastName: userObj.lastName,
+      chatUUID: CHAT_UUID,
+    };
       // Create chat record ("membership") for each user
-      await Chat.create(chat, { overwrite: false });
-    }
-
-    return { chatUUID: CHAT_UUID };
-  } catch (err) {
-    throw err;
+    await Chat.create(chat, { overwrite: false });
   }
+
+  return { chatUUID: CHAT_UUID };
 }
 
 
@@ -82,7 +77,7 @@ export async function leaveChat(username, chatUUID) {
  */
 export async function deleteChat(chatUUID) {
   const chatWithMembers = await getChatWithMembers(chatUUID);
-  const members = _.map(chatWithMembers, (item) => item.username);
+  const members = chatWithMembers.map((item) => item.username);
 
   // Delete all instances of ChatUUID
   for (const member of members) {
@@ -101,11 +96,7 @@ export async function deleteChat(chatUUID) {
  * @return {*} list of Chat objects
  */
 export async function getChatWithMembers(chatUUID) {
-  const callback = function(resp) {
-    return _.map(resp.Items, (x) => unmarshallAttributes(x));
-  };
-  const chats = await executeAsync(Chat.query(chatUUID).usingIndex('ChatMembersIndex'), callback);
-  return chats;
+  return await queryGetList(Chat.query(chatUUID).usingIndex('ChatMembersIndex'));
 }
 
 /**
@@ -114,57 +105,46 @@ export async function getChatWithMembers(chatUUID) {
  * @return {*} list of Chat objects
  */
 export async function getChatsOfUser(user) {
-  const callback = function(resp) {
-    return _.map(resp.Items, (x) => unmarshallAttributes(x));
-  };
-  const chats = await executeAsync(Chat.query(user), callback);
-  return chats;
+  return await queryGetList(Chat.query(user));
 }
 
 /**
  * Get a chat instance with a particular member, or throw an error
- * @param {*} chatUUID UUID of chat
- * @param {*} username username of potential member
- * @return {*} corresponding chat object
+ * @param {string} chatUUID UUID of chat
+ * @param {string} username username of potential member
+ * @return {Object} corresponding chat object
  */
 export async function getChatInstance(chatUUID, username) {
-  const chat = await Chat.get(chatUUID, username, { ConsistentRead: true });
-
-  if (!chat) {
-    throw new NotFound('Chat instance doesn\'t exist!');
-  }
-  return unmarshallAttributes(chat);
+  const chat = await checkThrowAWSError(
+      Chat.get(username, chatUUID),
+      'ResourceNotFoundException',
+      new NotFound(
+          `The specified chat with uuid '${chatUUID}' was not found`),
+  );
+  return unmarshallItem(chat);
 }
 
 /**
  * Creates a ChatHistory item in DynamoDB from a create post request.
  * @param {Object} body the request body of the create chat message request
- * @return {Object} the new post object from the database
+ * @return {Object} the new post object
  */
 export async function createChatMessage(body) {
-  try {
-    const chatHistoryItem = {
-      chatUUID: body.chatUUID,
-      timestamp: new Date().toISOString(),
-      message: body.message,
-      sender: body.sender,
-    };
-    const chatHistoryCreated = await ChatHistory.create(chatHistoryItem, { overwrite: false });
-    return chatHistoryCreated;
-  } catch (err) {
-    throw err;
-  }
+  const chatHistoryItem = {
+    chatUUID: body.chatUUID,
+    timestamp: new Date().toISOString(),
+    message: body.message,
+    sender: body.sender,
+  };
+  await ChatHistory.create(chatHistoryItem, { overwrite: false });
+  return chatHistoryItem;
 }
 
 /**
  * Get a chat's history
- * @param {*} chatUUID UUID of chat
- * @return {*} list of ChatHistory objects
+ * @param {string} chatUUID UUID of chat
+ * @return {Array} list of ChatHistory objects
  */
 export async function getChatHistory(chatUUID) {
-  const callback = function(resp) {
-    return _.map(resp.Items, (x) => unmarshallAttributes(x));
-  };
-  const chats = await executeAsync(ChatHistory.query(chatUUID).descending(), callback);
-  return chats;
+  return await queryGetList(ChatHistory.query(chatUUID).descending());
 }

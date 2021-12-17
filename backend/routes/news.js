@@ -1,15 +1,13 @@
 import express from 'express';
 import { StatusCodes } from 'http-status-codes';
 import routeCache from 'route-cache';
-import { BadRequest } from '../error/errors.js';
 import { turnTextToKeywords } from '../jobs/load-news.js';
 import {
   articleSearch, getCategories, likeArticle, recommendArticles, unlikeArticle,
 } from '../models/News.js';
 import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
-
-
-const MAX_ARTICLE_QUERY_LIMIT = 100;
+import { assertString, assertInt } from '../util/utils.js';
+import { asyncHandler } from '../error/errorHandlers.js';
 
 const router = new express.Router();
 
@@ -17,30 +15,19 @@ const router = new express.Router();
 /**
  * News categories.
  */
-router.get('/news/categories', routeCache.cacheSeconds(60 * 60), async function(req, res) {
+router.get('/news/categories', routeCache.cacheSeconds(60 * 60), asyncHandler(async function(req, res) { // eslint-disable-line max-len
   const categoriesSet = await getCategories();
   res.json(Array.from(categoriesSet));
-});
+}));
 
 
 /**
  * News search.
  */
 router.get('/news/articles', userAuthRequired, async function(req, res) {
-  let keywords;
-  try {
-    keywords = turnTextToKeywords(req.query.q || '', true);
-  } catch (err) {
-    if (err instanceof BadRequest) {
-      throw new BadRequest(
-          'Invalid keywords in article query (keywords ' +
-        'can only contain alphanumeric characters). ' + err.message,
-      );
-    }
-    throw err;
-  }
-  const page = req.query.page || 'current';
-  const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+  const keywords = turnTextToKeywords(assertString(req.query.q, 'q param', 200, 1), true);
+  const page = assertString(req.query.page, 'page param', 64, 1, '');
+  const limit = assertInt(req.query.limit, 'limit param', 2000, 1, 10);
   const articles = await articleSearch(req.body.username, keywords, page, limit);
   res.json(articles);
 });
@@ -49,35 +36,32 @@ router.get('/news/articles', userAuthRequired, async function(req, res) {
 /**
  * News recommendations.
  */
-router.get('/users/:username/recommended-articles', userAuthAndPathRequired, async function(req, res) { // eslint-disable-line max-len
-  const page = req.query.page || 'current';
-  const limit = req.query.limit ? parseInt(req.query.limit) : 10;
-  if (!limit || limit <= 0 || limit > MAX_ARTICLE_QUERY_LIMIT) {
-    throw new BadRequest(
-        `Invalid limit (must be an integer between 1 and ${MAX_ARTICLE_QUERY_LIMIT}).`,
-    );
-  }
+router.get('/users/:username/recommended-articles', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const page = assertString(req.query.page, 'page param', 64, 1, '');
+  const limit = assertInt(req.query.limit, 'limit param', 2000, 1, 10);
   const articles = await recommendArticles(req.user.username, page, limit);
   res.json(articles);
-});
+}));
 
 
 /**
  * Like article.
  */
-router.post('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, async function(req, res) { // eslint-disable-line max-len
-  await likeArticle(req.user.username, req.params.articleUUID);
+router.post('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const articleUUID = assertString(req.params.articleUUID, 'articleUUID', 64, 1, '');
+  await likeArticle(req.user.username, articleUUID);
   res.sendStatus(StatusCodes.CREATED);
-});
+}));
 
 
 /**
  * Unlike article.
  */
-router.delete('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, async function(req, res) { // eslint-disable-line max-len
-  await unlikeArticle(req.user.username, req.params.articleUUID);
+router.delete('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const articleUUID = assertString(req.params.articleUUID, 'articleUUID', 64, 1, '');
+  await unlikeArticle(req.user.username, articleUUID);
   res.sendStatus(StatusCodes.NO_CONTENT);
-});
+}));
 
 
 export default router;

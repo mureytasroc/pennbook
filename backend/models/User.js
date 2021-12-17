@@ -3,12 +3,12 @@ import bcrypt from 'bcrypt';
 import dynamo from 'dynamodb';
 import emailValidator from 'email-validator';
 import Joi from 'joi';
-import _ from 'lodash';
 import memoize from 'memoizee';
 import { getCategories } from './News.js';
 import owasp from 'owasp-password-strength-test';
 import { BadRequest, Conflict, NotFound } from '../error/errors.js';
-import { assertString, unmarshallAttributes, executeAsync } from '../util/utils.js';
+import { assertString, checkThrowAWSError,
+  queryGetList, queryGetListPageLimit } from '../util/utils.js';
 
 
 export const Affiliation = dynamo.define('Affiliation', {
@@ -46,12 +46,9 @@ export const UserAutocomplete = dynamo.define('UserAutocomplete', {
  * @return {Set} a set of valid affiliations
  */
 const getAffiliationsUnmemoized = async function() {
-  const callback = function(resp) {
-    return _.map(resp.Items, (x) => unmarshallAttributes(x).affiliation);
-  };
   const affiliationsSet = new Set();
-  const data = await executeAsync(Affiliation.scan().loadAll(), callback);
-  data.forEach((x, i) => affiliationsSet.add(x));
+  const data = await queryGetList(Affiliation.scan().loadAll());
+  data.forEach(({ affiliation }) => affiliationsSet.add(affiliation));
   return affiliationsSet;
 };
 
@@ -63,7 +60,8 @@ const isValidUsername = /^[a-zA-Z0-9-_]+$/;
  * @param {Object} profile the request body of a create or update user request
  * @param {Object} keysToCheck (optional) the keys to check during validation
  * @return {Object} an object containing only valid profile fields from profile
- */export async function validateUserProfile(profile, keysToCheck) {
+ */
+export async function validateUserProfile(profile, keysToCheck) {
   const {
     username, password, firstName, lastName, emailAddress, affiliation, interests,
   } = profile;
@@ -140,14 +138,22 @@ const isValidUsername = /^[a-zA-Z0-9-_]+$/;
  */
 export async function createUser(profile) {
   profile = await validateUserProfile(profile);
-  try {
-    await User.create(profile, { overwrite: false });
-  } catch (err) {
-    if (err.code === 'ConditionalCheckFailedException') {
-      throw new Conflict(`The specified username '${profile.username}' is taken.`);
-    }
-    throw err;
+  await checkThrowAWSError(
+      User.create(profile, { overwrite: false }),
+      'ConditionalCheckFailedException',
+      new Conflict(`The specified username '${profile.username}' is taken.`));
+  const fullName = profile.firstName + ' ' + profile.lastName;
+  const prefixes = [];
+  for (let i = 1; i <= fullName.length; i++) {
+    prefixes.push(fullName.slice(0, i));
   }
+  await UserAutocomplete.create(prefixes.map((prefix) => ({
+    prefix,
+    username: profile.username,
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+  }))[0]);
+  // TODO: schedule adsorption algorithm?
   delete profile.passwordHash;
   return profile;
 }
@@ -160,8 +166,7 @@ export async function createUser(profile) {
  * @return {Object} a profile object that is safe to return to the user
  */
 function unmarshallProfile(profile) {
-  profile = unmarshallAttributes(profile);
-  delete profile.passwordHash;
+  profile = JSON.parse(JSON.stringify(profile));
   return profile;
 }
 
@@ -176,22 +181,20 @@ export async function updateUser(profile) {
   delete profile.lastName;
   profile = await validateUserProfile(profile, profile);
   const username = profile.username;
-  try {
-    const newProfile = await User.update(
-        profile,
-        {
-          ConditionExpression: `username = :uname`,
-          ExpressionAttributeValues: { ':uname': username },
-          ReturnValues: 'ALL_NEW',
-        },
-    );
-    return unmarshallProfile(newProfile);
-  } catch (err) {
-    if (err.code === 'ConditionalCheckFailedException') {
-      throw new NotFound(`The username ${username} was not found.`);
-    }
-    throw err;
-  }
+  const newProfile = await checkThrowAWSError(
+      User.update(profile,
+          {
+            ConditionExpression: `username = :uname`,
+            ExpressionAttributeValues: { ':uname': username },
+            ReturnValues: 'ALL_NEW',
+          }),
+      'ConditionalCheckFailedException',
+      new NotFound(`The username ${username} was not found.`),
+  );
+  // TODO: if profile.interests, schedule adsorption algorithm
+  const parsedProfile = unmarshallProfile(newProfile);
+  delete parsedProfile.passwordHash;
+  return parsedProfile;
 }
 
 /**
@@ -200,13 +203,25 @@ export async function updateUser(profile) {
  * @return {Object} the profile of the user
  */
 export async function getUser(username) {
-  try {
-    const profile = await User.get(username, { ConsistentRead: true });
-    return unmarshallProfile(profile);
-  } catch (err) {
-    if (err.code === 'ResourceNotFoundException') {
-      throw new NotFound(`The username ${username} was not found.`);
-    }
-    throw err;
+  const profile = await checkThrowAWSError(
+      User.get(username, { ConsistentRead: true }),
+      'ResourceNotFoundException',
+      new NotFound(`The username ${username} was not found.`),
+  );
+  return unmarshallProfile(profile);
+}
+
+/**
+ * Searches for users by a prefix of their full name.
+ * @param {string} query a prefix of a user's full name to search for
+ * @param {string} page the username to get results after
+ * @param {number} limit the max number of results to return
+ */
+export async function searchUsers(query, page, limit) {
+  const results = await queryGetListPageLimit(
+      UserAutocomplete.query(query), 'username', page, limit, true);
+  for (const result of results) {
+    delete result.prefix;
   }
+  return results;
 }
