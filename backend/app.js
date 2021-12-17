@@ -19,7 +19,8 @@ if (prod) {
 const app = express();
 
 app.use(cors({
-  origin: ['https://pennbook.app', 'https://www.pennbook.app'],
+  origin: '*', // TODO: ['https://pennbook.app', 'https://www.pennbook.app'] in prod
+  // ['https://localhost'] in dev
 }));
 
 // Sentry Requests Hook
