@@ -143,7 +143,7 @@ export async function createUser(profile) {
       User.create(profile, { overwrite: false }),
       'ConditionalCheckFailedException',
       new Conflict(`The specified username '${profile.username}' is taken.`));
-  const fullName = profile.firstName + ' ' + profile.lastName;
+  const fullName = profile.firstName.trim() + ' ' + profile.lastName.trim();
   const prefixes = [];
   for (let i = 1; i <= fullName.length; i++) {
     prefixes.push(fullName.slice(0, i));
