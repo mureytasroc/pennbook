@@ -149,11 +149,11 @@ export async function createUser(profile) {
     prefixes.push(fullName.slice(0, i));
   }
   await UserAutocomplete.create(prefixes.map((prefix) => ({
-    prefix,
+    prefix: prefix.toLowerCase(),
     username: profile.username,
     firstName: profile.firstName,
     lastName: profile.lastName,
-  }))[0]);
+  })));
   // TODO: schedule adsorption algorithm?
   delete profile.passwordHash;
   return profile;

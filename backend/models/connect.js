@@ -26,7 +26,7 @@ const tableAndOptions = [
   [Comment, {}],
   [Affiliation, { BillingMode: 'PAY_PER_REQUEST' }],
   [User, {}],
-  [UserAutocomplete, {}],
+  [UserAutocomplete, { BillingMode: 'PAY_PER_REQUEST' }],
 ];
 
 for (const [table, options] of tableAndOptions) { // eslint-disable-line no-unused-vars
