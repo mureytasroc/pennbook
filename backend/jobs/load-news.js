@@ -50,15 +50,16 @@ export function parseAndCleanArticle(article) {
   } catch {
     return null;
   }
-  const date = new Date(articleOb.date);
+  let date = new Date(articleOb.date);
   date.setFullYear(date.getFullYear() + 4);
+  date = date.toISOString();
   articleOb.date = date;
   articleOb.shortDescription = articleOb.short_description;
-  articleOb.category = articleOb.category.toLowerCase();
   delete articleOb.short_description;
-  articleOb.articleUUID = date.toISOString() + uuidv5(articleOb.link, process.env.UUID_NAMESPACE);
+  articleOb.category = articleOb.category.toLowerCase();
+  articleOb.articleUUID = date + uuidv5(articleOb.link, process.env.UUID_NAMESPACE);
   for (const key in articleOb) {
-    if (articleOb[key] === '') {
+    if (!articleOb[key]) {
       articleOb[key] = undefined;
     }
   }
@@ -70,6 +71,7 @@ export function parseAndCleanArticle(article) {
  * @param {Date} minDate (optional) a minimum date cutoff after which to load articles
  */
 export async function loadNews(minDate) {
+  minDate = minDate && minDate.toISOString();
   console.log('Loading news...');
   let batch = [];
   /**
@@ -95,13 +97,14 @@ export async function loadNews(minDate) {
   fs.writeFileSync('./news.json', res.Body.toString());
   res = null;
   const lineReader = new LineByLineReader('./news.json');
+  const currDate = (new Date()).toISOString();
   lineReader.on('line', async function(line) {
     const article = parseAndCleanArticle(line);
     if (!article) {
       process.stdout.write('e');
       return;
     }
-    if (article.date > new Date() || (minDate && article.date < minDate)) {
+    if (article.date > currDate || (minDate && article.date < minDate)) {
       return;
     }
     categoriesSet.add(article.category);

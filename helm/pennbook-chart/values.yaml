@@ -11,6 +11,7 @@ jobs:
     schedule: "0 * * * *"
     command: '["npm"]'
     args: '["run", "recommend-articles"]'
+    maxMemory: "1Gi"
 
 redis:
   image: redis

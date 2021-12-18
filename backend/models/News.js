@@ -1,8 +1,8 @@
 import dynamo from 'dynamodb';
 import Joi from 'joi';
 import memoize from 'memoizee';
-import { BadRequest, Conflict, NotFound, UnprocessableEntity } from '../error/errors.js';
-import { unmarshallItem, unmarshallItems, queryGetList,
+import { BadRequest, Conflict, NotFound } from '../error/errors.js';
+import { unmarshallItem, queryGetList,
   checkThrowAWSError, queryGetListPageLimit } from '../util/utils.js';
 
 
@@ -22,9 +22,25 @@ export const Article = dynamo.define('Article', {
     authors: Joi.string(),
     link: Joi.string(),
     shortDescription: Joi.string(),
-    date: Joi.date(),
+    date: Joi.string(),
   },
 });
+
+/**
+ * Converts the given dynamoDB article object to a response object.
+ * @param {Object} article the dynamoDB article object
+ * @return {Object} the converted response object
+ */
+export function articleModelToResponse(article) {
+  return {
+    articleUUID: article.articleUUID,
+    category: article.category,
+    headline: article.headline,
+    authors: article.authors,
+    shortDescription: article.shortDescription,
+    date: article.date,
+  };
+}
 
 export const ArticleLike = dynamo.define('ArticleLike', {
   hashKey: 'articleUUID',
@@ -103,37 +119,28 @@ export async function getArticle(articleUUID) {
  * @return {Array} an array of article objects (search results)
  */
 export async function articleSearch(username, keywords, page, limit) {
-  if (!keywords.length) {
-    // TODO: Establish lower bound on number of queries? Test out in practice...
-    throw new UnprocessableEntity('Query is unprocessable; make keywords more specific');
-  }
   const matchingArticles = await Promise.all(
-      keywords.map((keyword) =>
-        ArticleKeyword.query(keyword)
-            .loadAll()
-            .exec()),
-  );
+      keywords.map((keyword) => queryGetList(ArticleKeyword.query(keyword).loadAll())));
   const articleUUIDtoMatchCount = new Map();
-  const articleUUIDtoArticle = new Map();
+  const articleUUIDtoWeight = new Map();
   let maxMatchCount = 0;
-  for (const res of matchingArticles) {
-    for (const article of unmarshallItems(res)) {
+  for (const articles of matchingArticles) {
+    for (const article of articles) {
       const uuid = article.articleUUID;
       const count = articleUUIDtoMatchCount.get(uuid) || 0;
       articleUUIDtoMatchCount.set(uuid, count + 1);
       maxMatchCount = Math.max(maxMatchCount, count + 1);
-      articleUUIDtoArticle.set(uuid, article);
+      articleUUIDtoWeight.set(uuid, 0);
     }
   }
 
   if (page && !articleUUIDtoMatchCount.has(page)) {
     throw new BadRequest('Invalid page for given keywords: ' + page);
   }
-  const startMatchCount = (page ? maxMatchCount : articleUUIDtoMatchCount.get(page));
+  const startMatchCount = (page ? articleUUIDtoMatchCount.get(page) : maxMatchCount);
 
-  const sortedEntries = articleUUIDtoMatchCount.entries().filter(
-      ([_, matches]) => matches <= currMatchCount,
-  );
+  const sortedEntries = Array.from(articleUUIDtoMatchCount.entries()).filter(
+      ([_, matches]) => matches <= startMatchCount);
   sortedEntries.sort((a, b) => b[1] - a[1]); // sort in descending order by num matches
   if (!sortedEntries.length) {
     return [];
@@ -141,33 +148,38 @@ export async function articleSearch(username, keywords, page, limit) {
 
   const articleUUIDsToRate = [];
   const matchCountSections = [];
-  const currMatchCountSection = [];
-  const currMatchCount = startMatchCount;
-  const totalArticlesPastFirstSection = 0;
+  let currMatchCountSection = [];
+  let currMatchCount = startMatchCount;
+  let totalArticlesPastFirstSection = 0;
+  let totalArticlesPastFirstSectionThresh = limit;
+  let broken = false;
   for (const [uuid, count] of sortedEntries) {
     if (currMatchCount !== count) {
       // new section
       currMatchCount = count;
       matchCountSections.push(currMatchCountSection);
       currMatchCountSection = [];
-      if (totalArticlesPastFirstSection >= limit) {
+      if (totalArticlesPastFirstSection >= totalArticlesPastFirstSectionThresh) {
+        broken = true;
         break;
       }
     }
     if (count !== startMatchCount) {
       totalArticlesPastFirstSection += 1;
+    } else if (!page) {
+      totalArticlesPastFirstSectionThresh -= 1;
     }
     articleUUIDsToRate.push(uuid);
     currMatchCountSection.push(uuid);
   }
+  if (!broken) {
+    matchCountSections.push(currMatchCountSection);
+  }
 
+  const articleRatings = JSON.parse(JSON.stringify(await ArticleRanking.getItems(
+      articleUUIDsToRate.map((uuid) => ({ username, articleUUID: uuid })))));
 
-  const articleRatings = await ArticleRanking.getItems(
-      articleUUIDsToRate.map((uuid) => ({ username, articleUUID: uuid })),
-  );
-
-  const articleUUIDtoWeight = new Map();
-  for (const { articleUUID, adsorptionWeight } of unmarshallItems(articleRatings)) {
+  for (const { articleUUID, adsorptionWeight } of articleRatings) {
     articleUUIDtoWeight.set(articleUUID, adsorptionWeight);
   }
 
@@ -176,7 +188,13 @@ export async function articleSearch(username, keywords, page, limit) {
     section.sort((a, b) => articleUUIDtoWeight.get(b) - articleUUIDtoWeight.get(a));
   }
 
-  return matchCountSections.flat().slice(0, limit);
+  const finalUUIDs = matchCountSections.flat().slice(0, limit);
+  const uuidToIdx = new Map();
+  finalUUIDs.forEach((uuid, idx) => uuidToIdx.set(uuid, idx));
+  const finalArticles = JSON.parse(JSON.stringify(await Article.getItems(finalUUIDs)));
+  return finalArticles
+      .sort((a, b)=>(uuidToIdx.get(a.articleUUID)-uuidToIdx.get(b.articleUUID)))
+      .map(articleModelToResponse);
 }
 
 
@@ -192,11 +210,12 @@ export async function recommendArticles(username, page, limit) {
       RecommendedArticle.query(username), 'recUUID', page, limit,
   );
   const articleUUIDtoRecUUID = new Map();
-  for (const rec of unmarshallItems(recsResult)) {
+  for (const rec of recsResult) {
     articleUUIDtoRecUUID.set(rec.articleUUID, rec.recUUID);
   }
-  const articlesResult = await Article.getItems(articleUUIDtoRecUUID.keys());
-  return unmarshallItems(articlesResult).map(
+  const articlesResult = JSON.parse(JSON.stringify(
+      await Article.getItems(articleUUIDtoRecUUID.keys())));
+  return articlesResult.map(
       (article) => ({ recUUID: articleUUIDtoRecUUID.get(article.articleUUID), ...article }),
   );
 }
@@ -207,6 +226,7 @@ export async function recommendArticles(username, page, limit) {
  * @param {string} articleUUID the UUID of the article to like
  */
 export async function likeArticle(username, articleUUID) {
+  await getArticle(articleUUID);
   try {
     await ArticleLike.create({ articleUUID, username }, { overwrite: false });
   } catch (err) {

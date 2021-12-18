@@ -4,11 +4,9 @@ import { Category, Article, ArticleLike, ArticleKeyword,
   ArticleRanking, RecommendedArticle } from './News.js';
 import { Post, Comment } from './Post.js';
 import { Affiliation, User, UserAutocomplete } from './User.js';
-import redis from 'ioredis';
+import Redis from 'ioredis';
 
-export const redisClient = process.env.REDIS_URL ?
-  redis.createClient({ url: process.env.REDIS_URL, enableOfflineQueue: false }) :
-  redis.createClient({ enableOfflineQueue: false });
+export const redisClient = new Redis(process.env.REDIS_URL || undefined);
 
 redisClient.on('error', (err) => {
   throw err;
@@ -36,6 +34,7 @@ for (const [table, options] of tableAndOptions) {
     await new Promise((resolve, reject) =>
       table.createTable(options, (err) => err ? reject(err) : resolve()));
   } catch (err) {
+    console.log(err);
     if (err.code !== 'ResourceInUseException') {
       throw err;
     }

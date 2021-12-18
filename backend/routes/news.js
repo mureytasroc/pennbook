@@ -25,10 +25,11 @@ router.get('/news/categories', routeCache.cacheSeconds(60 * 60), asyncHandler(as
  * News search.
  */
 router.get('/news/articles', userAuthRequired, async function(req, res) {
-  const keywords = turnTextToKeywords(assertString(req.query.q, 'q param', 200, 1), true);
+  const keywords = turnTextToKeywords(decodeURIComponent(
+      assertString(req.query.q, 'q param', 200, 1), true));
   const page = assertString(req.query.page, 'page param', 64, 1, '');
   const limit = assertInt(req.query.limit, 'limit param', 2000, 1, 10);
-  const articles = await articleSearch(req.body.username, keywords, page, limit);
+  const articles = await articleSearch(req.user.username, keywords, page, limit);
   res.json(articles);
 });
 
