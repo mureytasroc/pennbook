@@ -11,8 +11,11 @@
         overflow-x: hidden;
       "
     >
-
-      <WallView :wallPosts="getWallPosts" :username="this.username" v-bind:isSelf="false"></WallView>
+      <WallView
+        :wallPosts="this.wallPosts"
+        :username="this.username"
+        v-bind:isSelf="false"
+      ></WallView>
     </div>
   </q-page>
 </template>
@@ -22,13 +25,14 @@ import { mapActions, mapGetters } from "vuex";
 export default {
   data() {
     return {
+      wallPosts: [],
       editMode: false,
       presetInterestOptions: [],
       newAffiliation: "",
       newInterests: [],
       newEmailAddress: "",
       newPassword: "",
-      username: ""
+      username: "",
     };
   },
 
@@ -36,41 +40,36 @@ export default {
     WallView: require("components/WallView.vue").default,
   },
 
-  methods: {
+  methods: {},
 
-  },
-
-  computed: {
-
-    getWallPosts() {
-
-        let wallPosts = [
-        {
-          postUUID: "a1UNIQUEID",
-          creator: { username: "bruh", firstName: "john", lastName: "smith" },
-          type: "Post",
-          content: "this is a personal post",
-        },
-        {
-          postUUID: "a1UNIQUEID",
-          creator: { username: "bruh", firstName: "jim", lastName: "halpert" },
-          type: "Post",
-          content: "person post 2",
-        },
-      ];
-
-      return wallPosts;
-    },
-  },
+  computed: {},
 
   watch: {},
 
   mounted() {
     let currentPath = this.$route.fullPath;
-    let subdomains = currentPath.split('/');
-    this.username = subdomains[subdomains.length-1]
+    let subdomains = currentPath.split("/");
+    this.username = subdomains[subdomains.length - 1];
 
-    //TODO: make route call to fetch wall posts from username
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    axios
+      .get(
+        "/api/users/" + userInfo.username + "/wall/",
+
+        {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        }
+      )
+      .then((resp) => {
+        if (resp.status == 200) {
+          this.wallPosts = resp.data;
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          console.log(err.response);
+        }
+      });
   },
 };
 </script>

@@ -119,7 +119,7 @@
       <hr style="height: 1px; background: grey; width: 100%" />
 
       <WallView
-        :wallPosts="getWallPosts"
+        :wallPosts="this.wallPosts"
         username="My Own"
         v-bind:isSelf="true"
       ></WallView>
@@ -133,6 +133,7 @@ import axios from "axios";
 export default {
   data() {
     return {
+      wallPosts: [],
       editMode: false,
       newAffiliation: "",
       newInterests: [],
@@ -174,41 +175,6 @@ export default {
       };
       //this.activeUserInfo;
     },
-
-    getWallPosts() {
-      let wallPosts = [
-        {
-          postUUID: "a1UNIQUEID",
-          creator: { username: "bruh", firstName: "john", lastName: "smith" },
-          type: "Post",
-          content: "this is a personal post",
-        },
-        {
-          postUUID: "a1UNIQUEID",
-          creator: { username: "bruh", firstName: "jim", lastName: "halpert" },
-          type: "Post",
-          content: "person post 2",
-        },
-      ];
-
-      /**
-      let wallPosts = [];
-      axios.get("/api/users/" + sessions.username +  "/wall/").then((resp) => {
-        if (resp == 200) {
-          // ok
-          wallPosts = resp.data;
-        } else if (resp == 400) {
-          // bad req
-        } else if (resp == 401) {
-          //unauth
-        } else if (resp == 403) {
-          //forbidden
-        }
-      })
-      */
-
-      return wallPosts;
-    },
   },
 
   watch: {},
@@ -240,6 +206,27 @@ export default {
       })
       .catch((err) => {
         console.log(err);
+      });
+
+    // load wall posts
+
+    axios
+      .get(
+        "/api/users/" + userInfo.username + "/wall/",
+
+        {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        }
+      )
+      .then((resp) => {
+        if (resp.status == 200) {
+          this.wallPosts = resp.data;
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          console.log(err.response);
+        }
       });
   },
 };

@@ -144,15 +144,21 @@ export default {
       //TODO: post update (text in newPost variable) – have to store/fetch currently logged in user in local state (need creator data)
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
-        .post("/api/users/" + userInfo.username + "/wall/", {
-          type: "Post",
-          content: this.newPost,
-          headers: { Authorization: `Bearer ${localStorage.jwt}` },
-        })
+        .post(
+          "/api/users/" + userInfo.username + "/wall/",
+          {
+            type: "Post",
+            content: this.newPost,
+          },
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
         .then((resp) => {
           if (resp.status == 201) {
             // created
-            console.log(resp);
+            this.wallPosts.unshift(resp.data);
+            this.newPost = "";
           }
         })
         .catch((err) => {

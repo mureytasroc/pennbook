@@ -3,7 +3,7 @@
     <q-list class="full-width">
       <div>
         <q-item
-          v-for="comment in comments"
+          v-for="comment in this.comments"
           :key="comment"
           style="
             margin: auto;
@@ -64,9 +64,11 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   data() {
     return {
+      comments: [],
       newComment: "",
     };
   },
@@ -79,79 +81,60 @@ export default {
 
   computed: {
     //TODO: this has to call route to postUUID to fetch comments
-    comments() {
-      let comments = [
-        {
-          commentUUID: "a",
-          creator: { username: "bruh", firstName: "joe", lastName: "joe" },
-          content:
-            "comment1 YOOOOOOOOO LES G O O O O AFSF ASF LASF ASLFLASLFASLFLAS",
-        },
-        {
-          commentUUID: "b",
-          creator: { username: "bruhh", firstName: "joes", lastName: "jose" },
-          content: "comment2",
-        },
-      ];
-
-      /*
-      let comments = [];
-      axios
-        .get(
-          "/api/users/" +
-            sessions.username +
-            "/wall/" +
-            this.$props.postUUID +
-            "/"
-        )
-        .then((resp) => {
-          if (resp == 200) {
-            // ok
-            comments = resp.data;
-          } else if (resp == 400) {
-            // bad req
-          } else if (resp == 401) {
-            // unauth
-          } else if (resp == 403) {
-            // forbidden
-          } else if (resp == 404) {
-            // postUUID not found
-          }
-        });
-        */
-
-      return comments;
-    },
   },
 
   methods: {
     postComment() {
       //TODO: call route to update db with new comment
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
         .post(
           "/api/users/" +
-            sessions.username +
+            userInfo.username +
             "/wall/" +
             this.$props.postUUID +
-            "/",
+            "/comments/",
           {
             content: this.newComment,
+          },
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
           }
         )
         .then((resp) => {
-          if (resp == 200) {
+          console.log(resp);
+          if (resp.status == 201) {
             // ok
-          } else if (resp == 400) {
-            // bad req
-          } else if (resp == 401) {
-            // unauth
-          } else if (resp == 403) {
-            // forbidden
-          } else if (resp == 404) {
-            // postUUID not found
+            this.newComment = "";
+            this.comments.push(resp.data);
           }
         });
     },
+  },
+  mounted() {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    axios
+      .get(
+        "/api/users/" +
+          userInfo.username +
+          "/wall/" +
+          this.$props.postUUID +
+          "/comments/",
+        {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        }
+      )
+      .then((resp) => {
+        if (resp.status == 200) {
+          // ok
+          this.comments = resp.data.reverse();
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          console.log(err);
+        }
+      });
   },
 };
 </script>
