@@ -8,6 +8,7 @@ import {
 import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 import { assertString, assertInt } from '../util/utils.js';
 import { asyncHandler } from '../error/errorHandlers.js';
+import { BadRequest } from '../error/errors.js';
 
 const router = new express.Router();
 
@@ -27,6 +28,9 @@ router.get('/news/categories', routeCache.cacheSeconds(60 * 60), asyncHandler(as
 router.get('/news/articles', userAuthRequired, async function(req, res) {
   const keywords = turnTextToKeywords(decodeURIComponent(
       assertString(req.query.q, 'q param', 200, 1), true));
+  if (!keywords.length) {
+    throw new BadRequest('No descriptive keywords found. Please make a more descriptive search.');
+  }
   const page = assertString(req.query.page, 'page param', 64, 1, '');
   const limit = assertInt(req.query.limit, 'limit param', 2000, 1, 10);
   const articles = await articleSearch(req.user.username, keywords, page, limit);
