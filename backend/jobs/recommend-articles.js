@@ -5,7 +5,7 @@ import { redisClient } from '../models/connect.js';
  * Loads news and then runs the livy job to recommend articles.
  */
 export async function recommendArticles() {
-  if (JSON.parse(await redisClient.get('RECOMMENDER_RUNNING'))) {
+  if (JSON.parse(await redisClient.get('RECOMMENDER_RUNNING') || JSON.stringify(false))) {
     await redisClient.set('RECOMMENDER_RUN_WHEN_DONE', JSON.stringify(true));
     return;
   }
