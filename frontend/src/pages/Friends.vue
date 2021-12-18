@@ -5,10 +5,9 @@
     <!-- chat page -->
 
     <div
-      class="flex q-pa-md"
+      class="q-pa-md"
       style="
         width: 100%;
-        display: flex;
         justify-content: center;
         margin: auto;
         margin-top: 30px;
@@ -42,7 +41,7 @@
             align="center"
             narrow-indicator
           >
-            <q-tab style="color: #011f5b" label="People" name="People" />
+            <q-tab style="color: #011f5b" label="People" name="people" />
 
             <q-tab style="color: #011f5b" label="Friends" name="friends" />
 
@@ -135,12 +134,12 @@
       <!-- people -->
       <!--TODO: once get profiles showing up, make 'add friend' button-->
       <div
-        v-else
+        v-if="this.tab == 'people'"
         class="inline justify-center shift no-wrap"
         style="display: flex; position: relative; margin-top: 2%"
       >
         <!--TODO: make this functional and search for friends / move elsewhere-->
-        <q-toolbar class="bg-primary text-white rounded-borders">
+        <q-toolbar class="bg-primary text-white rounded-borders" style="width: 50%">
           <h7 class="gt-xs"> Find/Add friends! </h7>
 
           <q-space />
@@ -172,7 +171,53 @@
           color="secondary"
           @click="searchPeople"
         />
+
       </div>
+        <div v-if="this.searchedFriends && this.tab == 'people' " style="margin-top: 2%">
+        <q-item
+          v-for="searchedFriend in this.searchedFriends"
+          :key="searchedFriend"
+          clickable
+          v-ripple
+          style="
+            height: 80px;
+            margin: auto;
+            margin-bottom: 10px;
+            width: 600px;
+            opacity: 0.8;
+            background: whitesmoke;
+          "
+        >
+          <q-btn @click="visitWall(searchedFriend.username)" flat>
+            <q-item-section avatar>
+              <q-avatar color="primary" text-color="white">
+                {{
+                  searchedFriend.firstName.charAt(0).toUpperCase() +
+                  searchedFriend.lastName.charAt(0).toUpperCase()
+                }}
+              </q-avatar>
+            </q-item-section>
+          </q-btn>
+
+          <q-item-section>
+            <q-item-label>{{
+              searchedFriend.firstName + " " + searchedFriend.lastName
+            }}</q-item-label>
+          </q-item-section>
+
+          <q-btn
+            icon="add_circle"
+            flat
+            dense
+            unelevated
+            style="font-size: 12px !important; margin-left: 5px"
+            color="green"
+            @click="addFriend(searchedFriend.username)"
+          />
+        </q-item>
+      </div>
+
+
     </div>
   </q-page>
 </template>
@@ -186,6 +231,7 @@ export default {
       tab: "friends",
       searchPeopleQuery: "",
       friends: [],
+      searchedFriends: []
     };
   },
   props: {},
@@ -252,6 +298,8 @@ export default {
             console.log(err.response);
           }
         });
+
+        //TODO: set this.searchedFriends
     },
 
     showChat(otherUsername) {
