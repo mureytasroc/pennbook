@@ -9,6 +9,7 @@ import owasp from 'owasp-password-strength-test';
 import { BadRequest, Conflict, NotFound } from '../error/errors.js';
 import { assertString, checkThrowAWSError,
   queryGetList, queryGetListPageLimit } from '../util/utils.js';
+import { Friendship } from './Friendship.js';
 
 
 export const Affiliation = dynamo.define('Affiliation', {
@@ -181,7 +182,7 @@ export async function updateUser(profile) {
   delete profile.lastName;
   profile = await validateUserProfile(profile, profile);
   const username = profile.username;
-  const newProfile = await checkThrowAWSError(
+  const newProfile = unmarshallProfile(await checkThrowAWSError(
       User.update(profile,
           {
             ConditionExpression: `username = :uname`,
@@ -190,11 +191,24 @@ export async function updateUser(profile) {
           }),
       'ConditionalCheckFailedException',
       new NotFound(`The username ${username} was not found.`),
-  );
-  // TODO: if profile.interests, schedule adsorption algorithm
-  const parsedProfile = unmarshallProfile(newProfile);
-  delete parsedProfile.passwordHash;
-  return parsedProfile;
+  ));
+  if (profile.interests) {
+    // TODO: schedule adsorption algorithm
+  }
+  if (profile.affiliation) {
+    const friendships = await queryGetList(
+        Friendship.query(newProfile.username).usingIndex('FriendUsernameIndex').loadAll());
+    await Promise.all(friendships.map((f) => Friendship.update({
+      username: f.username,
+      friendUsername: f.friendUsername,
+      friendAffiliation: newProfile.affiliation,
+      confirmedAffiliationUUID: (
+        `${f.confirmed ? 'true' : 'false'}#${newProfile.affiliation}#${f.friendshipUUID}`
+      ),
+    })));
+  }
+  delete newProfile.passwordHash;
+  return newProfile;
 }
 
 /**

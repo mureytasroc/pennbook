@@ -3,7 +3,8 @@ import express from 'express';
 import { StatusCodes } from 'http-status-codes';
 import owasp from 'owasp-password-strength-test';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
-import { BadRequest, NotFound, TooManyRequests, Unauthenticated } from '../error/errors.js';
+import { BadRequest, Forbidden, NotFound, TooManyRequests,
+  Unauthenticated } from '../error/errors.js';
 import { redisClient } from '../models/connect.js';
 import { createUser, getAffiliations, getUser, updateUser, searchUsers } from '../models/User.js';
 import { assertString, assertInt, cannotUpdate } from '../util/utils.js';
@@ -13,7 +14,7 @@ import {
   deleteFriendship, getFriendships,
   friendshipModelToResponse,
 } from '../models/Friendship.js';
-import { userAuthAndPathRequired } from './auth.js';
+import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 import { asyncHandler } from '../error/errorHandlers.js';
 
 const router = new express.Router();
@@ -145,11 +146,18 @@ router.delete('/users/:username/friends/:friendUsername', userAuthAndPathRequire
 /**
  * Get friendships.
  */
-router.get('/users/:username/friends/', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+router.get('/users/:username/friends/', userAuthRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
   const page = assertString(req.query.page, 'page param', 64, 1, '');
   const limit = assertInt(req.query.limit, 'limit param', 2000, 1, 10);
-  const friendships = await getFriendships(req.user.username, page, limit);
-  // TODO: handle req.params.visualization, req.params.origin
+  const visualizationOrigin = assertString(
+      req.query.visualizationOrigin, 'visualizationOrigin param', 64, 1, '');
+  if (visualizationOrigin && visualizationOrigin !== req.user.username) {
+    throw new Forbidden(`Origin parameter set to ${origin}, not authenticated user.`);
+  }
+  if (!visualizationOrigin && req.params.username !== req.user.username) {
+    throw new Forbidden('Authenticated user does not match username in path.');
+  }
+  const friendships = await getFriendships(req.params.username, page, limit, visualizationOrigin);
   res.status(StatusCodes.OK).json(friendships);
 }));
 

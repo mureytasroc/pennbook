@@ -4,7 +4,7 @@ import dynamo from 'dynamodb';
 import { getUser } from '../models/User.js';
 import { Conflict, Forbidden, NotFound } from '../error/errors.js';
 import Joi from 'joi';
-import { unmarshallItem, queryGetListPageLimit, checkThrowAWSError,
+import { unmarshallItem, queryGetListPageLimit, queryGetList, checkThrowAWSError,
   extractUserObject } from '../util/utils.js';
 
 export const Friendship = dynamo.define('Friendship', {
@@ -15,13 +15,22 @@ export const Friendship = dynamo.define('Friendship', {
     friendUsername: Joi.string(),
     friendFirstName: Joi.string(),
     friendLastName: Joi.string(),
+    friendAffiliation: Joi.string(),
     friendshipUUID: Joi.string(),
+    confirmedAffiliationUUID: Joi.string(), // `${confirmed}#${friendAffiliation}#${friendshipUUID}`
     confirmed: Joi.boolean().default(false),
     requested: Joi.boolean().default(false),
     timestamp: Joi.string(),
   },
   indexes: [{
     hashKey: 'username', rangeKey: 'friendshipUUID', type: 'local', name: 'FriendUUIDIndex',
+  },
+  {
+    hashKey: 'username', rangeKey: 'confirmedAffiliationUUID', type: 'local',
+    name: 'ConfirmedAffiliationUUIDIndex',
+  },
+  {
+    hashKey: 'friendUsername', type: 'global', name: 'FriendUsernameIndex',
   }],
 });
 
@@ -33,10 +42,32 @@ export const Friendship = dynamo.define('Friendship', {
 export function friendshipModelToResponse(friendship) {
   return {
     ...extractUserObject(friendship, 'friend'),
+    affiliation: friendship.friendAffiliation,
     confirmed: friendship.confirmed ? true : false,
+    requested: friendship.requested ? true : false,
     timestamp: friendship.timestamp,
     friendshipUUID: friendship.friendshipUUID,
     loggedIn: false, // TODO: set loggedIn status
+  };
+}
+
+/**
+ * Converts the given array of friendship models to a visualization response.
+ * @param {Object} user the origin user
+ * @param {Array} friendships the array of friendship models
+ * @return {Object} the visualization response
+ */
+export function friendshipModelsToVisResponse(user, friendships) {
+  return {
+    id: user.username,
+    name: user.firstName + ' ' + user.lastName,
+    children: friendships.map((friendship) => ({
+      id: friendship.friendUsername,
+      name: friendship.friendFirstName + ' ' + friendship.friendLastName,
+      friendshipUUID: friendship.friendshipUUID,
+      data: {},
+      children: [],
+    })),
   };
 }
 
@@ -58,7 +89,9 @@ export async function createFriendship(username, friendUsername) {
     friendUsername: friend.username,
     friendFirstName: friend.firstName,
     friendLastName: friend.lastName,
+    friendAffiliation: friend.affiliation,
     friendshipUUID,
+    confirmedAffiliationUUID: `false#${friend.affiliation}#${friendshipUUID}`,
     timestamp,
     requested: true,
   };
@@ -71,7 +104,9 @@ export async function createFriendship(username, friendUsername) {
             friendUsername: user.username,
             friendFirstName: user.firstName,
             friendLastName: user.lastName,
+            friendAffiliation: user.affiliation,
             friendshipUUID,
+            confirmedAffiliationUUID: `false#${user.affiliation}#${friendshipUUID}`,
             timestamp,
           },
           { overwrite: false, ReturnValues: 'ALL_OLD' }),
@@ -88,8 +123,15 @@ export async function createFriendship(username, friendUsername) {
       ]);
       if (!existingFriendship.requested && !existingFriendship.confirmed) {
         // confirm friendship
+        const uuid = existingFriendship.friendshipUUID;
         existingFriendship.confirmed = true;
+        existingFriendship.confirmedAffiliationUUID = (
+          `true#${existingFriendship.friendAffiliation}#${uuid}`
+        );
         existingReverseFriendship.confirmed = true;
+        existingReverseFriendship.confirmedAffiliationUUID = (
+          `true#${existingReverseFriendship.friendAffiliation}#${uuid}`
+        );
         await Promise.all([
           Friendship.update(existingFriendship),
           Friendship.update(existingReverseFriendship),
@@ -164,10 +206,35 @@ export async function deleteFriendship(username, friendUsername) {
  * @param {string} username the username to get friends of
  * @param {string} page the friendshipUUID to get friendships before
  * @param {number} limit the max number of friendships to get
+ * @param {string} visualizationOrigin (optional) the username of a user to restrict listed
+ *    friends to having the same affiliation as the origin; if specified, this function
+ *    will return results in the visualizer format
  * @return {Array} a list of friend usernames
  */
-export async function getFriendships(username, page, limit) {
-  const friendships = await queryGetListPageLimit(
-      Friendship.query(username).usingIndex('FriendUUIDIndex'), 'friendshipUUID', page, limit);
-  return friendships.map(friendshipModelToResponse);
+export async function getFriendships(username, page, limit, visualizationOrigin) {
+  if (!visualizationOrigin) {
+    const friendships = await queryGetListPageLimit(
+        Friendship.query(username).usingIndex('FriendUUIDIndex'),
+        'friendshipUUID', page, limit, true, // ascending
+    );
+    return friendships.map(friendshipModelToResponse);
+  }
+  const originUser = await getUser(visualizationOrigin);
+  page = `true#${originUser.affiliation}#` + (page || '');
+
+  const requests = [
+    queryGetList(Friendship.query(username).usingIndex('ConfirmedAffiliationUUIDIndex')
+        .where('confirmedAffiliationUUID').gte(page).limit(limit+1)),
+  ];
+  if (visualizationOrigin !== username) {
+    requests.push(getUser(username));
+  }
+  const responses = await Promise.all(requests);
+
+  const friendships = responses[0].filter((f) => (
+    (!page || f.confirmedAffiliationUUID > page) &&
+    f.confirmed && f.friendAffiliation === originUser.affiliation
+  )).slice(0, limit);
+  const user = (visualizationOrigin === username) ? originUser : responses[1];
+  return friendshipModelsToVisResponse(user, friendships);
 }
