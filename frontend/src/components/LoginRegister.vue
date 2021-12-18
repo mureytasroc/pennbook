@@ -37,9 +37,21 @@
       outlined
       v-if="tab == 'register'"
       v-model="formData.affiliation"
-      :options="options"
+      :options="affiliationOptions"
       label="Affiliation"
     />
+
+    <br>
+
+    <q-select
+      outlined
+      multiple
+      v-if="tab == 'register'"
+      v-model="formData.interest"
+      :options="interestOptions"
+      label="Interests"
+    />
+
     <br />
     <q-input
       v-if="tab == 'register'"
@@ -133,7 +145,8 @@ export default {
         affiliation: "",
         interests: "religion",
       },
-      options: [],
+      affiliationOptions: [],
+      interestOptions: [],
       confirmPassword: "",
       message: "Please fill out the form entirely!",
       alert: false,
@@ -141,6 +154,7 @@ export default {
   },
 
   methods: {
+
     async submitForm(formData) {
       if (this.tab === "login") {
         // login tab
@@ -198,6 +212,9 @@ export default {
       .catch((err) => {
         console.log(err);
       });
+
+     this.interestOptions = ['a', 'b', 'c']
+     this.affiliationOptions = ['d', 'e', 'f']
   },
 };
 </script>

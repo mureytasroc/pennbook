@@ -66,13 +66,14 @@
               style="font-size: 1.1rem; color: black"
             >
               🎓:
-              <q-input
-                filled
-                v-model="newAffiliation"
-                :placeholder="this.getActiveUserInfo.affiliation"
-                :dense="dense"
-                style="margin-left: 10px"
-              />
+
+                <q-select
+                  outlined
+                  v-model="newAffiliation"
+                  :options="affiliationOptions"
+                  label="Affiliation"
+                />
+
             </q-item>
 
             <br />
@@ -90,12 +91,13 @@
               style="font-size: 1.1rem; color: black"
             >
               ❤️:
-              <q-input
-                filled
+
+              <q-select
+                outlined
+                multiple
                 v-model="newInterests"
-                :placeholder="this.getActiveUserInfo.interests"
-                :dense="dense"
-                style="margin-left: 10px"
+                :options="interestOptions"
+                label="Interests"
               />
             </q-item>
 
@@ -132,11 +134,12 @@ export default {
   data() {
     return {
       editMode: false,
-      presetInterestOptions: [],
       newAffiliation: "",
       newInterests: [],
       newEmailAddress: "",
       newPassword: "",
+      affiliationOptions: [],
+      interestOptions: []
     };
   },
 
@@ -212,6 +215,8 @@ export default {
 
   mounted() {
     //TODO: load preset interest options.., and set presetInterestOptions?
+    this.affilationOptions = ['a', 'b', 'c']
+    this.interestOptions = ['d', 'e', 'f']
   },
 };
 </script>

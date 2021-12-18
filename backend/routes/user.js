@@ -103,7 +103,7 @@ router.patch('/users/:username/profile', userAuthAndPathRequired, asyncHandler(a
  * Search users.
  */
 router.get('/users', asyncHandler(async function(req, res) {
-  const query = assertString(req.query.q, 'q param');
+  const query = assertString(req.query.q, 'q param').toLowerCase().trim().split(/\s+/).join(' ');
   const page = assertString(req.query.page, 'page param', 64, 1, '');
   const limit = assertInt(req.query.limit, 'limit param', 5000, 1, 10);
   const results = await searchUsers(query, page, limit);
