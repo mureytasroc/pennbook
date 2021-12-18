@@ -44,7 +44,7 @@ export default route(function (/* { store, ssrContext } */) {
     } else if (to.path == "/ogin" && localStorage.jwt) {
       // already auth
       next({
-        path: "/",
+        path: "/homepage",
       });
     } else {
       next();

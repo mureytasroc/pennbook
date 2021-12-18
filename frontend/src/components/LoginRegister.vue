@@ -169,7 +169,7 @@ export default {
               localStorage.jwt = resp.data.token;
               localStorage.setItem("userInfo", JSON.stringify(resp.data));
               this.message = "Logged in!";
-              this.$router.push("/");
+              this.$router.push("/homepage");
             }
           })
           .catch((err) => {
@@ -191,7 +191,7 @@ export default {
               localStorage.jwt = resp.data.token;
               localStorage.setItem("userInfo", JSON.stringify(resp.data));
               this.message = "Account registered!";
-              this.$router.push("/");
+              this.$router.push("/homepage");
             }
           })
           .catch((err) => {
