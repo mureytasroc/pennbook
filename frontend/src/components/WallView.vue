@@ -1,99 +1,122 @@
 <template>
+  <div
+    class="flex q-pa-md"
+    style="
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: auto;
+      margin-top: 30px;
+      overflow-x: hidden;
+    "
+  >
+    <!-- wall-->
 
-    <div
-      class="flex q-pa-md"
-      style="width: 100%;display: flex; justify-content: center; margin: auto;margin-top:30px; overflow-x: hidden"
-    >
+    <div>
+      <!--TODO: v-else -->
+      <div>
+        <q-bar dark class="bg-secondary text-white">
+          <div v-if="this.isSelf" class="col text-center text-weight-bold">
+            {{ this.username }} Wall!
+          </div>
+          <div v-else class="col text-center text-weight-bold">
+            {{ this.username }}'s Wall!
+          </div>
+        </q-bar>
+        <br />
+        <br v-if="!this.isSelf" />
 
-      <!-- wall-->
-
-      <div> <!--TODO: v-else -->
-        <div>
-           <q-bar dark class="bg-secondary text-white">
-            <div v-if="this.isSelf" class="col text-center text-weight-bold">{{this.username}} Wall!</div>
-            <div v-else class="col text-center text-weight-bold">{{this.username}}'s Wall!</div>
-          </q-bar>
-          <br>  <br v-if="!this.isSelf">
-
-        <q-card v-if="!this.isSelf"
+        <q-card
+          v-if="this.isSelf"
           style="
             margin: auto;
             border: 8px solid white;
             border-radius: 20px;
             overflow-y: hidden;
-            overflow-x: hidden; bottom: 20%;
-            width: 90%
+            overflow-x: hidden;
+            bottom: 20%;
+            width: 90%;
           "
+        >
+          <q-card
+            style="border-radius: 20px; height: 190px; background: whitesmoke"
           >
-            <q-card style="border-radius: 20px; height: 190px; background: whitesmoke" >
-              <q-card-section style="font-size: 1rem;">
-                <q-input
-                  v-model="newPost"
-                  rounded
-                  autofocus
-                  :autogrow="false"
-                  placeholder="Your update!"
-                  standout="bg-white text-black"
-                  type="textarea"
-                  bg-color="white"
-                  style="height: 100%; opacity: 0.8;padding-top:10px"
-                  input-style="color: black; font-size: 1.2rem;">
-                </q-input>
-              </q-card-section>
-            </q-card>
-            <q-card-actions style="width: 100%; font-size: 1rem;margin-top:5px" class="row justify-between">
-
-              <q-btn label="Post Update!" color="primary" v-close-popup rounded @click="postUpdate()" style="padding:10px;margin:auto;">
-              </q-btn>
-
-            </q-card-actions>
-         </q-card>
-        <div v-if="!this.isSelf"><br> <br></div>
-        </div>
-        <q-list class="full-width">
-          <div>
-           <q-item
-              v-for="post in this.wallPosts"
-              :key="post.postUUID"
-              clickable
-              v-ripple
-
-              style="
-                margin: auto;
-                margin-bottom: 10px;
-                margin-top: 10px;
-                opacity: 0.8;
-              "
+            <q-card-section style="font-size: 1rem">
+              <q-input
+                v-model="newPost"
+                rounded
+                autofocus
+                :autogrow="false"
+                placeholder="Your update!"
+                standout="bg-white text-black"
+                type="textarea"
+                bg-color="white"
+                style="height: 100%; opacity: 0.8; padding-top: 10px"
+                input-style="color: black; font-size: 1.2rem;"
+              >
+              </q-input>
+            </q-card-section>
+          </q-card>
+          <q-card-actions
+            style="width: 100%; font-size: 1rem; margin-top: 5px"
+            class="row justify-between"
+          >
+            <q-btn
+              label="Post Update!"
+              color="primary"
+              v-close-popup
+              rounded
+              @click="postUpdate()"
+              style="padding: 10px; margin: auto"
             >
-
-            <div>
-                <StatusPost
-                    :postUUID="post.postUUID"
-                    :firstName="post.creator.firstName"
-                    :lastName="post.creator.lastName"
-                    :content="post.content"
-                    style="height: 100%;width: 100%; margin:auto"
-                />
-            </div>
-
-            </q-item>
-          </div>
-        </q-list>
-
+            </q-btn>
+          </q-card-actions>
+        </q-card>
+        <div v-if="!this.isSelf">
+          <br />
+          <br />
+        </div>
       </div>
+      <q-list class="full-width">
+        <div>
+          <q-item
+            v-for="post in this.wallPosts"
+            :key="post.postUUID"
+            clickable
+            v-ripple
+            style="
+              margin: auto;
+              margin-bottom: 10px;
+              margin-top: 10px;
+              opacity: 0.8;
+            "
+          >
+            <div>
+              <StatusPost
+                :postUUID="post.postUUID"
+                :firstName="post.creator.firstName"
+                :lastName="post.creator.lastName"
+                :content="post.content"
+                style="height: 100%; width: 100%; margin: auto"
+              />
+            </div>
+          </q-item>
+        </div>
+      </q-list>
     </div>
+  </div>
 </template>
-
 
 <script>
 //maybe pull up chats of matches here; in v-for, only load user if in liked array
 //when message is sent is to other user, other user's 'read' should be switched to false (unless on current router. then still true). in same payload
 import { mapState, mapGetters, mapActions } from "vuex";
 import { Notify } from "quasar";
+import axios from "axios";
 export default {
   data() {
     return {
-      newPost: ""
+      newPost: "",
     };
   },
 
@@ -103,36 +126,46 @@ export default {
       default: () => ({}),
     },
     username: {
-      type: String
+      type: String,
     },
     isSelf: {
-      type: Boolean
-    }
+      type: Boolean,
+    },
   },
 
   components: {
     StatusPost: require("components/StatusPost.vue").default,
   },
 
-  computed: {
-
-  },
+  computed: {},
 
   methods: {
-
     postUpdate() {
       //TODO: post update (text in newPost variable) – have to store/fetch currently logged in user in local state (need creator data)
-    }
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .post("/api/users/" + userInfo.username + "/wall/", {
+          type: "Post",
+          content: this.newPost,
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+        .then((resp) => {
+          if (resp.status == 201) {
+            // created
+            console.log(resp);
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+          }
+        });
+    },
   },
 
-
-  mounted() {
-
-  },
+  mounted() {},
 };
 </script>
-
-
 
 <style>
 #background {

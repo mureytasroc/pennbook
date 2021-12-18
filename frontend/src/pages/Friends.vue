@@ -58,68 +58,79 @@
 
       <!-- profile tab (for regular chat) -->
       <div v-if="this.tab == 'friends'" style="margin-top: 2%">
-                    <q-item v-for="friend in getFriends" :key="friend" clickable v-ripple style="
-                height: 80px;
-                margin: auto;
-                margin-bottom: 10px;
-                width:600px;
-                opacity: 0.8;
-                background: whitesmoke
-              ">
-              <q-btn @click="visitWall(friend.username)" flat>
-                <q-item-section avatar>
-                <q-avatar color="primary" text-color="white">
-                    {{ friend.firstName.charAt(0).toUpperCase() + friend.lastName.charAt(0).toUpperCase()}}
-                </q-avatar>
-                </q-item-section>
-              </q-btn>
+        <q-item
+          v-for="friend in this.friends"
+          :key="friend"
+          clickable
+          v-ripple
+          style="
+            height: 80px;
+            margin: auto;
+            margin-bottom: 10px;
+            width: 600px;
+            opacity: 0.8;
+            background: whitesmoke;
+          "
+        >
+          <q-btn @click="visitWall(friend.username)" flat>
+            <q-item-section avatar>
+              <q-avatar color="primary" text-color="white">
+                {{
+                  friend.firstName.charAt(0).toUpperCase() +
+                  friend.lastName.charAt(0).toUpperCase()
+                }}
+              </q-avatar>
+            </q-item-section>
+          </q-btn>
 
-                <q-item-section avatar>
-                 <q-btn
-                    v-if="friend.loggedIn"
-                    round
-                    dense
-                    unelevated
-                    style="font-size: 6px !important; margin-left: 5px"
-                    color="light-green-5"
-                  />
-                </q-item-section>
+          <q-item-section avatar>
+            <q-btn
+              v-if="friend.loggedIn"
+              round
+              dense
+              unelevated
+              style="font-size: 6px !important; margin-left: 5px"
+              color="light-green-5"
+            />
+          </q-item-section>
 
-                <q-item-section>
-                <q-item-label>{{ friend.firstName + " " + friend.lastName }}</q-item-label>
+          <q-item-section>
+            <q-item-label>{{
+              friend.firstName + " " + friend.lastName
+            }}</q-item-label>
+          </q-item-section>
 
-                </q-item-section>
-
-                <q-item-section side>
-                <!--TODO: on click, remove this friend -->
-                <q-btn style="margin-right: 20px"
-                    v-if="friend.loggedIn"
-                    dense
-                    round
-                    icon="textsms"
-                    color="light-green-6"
-                    @click="
-                        showChat(friend.username);
-                    "
-                  />
-        </q-item-section>
-                     <q-btn
-                    icon="remove_circle_outline"
-                    flat
-                    dense
-                    unelevated
-                    style="font-size: 12px !important; margin-left: 5px"
-                    color="red"
-                     @click="removeFriend(friend.username)"
-                  />
-      </q-item>
+          <q-item-section side>
+            <!--TODO: on click, remove this friend -->
+            <q-btn
+              style="margin-right: 20px"
+              v-if="friend.loggedIn"
+              dense
+              round
+              icon="textsms"
+              color="light-green-6"
+              @click="showChat(friend.username)"
+            />
+          </q-item-section>
+          <q-btn
+            icon="remove_circle_outline"
+            flat
+            dense
+            unelevated
+            style="font-size: 12px !important; margin-left: 5px"
+            color="red"
+            @click="removeFriend(friend.username)"
+          />
+        </q-item>
       </div>
 
-
-        <div v-else-if="this.tab == 'visualizer'" class="inline justify-center shift no-wrap"
-          style="display: flex; position: relative;">
+      <div
+        v-else-if="this.tab == 'visualizer'"
+        class="inline justify-center shift no-wrap"
+        style="display: flex; position: relative"
+      >
         <Visualizer />
-        </div>
+      </div>
 
       <!-- people -->
       <!--TODO: once get profiles showing up, make 'add friend' button-->
@@ -163,64 +174,48 @@
         />
       </div>
     </div>
-
   </q-page>
 </template>
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import axios from "axios";
 export default {
   data() {
     return {
       tab: "friends",
       searchPeopleQuery: "",
+      friends: [],
     };
   },
   props: {},
   components: {
     Visualizer: require("components/Visualizer.vue").default,
   },
-  computed: {
-    getFriends() {
-      //TODO: call route to fetch friendships
-      let friends = [
-        {
-          username: "pat-liu",
-          firstName: "pat",
-          lastName: "liu",
-          confirmed: true,
-          loggedIn: true,
-        },
-        {
-          username: "max-tsiang",
-          firstName: "max",
-          lastName: "tsiang",
-          confirmed: true,
-          loggedIn: false,
-        },
-      ];
-      /*
-      let friends = [];
-      axios
-          .get("/api/users/" + sessions.username + "/friends/").then((resp) => {
-            if (resp == 200) {
-              // ok
-              friends = resp.data;
-            } else if (resp == 401) {
-              // unath
-            } else if (resp == 403) {
-              // forbidden
-            }
-          })
-      }
-      */
-      return friends;
-    },
-  },
 
   watch: {},
-  mounted() {},
+  mounted() {
+    this.getFriends();
+  },
   methods: {
+    getFriends() {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .get("/api/users/" + userInfo.username + "/friends/", {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+        .then((resp) => {
+          if (resp.status == 200) {
+            // ok
+            this.friends = resp.data;
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+          }
+        });
+    },
     removeFriend(friendUsername) {
       /*
       axios
@@ -243,17 +238,20 @@ export default {
     //TODO: make this route call
     searchPeople() {
       console.log(this.searchPeopleQuery);
-      /*
+
       axios
         .get("/api/users/", { params: { q: this.searchPeopleQuery } })
         .then((resp) => {
-          if (resp == 200) {
+          console.log(resp);
+          if (resp.status == 200) {
             // ok
-          } else if (resp == 400) {
-            // bad req
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
           }
         });
-        */
     },
 
     showChat(otherUsername) {
@@ -264,9 +262,8 @@ export default {
     },
 
     visitWall(username) {
-      this.$router.push('/wall/'+username)
-    }
-
+      this.$router.push("/wall/" + username);
+    },
   },
   beforeUnmount() {},
 };
