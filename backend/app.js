@@ -19,8 +19,9 @@ if (prod) {
 const app = express();
 
 const CORS_POLICY = prod ?
-  ['https://pennbook.app', 'https://www.pennbook.app', 'http://localhost']
-  : ['https://localhost', 'http://localhost'];
+  ['https://pennbook.app', 'https://www.pennbook.app',
+    'http://localhost', 'http://localhost:8080'] :
+  ['https://localhost', 'http://localhost'];
 
 app.use(cors({
   origin: CORS_POLICY,
