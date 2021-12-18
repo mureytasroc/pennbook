@@ -51,7 +51,7 @@
         <q-list class="full-width">
           <div>
             <q-item
-              v-for="post in posts"
+              v-for="post in this.posts"
               :key="post.postUUID"
               clickable
               v-ripple
@@ -94,9 +94,12 @@
 //when message is sent is to other user, other user's 'read' should be switched to false (unless on current router. then still true). in same payload
 import { mapState, mapGetters, mapActions } from "vuex";
 import { Notify } from "quasar";
+import axios from "axios";
 export default {
   data() {
-    return {};
+    return {
+      posts: [],
+    };
   },
 
   props: {
@@ -112,39 +115,6 @@ export default {
     // return the key range specified by the current message page # and size of page.
     // ex. if we're on page 1 and size is 5, return keys [5..9]
     // prerequisite: matchOnline is "sorted" by keys
-    posts() {
-      let posts = [
-        {
-          postUUID: "a",
-          creator: { username: "bruh", firstName: "john", lastName: "smith" },
-          type: "Post",
-          content: "I got a new hat",
-        },
-        {
-          type: "friendship",
-          user1: { username: "bruh", firstName: "bruh", lastName: "1" },
-          user2: { username: "bruh2", firstName: "bruh", lastName: "2" },
-        },
-      ];
-
-      /**
-      let posts = [];
-      axios.get("/api/users/" + sessions.username +  "/home/").then((resp) => {
-        if (resp == 200) {
-          // ok
-          posts = resp.data;
-        } else if (resp == 400) {
-          // bad req
-        } else if (resp == 401) {
-          //unauth
-        } else if (resp == 403) {
-          //forbidden
-        }
-      })
-      */
-
-      return posts;
-    },
 
     // return a subset of matchOnline, which is dictated by the key array from matchOnlineKeyRange.
     matchOnlineRange() {
@@ -163,7 +133,24 @@ export default {
 
   methods: {},
 
-  mounted() {},
+  mounted() {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    axios
+      .get("/api/users/" + userInfo.username + "/home/", {
+        headers: { Authorization: `Bearer ${localStorage.jwt}` },
+      })
+      .then((resp) => {
+        if (resp.status == 200) {
+          // ok
+          this.posts = resp.data;
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          console.log(err.response);
+        }
+      });
+  },
 };
 </script>
 
