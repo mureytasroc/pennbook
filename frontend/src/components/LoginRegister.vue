@@ -43,7 +43,6 @@
     <br />
     <q-input
       v-if="tab == 'register'"
-      v-model="formData.birthay"
       class="q-mb-md"
       outlined
       type="date"
@@ -132,9 +131,9 @@ export default {
         firstName: "",
         lastName: "",
         affiliation: "",
-        interests: [],
+        interests: "religion",
       },
-      options: ["Google", "Facebook", "Twitter", "Apple", "Oracle"],
+      options: [],
       confirmPassword: "",
       message: "Please fill out the form entirely!",
       alert: false,
@@ -153,27 +152,35 @@ export default {
           .then((resp) => {
             if (resp.status == 200) {
               // login ok
-            } else if (resp.status == 401) {
-              // unauth
-              this.message = "Login failed!";
-            } else if (resp.status == 429) {
-              // too many failed attempts
-              this.message = "Too many failed attempts!";
+              localStorage.jwt = resp.data.token;
+              localStorage.username = formData.username;
+              this.message = "Logged in!";
+              this.$router.push("/");
+            }
+          })
+          .catch((err) => {
+            if (err.response) {
+              this.message = err.response.data.message;
             }
           });
       } else {
         // registration tab
+        this.message = "Registering...";
+        console.log(JSON.parse(JSON.stringify(formData)));
         axios
-          .post("/api/users", {
-            formData,
-          })
+          .post("/api/users", JSON.parse(JSON.stringify(formData)))
           .then((resp) => {
             if (resp.status == 201) {
               // created
-            } else if (resp.status == 400) {
-              // bad req
-            } else if (resp.status == 409) {
-              // user taken
+              localStorage.jwt = resp.data.token;
+              localStorage.username = formData.username;
+              this.message = "Account registered!";
+              this.$router.push("/");
+            }
+          })
+          .catch((err) => {
+            if (err.response) {
+              this.message = err.response.data.message;
             }
           });
       }
@@ -182,11 +189,16 @@ export default {
 
   mounted() {
     // list affiliations
-    axios.get("/api/users/affiliations/").then((resp) => {
-      if (resp.status == 200) {
-        this.options = resp.data;
-      }
-    });
+    axios
+      .get("/api/users/affiliations/")
+      .then((resp) => {
+        if (resp.status == 200) {
+          this.options = resp.data;
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   },
 };
 </script>

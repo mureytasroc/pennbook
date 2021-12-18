@@ -1,39 +1,38 @@
-
 const routes = [
   {
-    path: '/',
-    component: () => import('pages/Auth.vue'),
+    path: "/login",
+    component: () => import("pages/Auth.vue"),
   },
 
   {
-    path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    path: "/",
+    component: () => import("layouts/MainLayout.vue"),
     children: [
-      { path: 'homepage', component: () => import('pages/Homepage.vue') },
-      { path: 'profile', component: () => import('pages/Profile.vue') },
-      { path: 'friends', component: () => import('pages/Friends.vue') },
-      { path: 'chat', component: () => import('pages/Chat.vue') },
+      { path: "homepage", component: () => import("pages/Homepage.vue") },
+      { path: "profile", component: () => import("pages/Profile.vue") },
+      { path: "friends", component: () => import("pages/Friends.vue") },
+      { path: "chat", component: () => import("pages/Chat.vue") },
     ],
   },
 
   {
-    path: '/chat',
-    component: () => import('layouts/MainLayout.vue'),
+    path: "/chat",
+    component: () => import("layouts/MainLayout.vue"),
     children: [
       {
-        path: '/chat/:catchAll(.*)*',
-        component: () => import('pages/Chat.vue'),
+        path: "/chat/:catchAll(.*)*",
+        component: () => import("pages/Chat.vue"),
       },
     ],
   },
 
   {
-    path: '/wall',
-    component: () => import('layouts/MainLayout.vue'),
+    path: "/wall",
+    component: () => import("layouts/MainLayout.vue"),
     children: [
       {
-        path: '/wall/:catchAll(.*)*',
-        component: () => import('pages/Wall.vue'),
+        path: "/wall/:catchAll(.*)*",
+        component: () => import("pages/Wall.vue"),
       },
     ],
   },
@@ -43,8 +42,8 @@ const routes = [
   // Always leave this as last one,
   // but you can also remove it
   {
-    path: '/:catchAll(.*)*',
-    component: () => import('pages/Error404.vue'),
+    path: "/:catchAll(.*)*",
+    component: () => import("pages/Error404.vue"),
   },
 ];
 

@@ -1,9 +1,6 @@
 <template>
   <q-layout view="lHh LpR lFf">
-    <div
-      style="overflow: hidden"
-      id="dayContainer"
-    ></div>
+    <div style="overflow: hidden" id="dayContainer"></div>
 
     <q-header
       v-if="!$q.platform.is.mobile || chatTab == ''"
@@ -21,7 +18,6 @@
           class="q-mr-sm"
         />
 
-
         <q-toolbar-title
           :style="
             $q.platform.is.mobile
@@ -29,17 +25,16 @@
               : 'padding-top:5px;height:98px'
           "
         >
-
-        <q-btn to="/homepage" flat>
+          <q-btn to="/homepage" flat>
             <img
-            class="logoToolbar"
-            src="/logotransparent.png"
-            style="height: 8vh; width: auto; margin: auto; margin-top: 5px;"
-            :style="
-              $q.platform.is.mobile ? 'margin-left: -10px !important' : ''
-            "
-          />
-        </q-btn>
+              class="logoToolbar"
+              src="/logotransparent.png"
+              style="height: 8vh; width: auto; margin: auto; margin-top: 5px"
+              :style="
+                $q.platform.is.mobile ? 'margin-left: -10px !important' : ''
+              "
+            />
+          </q-btn>
 
           <p
             style="
@@ -55,7 +50,6 @@
             <!--{{ $router.currentRoute.fullPath.replace("/", "") }}-->
           </p>
         </q-toolbar-title>
-
       </q-toolbar>
     </q-header>
 
@@ -140,7 +134,6 @@
             </span>
           </q-item-section>
         </q-item>
-
       </q-list>
 
       <!-- lower toolbar section (contact, suggestion, logout) -->
@@ -195,21 +188,24 @@
   </q-layout>
 </template>
 
-
 <script>
-
 export default {
   data() {
     return {
       left: false,
     };
   },
-}
+  methods: {
+    logout() {
+      localStorage.clear();
+      this.$router.push("/login");
+    },
+  },
+};
 
 //day: animated.png
 //night: newnight.gif
 </script>
-
 
 <style>
 #dayContainer {
@@ -258,7 +254,6 @@ export default {
   }
 
   .bg-image {
-
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
@@ -275,7 +270,7 @@ export default {
   border: 2 px solid black;
 }
 .q-drawer__content {
-  background-color: #011F5b;
+  background-color: #011f5b;
 }
 .navigation-item {
   border-radius: 5px;
