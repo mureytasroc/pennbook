@@ -41,13 +41,13 @@
       label="Affiliation"
     />
 
-    <br>
+    <br />
 
     <q-select
       outlined
       multiple
       v-if="tab == 'register'"
-      v-model="formData.interest"
+      v-model="chosenInterests"
       :options="interestOptions"
       label="Interests"
     />
@@ -143,8 +143,9 @@ export default {
         firstName: "",
         lastName: "",
         affiliation: "",
-        interests: "religion",
+        interests: "",
       },
+      chosenInterests: [],
       affiliationOptions: [],
       interestOptions: [],
       confirmPassword: "",
@@ -154,7 +155,6 @@ export default {
   },
 
   methods: {
-
     async submitForm(formData) {
       if (this.tab === "login") {
         // login tab
@@ -180,6 +180,9 @@ export default {
       } else {
         // registration tab
         this.message = "Registering...";
+
+        this.formData.interests = this.chosenInterests.join(",");
+
         axios
           .post("/api/users", JSON.parse(JSON.stringify(formData)))
           .then((resp) => {
@@ -201,20 +204,28 @@ export default {
   },
 
   mounted() {
-    // list affiliations
+    // load affiliations and interests
     axios
       .get("/api/users/affiliations/")
       .then((resp) => {
         if (resp.status == 200) {
-          this.options = resp.data;
+          this.affiliationOptions = resp.data;
         }
       })
       .catch((err) => {
         console.log(err);
       });
 
-     this.interestOptions = ['a', 'b', 'c']
-     this.affiliationOptions = ['d', 'e', 'f']
+    axios
+      .get("/api/news/categories/")
+      .then((resp) => {
+        if (resp.status == 200) {
+          this.interestOptions = resp.data;
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   },
 };
 </script>

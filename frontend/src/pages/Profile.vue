@@ -67,13 +67,12 @@
             >
               🎓:
 
-                <q-select
-                  outlined
-                  v-model="newAffiliation"
-                  :options="affiliationOptions"
-                  label="Affiliation"
-                />
-
+              <q-select
+                outlined
+                v-model="newAffiliation"
+                :options="affiliationOptions"
+                label="Affiliation"
+              />
             </q-item>
 
             <br />
@@ -130,6 +129,7 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+import axios from "axios";
 export default {
   data() {
     return {
@@ -139,7 +139,7 @@ export default {
       newEmailAddress: "",
       newPassword: "",
       affiliationOptions: [],
-      interestOptions: []
+      interestOptions: [],
     };
   },
 
@@ -170,7 +170,7 @@ export default {
         lastName: userInfo.lastName,
         emailAddress: userInfo.emailAddress,
         affiliation: userInfo.affiliation,
-        interests: ["poker", "tennis"],
+        interests: userInfo.interests,
       };
       //this.activeUserInfo;
     },
@@ -214,9 +214,33 @@ export default {
   watch: {},
 
   mounted() {
-    //TODO: load preset interest options.., and set presetInterestOptions?
-    this.affilationOptions = ['a', 'b', 'c']
-    this.interestOptions = ['d', 'e', 'f']
+    // prefill affiliations/interests with current chosen
+    const userInfo = this.getActiveUserInfo;
+    this.newAffiliation = userInfo.affiliation;
+    this.newInterests = userInfo.interests;
+
+    // load affiliations and interests
+    axios
+      .get("/api/users/affiliations/")
+      .then((resp) => {
+        if (resp.status == 200) {
+          this.affiliationOptions = resp.data;
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    axios
+      .get("/api/news/categories/")
+      .then((resp) => {
+        if (resp.status == 200) {
+          this.interestOptions = resp.data;
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   },
 };
 </script>
