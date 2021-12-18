@@ -18,10 +18,11 @@ if (prod) {
 // Setup server
 const app = express();
 
-const CORS_POLICY = prod ? ['https://pennbook.app', 'https://www.pennbook.app'] : ['https://localhost']
+const CORS_POLICY = prod ?
+  ['https://pennbook.app', 'https://www.pennbook.app'] : ['https://localhost'];
 
 app.use(cors({
-  origin: CORS_POLICY
+  origin: CORS_POLICY,
 }));
 
 // Sentry Requests Hook
@@ -47,12 +48,11 @@ const io = new Server(server, { cors: { origin: CORS_POLICY } });
 
 
 io.on('connection', (socket) => {
-
   socket.on('connected', async ({ username }) => {
     await setOnlineStatus(username, true);
-  }
+  },
 
-  )
+  );
   socket.on('join', async ({ username, uuid }) => {
     try {
       await getChatInstance(username, uuid);
@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
 
       redisClient.set(socket.id, username);
     } catch (err) {
-      socket.emit('err', { message: "You cannot join a chat you are not a part of!" })
+      socket.emit('err', { message: 'You cannot join a chat you are not a part of!' });
     }
   });
 

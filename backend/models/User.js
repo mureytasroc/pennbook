@@ -9,7 +9,7 @@ import owasp from 'owasp-password-strength-test';
 import { BadRequest, Conflict, NotFound } from '../error/errors.js';
 import {
   assertString, checkThrowAWSError,
-  queryGetList, queryGetListPageLimit
+  queryGetList, queryGetListPageLimit,
 } from '../util/utils.js';
 import { Friendship } from './Friendship.js';
 import { recommendArticles } from '../jobs/recommend-articles.js';
@@ -51,7 +51,7 @@ export const UserAutocomplete = dynamo.define('UserAutocomplete', {
 /**
  * @return {Set} a set of valid affiliations
  */
-const getAffiliationsUnmemoized = async function () {
+const getAffiliationsUnmemoized = async function() {
   const affiliationsSet = new Set();
   const data = await queryGetList(Affiliation.scan().loadAll());
   data.forEach(({ affiliation }) => affiliationsSet.add(affiliation));
@@ -105,7 +105,7 @@ export async function validateUserProfile(profile, keysToCheck) {
       throw new BadRequest('Password does not meet strength requirements.');
     }
     validatedProfile.passwordHash = await bcrypt.hash(password,
-      parseInt(process.env.PASSWORD_SALT_ROUNDS));
+        parseInt(process.env.PASSWORD_SALT_ROUNDS));
   }
 
   if (!keysToCheck || 'affiliation' in keysToCheck) {
@@ -145,14 +145,14 @@ export async function validateUserProfile(profile, keysToCheck) {
  */
 export async function setOnlineStatus(username, status) {
   await checkThrowAWSError(
-    User.update({ onlineStatus: status },
-      {
-        ConditionExpression: `username = :uname`,
-        ExpressionAttributeValues: { ':uname': username },
-        ReturnValues: 'ALL_NEW',
-      }),
-    'ConditionalCheckFailedException',
-    new NotFound(`The username ${username} was not found.`),
+      User.update({ onlineStatus: status },
+          {
+            ConditionExpression: `username = :uname`,
+            ExpressionAttributeValues: { ':uname': username },
+            ReturnValues: 'ALL_NEW',
+          }),
+      'ConditionalCheckFailedException',
+      new NotFound(`The username ${username} was not found.`),
   );
 }
 
@@ -164,9 +164,9 @@ export async function setOnlineStatus(username, status) {
 export async function createUser(profile) {
   profile = await validateUserProfile(profile);
   await checkThrowAWSError(
-    User.create(profile, { overwrite: false }),
-    'ConditionalCheckFailedException',
-    new Conflict(`The specified username '${profile.username}' is taken.`));
+      User.create(profile, { overwrite: false }),
+      'ConditionalCheckFailedException',
+      new Conflict(`The specified username '${profile.username}' is taken.`));
   const fullName = profile.firstName + ' ' + profile.lastName;
   const prefixes = [];
   for (let i = 1; i <= fullName.length; i++) {
@@ -207,14 +207,14 @@ export async function updateUser(profile) {
   profile = await validateUserProfile(profile, profile);
   const username = profile.username;
   const newProfile = unmarshallProfile(await checkThrowAWSError(
-    User.update(profile,
-      {
-        ConditionExpression: `username = :uname`,
-        ExpressionAttributeValues: { ':uname': username },
-        ReturnValues: 'ALL_NEW',
-      }),
-    'ConditionalCheckFailedException',
-    new NotFound(`The username ${username} was not found.`),
+      User.update(profile,
+          {
+            ConditionExpression: `username = :uname`,
+            ExpressionAttributeValues: { ':uname': username },
+            ReturnValues: 'ALL_NEW',
+          }),
+      'ConditionalCheckFailedException',
+      new NotFound(`The username ${username} was not found.`),
   ));
   if (profile.interests) {
     // Run recommender if diff threshold is met
@@ -229,7 +229,7 @@ export async function updateUser(profile) {
   }
   if (profile.affiliation) {
     const friendships = await queryGetList(
-      Friendship.query(newProfile.username).usingIndex('FriendUsernameIndex').loadAll());
+        Friendship.query(newProfile.username).usingIndex('FriendUsernameIndex').loadAll());
     await Promise.all(friendships.map((f) => Friendship.update({
       username: f.username,
       friendUsername: f.friendUsername,
@@ -250,9 +250,9 @@ export async function updateUser(profile) {
  */
 export async function getUser(username) {
   const profile = await checkThrowAWSError(
-    User.get(username, { ConsistentRead: true }),
-    'ResourceNotFoundException',
-    new NotFound(`The username ${username} was not found.`),
+      User.get(username, { ConsistentRead: true }),
+      'ResourceNotFoundException',
+      new NotFound(`The username ${username} was not found.`),
   );
   return unmarshallProfile(profile);
 }
@@ -265,7 +265,7 @@ export async function getUser(username) {
  */
 export async function searchUsers(query, page, limit) {
   const results = await queryGetListPageLimit(
-    UserAutocomplete.query(query), 'username', page, limit, true);
+      UserAutocomplete.query(query), 'username', page, limit, true);
   for (const result of results) {
     delete result.prefix;
   }
