@@ -153,7 +153,7 @@ export default {
             if (resp.status == 200) {
               // login ok
               localStorage.jwt = resp.data.token;
-              localStorage.username = formData.username;
+              localStorage.setItem("userInfo", JSON.stringify(resp.data));
               this.message = "Logged in!";
               this.$router.push("/");
             }
@@ -166,14 +166,13 @@ export default {
       } else {
         // registration tab
         this.message = "Registering...";
-        console.log(JSON.parse(JSON.stringify(formData)));
         axios
           .post("/api/users", JSON.parse(JSON.stringify(formData)))
           .then((resp) => {
             if (resp.status == 201) {
               // created
               localStorage.jwt = resp.data.token;
-              localStorage.username = formData.username;
+              localStorage.setItem("userInfo", JSON.stringify(resp.data));
               this.message = "Account registered!";
               this.$router.push("/");
             }

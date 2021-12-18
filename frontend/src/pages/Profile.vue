@@ -59,7 +59,7 @@
               >{{ "🎓: " + this.getActiveUserInfo.affiliation + " " }}</q-item
             >
 
-            <br v-if="this.editMode"/>
+            <br v-if="this.editMode" />
 
             <q-item
               v-if="this.editMode"
@@ -117,7 +117,11 @@
 
       <hr style="height: 1px; background: grey; width: 100%" />
 
-      <WallView :wallPosts="getWallPosts" username="My Own" v-bind:isSelf="true"></WallView>
+      <WallView
+        :wallPosts="getWallPosts"
+        username="My Own"
+        v-bind:isSelf="true"
+      ></WallView>
     </div>
   </q-page>
 </template>
@@ -132,7 +136,7 @@ export default {
       newAffiliation: "",
       newInterests: [],
       newEmailAddress: "",
-      newPassword: ""
+      newPassword: "",
     };
   },
 
@@ -155,13 +159,14 @@ export default {
     ...mapGetters("forms", ["activeUserInfo"]),
 
     getActiveUserInfo() {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       return {
-        username: "username",
-        password: "pass",
-        firstName: "joe",
-        lastName: "johnson",
-        emailAddress: "joe@gmail.com",
-        affiliation: "NETS",
+        username: userInfo.username,
+        password: "",
+        firstName: userInfo.firstName,
+        lastName: userInfo.lastName,
+        emailAddress: userInfo.emailAddress,
+        affiliation: userInfo.affiliation,
         interests: ["poker", "tennis"],
       };
       //this.activeUserInfo;
