@@ -10,6 +10,8 @@ import { BadRequest, Conflict, NotFound } from '../error/errors.js';
 import { assertString, checkThrowAWSError,
   queryGetList, queryGetListPageLimit } from '../util/utils.js';
 import { Friendship } from './Friendship.js';
+import { recommendArticles } from '../jobs/recommend-articles.js';
+import { redisClient } from './connect.js';
 
 
 export const Affiliation = dynamo.define('Affiliation', {
@@ -193,7 +195,15 @@ export async function updateUser(profile) {
       new NotFound(`The username ${username} was not found.`),
   ));
   if (profile.interests) {
-    // TODO: schedule adsorption algorithm
+    // Run recommender if diff threshold is met
+    const interestsDiff = JSON.parse(await redisClient.get('INTERESTS_DIFF') || JSON.stringify({}));
+    interestsDiff[username] = true;
+    if (Object.keys(interestsDiff).length >= process.env.INTEREST_DIFF_THRESHOLD) {
+      recommendArticles();
+      await redisClient.set('INTERESTS_DIFF', JSON.stringify({}));
+    } else {
+      await redisClient.set('INTERESTS_DIFF', JSON.stringify(interestsDiff));
+    }
   }
   if (profile.affiliation) {
     const friendships = await queryGetList(
