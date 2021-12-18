@@ -10,7 +10,7 @@ import * as Sentry from '@sentry/node';
 import { prod } from './config/dotenv.js';
 import cors from 'cors';
 import { getChatInstance, createChatMessage } from './models/Chat.js';
-
+import { setOnlineStatus } from './models/User.js';
 
 if (prod) {
   Sentry.init();
@@ -18,9 +18,10 @@ if (prod) {
 // Setup server
 const app = express();
 
+const CORS_POLICY = prod ? ['https://pennbook.app', 'https://www.pennbook.app'] : ['https://localhost']
+
 app.use(cors({
-  origin: '*', // TODO: ['https://pennbook.app', 'https://www.pennbook.app'] in prod
-  // ['https://localhost'] in dev
+  origin: CORS_POLICY
 }));
 
 // Sentry Requests Hook
@@ -42,23 +43,28 @@ app.use(returnError);
 // Run the server
 const server = app.listen(process.env.BACKEND_PORT);
 
-// TODO update cors policy
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, { cors: { origin: CORS_POLICY } });
 
 
 io.on('connection', (socket) => {
+
+  socket.on('connected', async ({ username }) => {
+    await setOnlineStatus(username, true);
+  }
+
+  )
   socket.on('join', async ({ username, uuid }) => {
     try {
       await getChatInstance(username, uuid);
+      socket.join(uuid);
+
+      io.to(uuid).emit('message', { user: 'server', message: `Welcome to the chat, ${username}!` });
+      io.to(uuid).emit('notification', { data: `${username} has joined the chat!` });
+
+      redisClient.set(socket.id, username);
     } catch (err) {
-      // socket.emit('err', { message : "You cannot join a chat you are not a part of!"})
+      socket.emit('err', { message: "You cannot join a chat you are not a part of!" })
     }
-    // TODO: move this in the try block above
-    socket.join(uuid);
-    io.to(uuid).emit('message', { user: 'server', message: `Welcome to the chat, ${username}!` });
-    redisClient.set(socket.id, username);
-    const name = await redisClient.get(socket.id);
-    console.log(name);
   });
 
   socket.on('message', async ({ message, username, uuid }) => {
@@ -96,8 +102,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', async () => {
     const name = await redisClient.GETDEL(socket.id); // eslint-disable-line new-cap
-    name;
-    // TODO: set online status of user corresponding 2 username to be false
+    await setOnlineStatus(name, false);
   });
 });
 
