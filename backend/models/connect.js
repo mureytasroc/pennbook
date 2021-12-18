@@ -15,28 +15,35 @@ redisClient.on('error', (err) => {
 const tableAndOptions = [
   [Chat, {}],
   [ChatHistory, {}],
-  [Friendship, { 'BillingMode': 'PAY_PER_REQUEST' }],
+  [Friendship, { BillingMode: 'PAY_PER_REQUEST' }],
   [Category, {}],
-  [Article, { 'BillingMode': 'PAY_PER_REQUEST' }],
-  [ArticleLike, { 'BillingMode': 'PAY_PER_REQUEST' }],
-  [ArticleKeyword, { 'BillingMode': 'PAY_PER_REQUEST' }],
-  [ArticleRanking, { 'BillingMode': 'PAY_PER_REQUEST' }],
-  [RecommendedArticle, { 'BillingMode': 'PAY_PER_REQUEST' }],
+  [Article, { BillingMode: 'PAY_PER_REQUEST' }],
+  [ArticleLike, { BillingMode: 'PAY_PER_REQUEST' }],
+  [ArticleKeyword, { BillingMode: 'PAY_PER_REQUEST' }],
+  [ArticleRanking, { BillingMode: 'PAY_PER_REQUEST' }],
+  [RecommendedArticle, { BillingMode: 'PAY_PER_REQUEST' }],
   [Post, {}],
   [Comment, {}],
-  [Affiliation, { 'BillingMode': 'PAY_PER_REQUEST' }],
+  [Affiliation, { BillingMode: 'PAY_PER_REQUEST' }],
   [User, {}],
   [UserAutocomplete, {}],
 ];
 
-for (const [table, options] of tableAndOptions) {
+for (const [table, options] of tableAndOptions) { // eslint-disable-line no-unused-vars
   try {
     await new Promise((resolve, reject) =>
-      table.createTable(options, (err) => err ? reject(err) : resolve()));
+      table.createTable((err) => err ? reject(err) : resolve()));
   } catch (err) {
-    console.log(err);
     if (err.code !== 'ResourceInUseException') {
       throw err;
     }
+    await table.updateTable();
   }
 }
+
+await Promise.all(tableAndOptions.map(([table, options]) =>
+  table.docClient.service.updateTable({
+    TableName: table.tableName(),
+    ...options,
+  }),
+));
