@@ -12,6 +12,7 @@ const routes = [
       { path: "profile", component: () => import("pages/Profile.vue") },
       { path: "friends", component: () => import("pages/Friends.vue") },
       { path: "chat", component: () => import("pages/Chat.vue") },
+      { path: "chats", component: () => import("pages/Messages.vue") },
     ],
   },
 
