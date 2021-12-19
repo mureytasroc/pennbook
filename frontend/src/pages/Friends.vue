@@ -57,6 +57,87 @@
 
       <!-- profile tab (for regular chat) -->
       <div v-if="this.tab == 'friends'" style="margin-top: 2%">
+
+        <!-- display current friend requests -->
+        <q-bar dark class="bg-secondary text-white" style="width: 50%; margin: auto">
+          <div class="col text-center text-weight-bold">Friend Requests</div>
+        </q-bar>
+
+        <br>
+
+        <q-item
+          v-for="friendRequest in this.friendRequests"
+          :key="friendRequest"
+          clickable
+          v-ripple
+          style="
+            height: 80px;
+            margin: auto;
+            margin-bottom: 10px;
+            width: 600px;
+            opacity: 0.8;
+            background: #F2F4DB;
+          "
+        >
+          <q-btn @click="visitWall(friendRequest.username)" flat>
+            <q-item-section avatar>
+              <q-avatar color="primary" text-color="white">
+                {{
+                  friendRequest.firstName.charAt(0).toUpperCase() +
+                  friendRequest.lastName.charAt(0).toUpperCase()
+                }}
+              </q-avatar>
+            </q-item-section>
+          </q-btn>
+
+          <q-item-section avatar>
+            <q-btn
+              v-if="friendRequest.loggedIn"
+              round
+              dense
+              unelevated
+              style="font-size: 6px !important; margin-left: 5px"
+              color="light-green-5"
+            />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>{{
+              friendRequest.firstName + " " + friendRequest.lastName
+            }}</q-item-label>
+          </q-item-section>
+
+          <q-item-section side>
+            <q-btn
+              style="margin-right: 20px"
+              dense
+              flat
+              icon="done"
+              color="light-green-6"
+              @click="acceptFriendRequest(friendRequest.username)"
+            />
+          </q-item-section>
+          <q-btn
+            icon="close"
+            flat
+            dense
+            unelevated
+            style="font-size: 12px !important; margin-left: 5px"
+            color="red"
+            @click="rejectFriendRequest(friendRequest.username)"
+          />
+        </q-item>
+
+        <br> <br>
+
+         <!-- display current friend requests -->
+        <q-bar dark class="bg-secondary text-white" style="width: 50%; margin: auto">
+          <div class="col text-center text-weight-bold">Friends</div>
+        </q-bar>
+
+        <br>
+
+        <!-- display current list of friends -->
         <q-item
           v-for="friend in this.friends"
           :key="friend"
@@ -121,6 +202,7 @@
             @click="removeFriend(friend.username)"
           />
         </q-item>
+
       </div>
 
       <div
@@ -272,6 +354,7 @@ export default {
           if (resp.status == 200) {
             // ok
             this.friends = resp.data;
+            this.friendRequests = resp.data;
           }
         })
         .catch((err) => {

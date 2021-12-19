@@ -235,5 +235,5 @@ export default {
 <style lang="sass">
 .my-card
   width: 100%
-  max-width: 250px
+  max-width: 500px
 </style>
