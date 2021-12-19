@@ -189,15 +189,13 @@
           </q-item-section>
 
           <q-item-section side>
-            <!--TODO: on click, remove this friend -->
             <q-btn
               style="margin-right: 20px"
-              v-if="friend.loggedIn"
               dense
               round
               icon="textsms"
               color="light-green-6"
-              @click="showChat(friend.username)"
+              @click="createChat(friend)"
             />
           </q-item-section>
           <q-btn
@@ -361,6 +359,7 @@ export default {
         .then((resp) => {
           if (resp.status == 200) {
             // ok
+            console.log(resp.data);
             resp.data.map((friendInfo) => {
               if (!friendInfo.requested && !friendInfo.confirmed) {
                 // incoming request
@@ -499,11 +498,41 @@ export default {
         });
     },
 
-    showChat(otherUsername) {
-      //TODO: derive chatUUID from current user + other username
-      //when calling startChat, chatName should be alphabetically sorted usernames separated by space (so can compare and see if chat exists).
+    createChat(friend) {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      // check if chat already exists (too slow?)
 
-      this.$router.push("/chat/" + otherUsername);
+      // create new chat
+      let chatName = [
+        userInfo.firstName + " " + userInfo.lastName,
+        friend.firstName + " " + friend.lastName,
+      ];
+      chatName.sort();
+      let chatNameString = chatName.join(", ");
+      console.log(chatNameString, [userInfo.username, friend.username]);
+      axios
+        .post(
+          "/api/chats/",
+          {
+            creator: userInfo.username,
+            name: chatNameString,
+            members: [userInfo.username, friend.username],
+          },
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            // ok
+            this.$router.push("/chat/" + resp.data.chatUUID);
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+          }
+        });
     },
 
     visitWall(friendUsername) {
