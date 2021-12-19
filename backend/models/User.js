@@ -238,6 +238,7 @@ export async function updateUser(profile) {
       username: f.username,
       friendUsername: f.friendUsername,
       friendAffiliation: newProfile.affiliation,
+      confirmedUUID: `${f.confirmed ? 'true' : 'false'}#${f.friendshipUUID}`,
       confirmedAffiliationUUID: (
         `${f.confirmed ? 'true' : 'false'}#${newProfile.affiliation}#${f.friendshipUUID}`
       ),

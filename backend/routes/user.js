@@ -152,7 +152,7 @@ router.get('/users/:username/friends/', userAuthRequired, asyncHandler(async fun
   const visualizationOrigin = assertString(
       req.query.visualizationOrigin, 'visualizationOrigin param', 64, 1, '');
   if (visualizationOrigin && visualizationOrigin !== req.user.username) {
-    throw new Forbidden(`Origin parameter set to ${origin}, not authenticated user.`);
+    throw new Forbidden(`Origin parameter set to ${visualizationOrigin}, not authenticated user.`);
   }
   if (!visualizationOrigin && req.params.username !== req.user.username) {
     throw new Forbidden('Authenticated user does not match username in path.');
