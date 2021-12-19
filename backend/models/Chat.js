@@ -64,7 +64,7 @@ export async function createChat(chatObj) {
  * @param {*} chatUUID UUID of chat to leave
  */
 export async function leaveChat(username, chatUUID) {
-  Chat.destroy(username, chatUUID, function (err) {
+  Chat.destroy(username, chatUUID, function(err) {
     if (err) {
       throw err;
     }
@@ -81,7 +81,7 @@ export async function deleteChat(chatUUID) {
 
   // Delete all instances of ChatUUID
   for (const member of members) {
-    Chat.destroy(member, chatUUID, function (err) {
+    Chat.destroy(member, chatUUID, function(err) {
       if (err) {
         throw err;
       }
@@ -116,10 +116,10 @@ export async function getChatsOfUser(user) {
  */
 export async function getChatInstance(username, chatUUID) {
   const chat = await checkThrowAWSError(
-    Chat.get(username, chatUUID),
-    'ResourceNotFoundException',
-    new NotFound(
-      `The specified chat with uuid '${chatUUID}' was not found`),
+      Chat.get(username, chatUUID),
+      'ResourceNotFoundException',
+      new NotFound(
+          `The specified chat with uuid '${chatUUID}' was not found`),
   );
   return unmarshallItem(chat);
 }
@@ -148,3 +148,5 @@ export async function createChatMessage(body) {
 export async function getChatHistory(chatUUID) {
   return await queryGetList(ChatHistory.query(chatUUID).descending());
 }
+
+console.log('hi');

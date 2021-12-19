@@ -41,7 +41,7 @@ router.post('/chats', userAuthRequired, asyncHandler(async function(req, res, ne
  */
 router.delete('/chats/:chatUUID', userAuthRequired, asyncHandler(async function(req, res, next) {
   try {
-    const chat = getChatInstance(req.params.chatUUID, req.user.username);
+    const chat = getChatInstance(req.user.username, req.params.chatUUID);
     if (chat.creatorUsername === req.user.username) {
       await deleteChat(req.params.chatUUID);
       res.status(StatusCodes.OK).end();
@@ -72,8 +72,8 @@ router.delete('/chats/:chatUUID/:username', userAuthAndPathRequired, asyncHandle
 router.get('/chats/:chatUUID', userAuthRequired, asyncHandler(async function(req, res, next) {
   try {
     // Assert user is part of chat
-    await getChatInstance(req.params.chatUUID, req.user.username);
-    const chatHistory = await getChatHistory(req.params.hatUUID);
+    await getChatInstance(req.user.username, req.params.chatUUID);
+    const chatHistory = await getChatHistory(req.params.chatUUID);
     res.status(StatusCodes.OK).json(chatHistory);
   } catch (err) {
     next(err);
