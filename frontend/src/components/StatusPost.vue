@@ -14,52 +14,55 @@
       "
     >
       <q-card-section style="width: 100%">
-          <div
-            flat>
-
+        <div flat>
           <q-item clickable v-ripple style="background: #fce8ea">
-             <q-item-section avatar>
-                <q-avatar color="primary" text-color="white">
-                    {{ this.firstName.charAt(0).toUpperCase() + this.lastName.charAt(0).toUpperCase()}}
-                </q-avatar>
+            <q-item-section avatar>
+              <q-avatar color="primary" text-color="white">
+                {{
+                  this.firstName.charAt(0).toUpperCase() +
+                  this.lastName.charAt(0).toUpperCase()
+                }}
+              </q-avatar>
             </q-item-section>
-            <q-item-section style="font-size: 1rem">{{ this.firstName + " " + this.lastName}} 📢 </q-item-section>
-        </q-item>
+            <q-item-section style="font-size: 1rem"
+              >{{ this.firstName + " " + this.lastName }} 📢
+            </q-item-section>
+          </q-item>
 
-        <q-separator spaced inset />
-        <q-item clickable v-ripple style="background: #e6f4f7;padding:20px">
-            <div style="font-size: 1.2rem; color:black">
-            <q-item-section>{{ this.content }}</q-item-section>
+          <q-separator spaced inset />
+          <q-item clickable v-ripple style="background: #e6f4f7; padding: 20px">
+            <div style="font-size: 1.2rem; color: black">
+              <q-item-section>{{ this.content }}</q-item-section>
             </div>
-        </q-item>
+          </q-item>
 
-         <q-separator spaced inset />
+          <q-separator spaced inset />
 
+          <CommentSection :postUUID="this.postUUID" :creator="this.creator">
+          </CommentSection>
 
-            <CommentSection :postUUID="this.postUUID"> </CommentSection>
-
-            <!--fetch comments by post uuid-->
-
+          <!--fetch comments by post uuid-->
         </div>
       </q-card-section>
     </q-card>
   </div>
 </template>
 
-
 <script>
 export default {
   data() {
-    return {
-
-    }
+    return {};
   },
   components: {
-      CommentSection: require("components/CommentSection.vue").default
+    CommentSection: require("components/CommentSection.vue").default,
   },
 
   props: {
     postUUID: {
+      type: String,
+      required: true,
+    },
+    creator: {
       type: String,
       required: true,
     },
@@ -74,9 +77,8 @@ export default {
     content: {
       type: String,
       required: true,
-    }
+    },
   },
-
 };
 </script>
 

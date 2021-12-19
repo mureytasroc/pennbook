@@ -62,12 +62,12 @@
                 opacity: 0.8;
               "
             >
-              <div v-if="post.type == 'friendship'">
+              <div v-if="post.type == 'Friendship'">
                 <FriendshipUpdate
-                  :firstNameA="post.user1.firstName"
-                  :lastNameA="post.user1.lastName"
-                  :firstNameB="post.user2.firstName"
-                  :lastNameB="post.user2.lastName"
+                  :firstNameA="post.friend.firstName"
+                  :lastNameA="post.friend.lastName"
+                  :firstNameB="post.friendOfFriend.firstName"
+                  :lastNameB="post.friendOfFriend.lastName"
                   style="height: 100%; width: 100%; margin: auto"
                 />
               </div>
@@ -75,6 +75,7 @@
               <div v-else>
                 <StatusPost
                   :postUUID="post.postUUID"
+                  :creator="post.creator.username"
                   :firstName="post.creator.firstName"
                   :lastName="post.creator.lastName"
                   :content="post.content"
@@ -142,6 +143,7 @@ export default {
       .then((resp) => {
         if (resp.status == 200) {
           // ok
+          console.log(resp.data);
           this.posts = resp.data;
         }
       })

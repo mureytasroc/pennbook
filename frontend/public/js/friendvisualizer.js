@@ -10,7 +10,6 @@ $(document).ready(function () {
       visualizationOrigin: userInfo.username,
     },
     success: function (response) {
-      console.log(response);
       var infovis = document.getElementById("infovis");
       var w = infovis.offsetWidth - 50,
         h = infovis.offsetHeight - 50;

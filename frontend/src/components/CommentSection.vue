@@ -77,6 +77,10 @@ export default {
       type: String,
       required: true,
     },
+    creator: {
+      type: String,
+      required: true,
+    },
   },
 
   computed: {
@@ -85,14 +89,12 @@ export default {
 
   methods: {
     postComment() {
-      //TODO: call route to update db with new comment
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
         .post(
           "/api/users/" +
-            userInfo.username +
+            this.creator +
             "/wall/" +
-            this.$props.postUUID +
+            this.postUUID +
             "/comments/",
           {
             content: this.newComment,
@@ -102,7 +104,6 @@ export default {
           }
         )
         .then((resp) => {
-          console.log(resp);
           if (resp.status == 201) {
             // ok
             this.newComment = "";
@@ -112,14 +113,9 @@ export default {
     },
   },
   mounted() {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     axios
       .get(
-        "/api/users/" +
-          userInfo.username +
-          "/wall/" +
-          this.$props.postUUID +
-          "/comments/",
+        "/api/users/" + this.creator + "/wall/" + this.postUUID + "/comments/",
         {
           headers: { Authorization: `Bearer ${localStorage.jwt}` },
         }

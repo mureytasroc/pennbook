@@ -416,11 +416,9 @@ export default {
           }
         )
         .then((resp) => {
-          console.log(resp);
           if (resp.status == 201) {
             // ok
             alert("Sent a friend request to " + friendUsername + "!");
-            // this.friends.push(resp.data);
           }
         })
         .catch((err) => {
@@ -443,9 +441,11 @@ export default {
           if (resp.status == 201) {
             // ok
             alert("Accepted " + friendUsername + "'s friend request!");
+            // remove from friendRequests
             this.friendRequests = this.friendRequests.filter(
               (friend) => friend.username != friendUsername
             );
+            // add to friends
             this.friends.push(resp.data);
           }
         })

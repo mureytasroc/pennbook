@@ -27,7 +27,6 @@
         <br v-if="!this.isSelf" />
 
         <q-card
-          v-if="this.isSelf"
           style="
             margin: auto;
             border: 8px solid white;
