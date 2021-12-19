@@ -57,13 +57,16 @@
 
       <!-- profile tab (for regular chat) -->
       <div v-if="this.tab == 'friends'" style="margin-top: 2%">
-
         <!-- display current friend requests -->
-        <q-bar dark class="bg-secondary text-white" style="width: 50%; margin: auto">
+        <q-bar
+          dark
+          class="bg-secondary text-white"
+          style="width: 50%; margin: auto"
+        >
           <div class="col text-center text-weight-bold">Friend Requests</div>
         </q-bar>
 
-        <br>
+        <br />
 
         <q-item
           v-for="friendRequest in this.friendRequests"
@@ -76,10 +79,10 @@
             margin-bottom: 10px;
             width: 600px;
             opacity: 0.8;
-            background: #F2F4DB;
+            background: #f2f4db;
           "
         >
-          <q-btn @click="visitWall(friendRequest.username)" flat>
+          <q-btn flat>
             <q-item-section avatar>
               <q-avatar color="primary" text-color="white">
                 {{
@@ -128,14 +131,19 @@
           />
         </q-item>
 
-        <br> <br>
+        <br />
+        <br />
 
-         <!-- display current friend requests -->
-        <q-bar dark class="bg-secondary text-white" style="width: 50%; margin: auto">
+        <!-- display current friend requests -->
+        <q-bar
+          dark
+          class="bg-secondary text-white"
+          style="width: 50%; margin: auto"
+        >
           <div class="col text-center text-weight-bold">Friends</div>
         </q-bar>
 
-        <br>
+        <br />
 
         <!-- display current list of friends -->
         <q-item
@@ -202,7 +210,6 @@
             @click="removeFriend(friend.username)"
           />
         </q-item>
-
       </div>
 
       <div
@@ -275,7 +282,7 @@
             background: whitesmoke;
           "
         >
-          <q-btn @click="visitWall(searchedFriend.username)" flat>
+          <q-btn flat>
             <q-item-section avatar>
               <q-avatar color="primary" text-color="white">
                 {{
@@ -331,6 +338,7 @@ export default {
       tab: "friends",
       searchPeopleQuery: "",
       friends: [],
+      friendRequests: [],
       searchedFriends: [],
     };
   },
@@ -353,8 +361,15 @@ export default {
         .then((resp) => {
           if (resp.status == 200) {
             // ok
-            this.friends = resp.data;
-            this.friendRequests = resp.data;
+            resp.data.map((friendInfo) => {
+              if (!friendInfo.requested && !friendInfo.confirmed) {
+                // incoming request
+                this.friendRequests.push(friendInfo);
+              } else if (friendInfo.confirmed) {
+                // friend
+                this.friends.push(friendInfo);
+              }
+            });
           }
         })
         .catch((err) => {
@@ -404,8 +419,62 @@ export default {
           console.log(resp);
           if (resp.status == 201) {
             // ok
-            alert("Added " + friendUsername + "!");
+            alert("Sent a friend request to " + friendUsername + "!");
+            // this.friends.push(resp.data);
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+          }
+        });
+    },
+    acceptFriendRequest(friendUsername) {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .post(
+          "/api/users/" + userInfo.username + "/friends/" + friendUsername,
+          {},
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 201) {
+            // ok
+            alert("Accepted " + friendUsername + "'s friend request!");
+            this.friendRequests = this.friendRequests.filter(
+              (friend) => friend.username != friendUsername
+            );
             this.friends.push(resp.data);
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+          }
+        });
+    },
+    rejectFriendRequest(friendUsername) {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+      axios
+        .delete(
+          "/api/users/" +
+            userInfo.username +
+            "/friends/" +
+            friendUsername +
+            "/",
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 204) {
+            // ok
+            this.friendRequests = this.friendRequests.filter(
+              (friend) => friend.username != friendUsername
+            );
           }
         })
         .catch((err) => {
@@ -437,8 +506,8 @@ export default {
       this.$router.push("/chat/" + otherUsername);
     },
 
-    visitWall(username) {
-      this.$router.push("/wall/" + username);
+    visitWall(friendUsername) {
+      this.$router.push("/wall/" + friendUsername);
     },
   },
   beforeUnmount() {},

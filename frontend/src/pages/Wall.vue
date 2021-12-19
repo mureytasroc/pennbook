@@ -22,6 +22,7 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+import axios from "axios";
 export default {
   data() {
     return {
@@ -54,7 +55,7 @@ export default {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     axios
       .get(
-        "/api/users/" + userInfo.username + "/wall/",
+        "/api/users/" + this.username + "/wall/",
 
         {
           headers: { Authorization: `Bearer ${localStorage.jwt}` },
