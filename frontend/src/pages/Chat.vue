@@ -86,14 +86,14 @@
              <q-chat-message
               class="chatSize"
               style="font-size: 16px; color: black"
-              v-for="(message, key) in messages"
-              :label="messageDate(message.timestamp)"
-              :key="key"
-              :sent="message.from == userOrder ? true : false"
+              v-for="message in messages"
+              :text="[message.messageUUID]"
+              :name="message.sender.username"
+              :key="message"
+              :sent="message.sender.username == this.userInfo.username ? true : false"
               :bg-color="
                 message.from == userOrder ? 'whitesmoke' : 'light-green-3'
               "
-              :stamp="message.timestamp ? messageTime(message.timestamp) : ''"
             >
             </q-chat-message>
           </div>
@@ -153,7 +153,9 @@ export default {
       userOrder: "",
       popupMode: "",
       name: "",
-      users: []
+      users: [],
+      userInfo: {},
+      messages: [{"messageUUID": "bruh", "timestamp": 123, "sender": {"username": "patrick", "firstName": "pat", "lastName": "liu"}}]
     };
   },
 
@@ -199,6 +201,15 @@ export default {
        this.$router.push('/chats')
     },
 
+
+    messageDate(timestamp) {
+      //console.log(timestamp);
+      let dateObj = new Date(Number(timestamp));
+      return dateObj
+        .toLocaleDateString()
+        .substring(0, dateObj.toLocaleDateString().length - 5);
+    },
+
     getOnlineFriends() {
 
       //TODO: return array of online friends (call route)
@@ -241,6 +252,8 @@ export default {
     let currentPath = this.$route.fullPath;
     let subdomains = currentPath.split('/');
     let chatUUID = subdomains[subdomains.length-1]
+    this.userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    console.log(this.userInfo)
 
     //TODO: set chatUUID field and load all messages (route call) into "messages"
     //get involved users and set users variable
