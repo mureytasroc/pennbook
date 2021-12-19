@@ -82,20 +82,12 @@
           class="q-pa-md column col justify-end"
           style="margin-bottom: 30px; margin-top: 30px"
         >
-          <!--<q-btn
-            v-if="showAllButton"
-            @click="showAllMessages"
-            color="secondary"
-            label="Show All"
-            style="margin-bottom: 30px; margin-top: -10px"
-          />-->
-          <!-- Write mode -->
           <div>
              <q-chat-message
               class="chatSize"
               style="font-size: 16px; color: black"
               v-for="(message, key) in messages"
-              :label="message.from == 'conversationStarter' ? '💬 ' + message.text  : messageDate(message.timestamp)"
+              :label="messageDate(message.timestamp)"
               :key="key"
               :sent="message.from == userOrder ? true : false"
               :bg-color="
@@ -114,7 +106,6 @@
 
           <q-form @keyup:enter="sendMessage" class="full-width">
             <q-input
-              @input="nowTyping"
               v-model="newMessage"
               ref="newMessage"
               bg-color="white"
@@ -126,7 +117,7 @@
 
               <template v-slot:after>
                 <q-btn
-                v-show="newMessage"
+                  v-show="newMessage"
                   @click="sendMessage"
                   round
                   dense
@@ -182,20 +173,16 @@ export default {
 
     sendMessage() {
       if (this.newMessage.replace(/\s/g, "") != "") {
-        // copy newMessage to local variable so that it can be
-        // cleared (and '... is typing' removed) before the message is sent
+
+        //TODO: post message to route
         let messageContent = this.newMessage;
+        console.log(messageContent);
 
         this.clearMessage();
 
         let date = Date.parse(new Date()).toString();
 
       }
-    },
-
-    showAllMessages() {
-      this.loadAllMessages(this.otherId);
-      this.showAllButton = false;
     },
 
     clearMessage() {
@@ -234,7 +221,7 @@ export default {
     },
 
    sendInvite(username){
-      //invite user with username to same chatUUID
+      //invite user with username to same chatUUID – should open up new chatUUID?
     }
 
   },
@@ -248,14 +235,6 @@ export default {
 
   mounted() {
 
-    if (screen.width < 766) {
-      this.drawerWidth = screen.width;
-      this.buttonShow = true;
-    } else if (screen.width > 766 && screen.width < 1024) {
-      this.drawerWidth = 0.7 * screen.width;
-      this.buttonShow = true;
-    }
-
   },
 
   created() {
@@ -263,7 +242,7 @@ export default {
     let subdomains = currentPath.split('/');
     let chatUUID = subdomains[subdomains.length-1]
 
-    //TODO: set chatUUID field and load all messages (route call)
+    //TODO: set chatUUID field and load all messages (route call) into "messages"
     //get involved users and set users variable
   },
 
