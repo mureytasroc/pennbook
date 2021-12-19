@@ -148,3 +148,5 @@ export async function createChatMessage(body) {
 export async function getChatHistory(chatUUID) {
   return await queryGetList(ChatHistory.query(chatUUID).descending());
 }
+
+console.log('hi');
