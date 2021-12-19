@@ -113,7 +113,7 @@
               : ''
           "
           active-class="tab-active"
-          @click="handlePush('messages')"
+          to="/chats"
           class="q-ma-sm"
           clickable
           :focused="this.messageFocus"
