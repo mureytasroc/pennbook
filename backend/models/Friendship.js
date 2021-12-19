@@ -4,7 +4,7 @@ import dynamo from 'dynamodb';
 import { getUser } from '../models/User.js';
 import { Conflict, Forbidden, NotFound } from '../error/errors.js';
 import Joi from 'joi';
-import { unmarshallItem, queryGetListPageLimit, queryGetList, checkThrowAWSError,
+import { unmarshallItem, queryGetListPageLimit, checkThrowAWSError,
   extractUserObject } from '../util/utils.js';
 
 export const Friendship = dynamo.define('Friendship', {
@@ -24,9 +24,6 @@ export const Friendship = dynamo.define('Friendship', {
     timestamp: Joi.string(),
   },
   indexes: [{
-    hashKey: 'username', rangeKey: 'friendshipUUID', type: 'local', name: 'FriendUUIDIndex',
-  },
-  {
     hashKey: 'username', rangeKey: 'confirmedUUID', type: 'local',
     name: 'ConfirmedUUIDIndex',
   },
@@ -51,7 +48,7 @@ export function friendshipModelToResponse(friendship) {
     confirmed: friendship.confirmed ? true : false,
     requested: friendship.requested ? true : false,
     timestamp: friendship.timestamp,
-    friendshipUUID: friendship.friendshipUUID,
+    friendshipUUID: friendship.confirmedUUID,
     loggedIn: false, // TODO: set loggedIn status
   };
 }
@@ -218,15 +215,21 @@ export async function deleteFriendship(username, friendUsername) {
  * @param {string} visualizationOrigin (optional) the username of a user to restrict listed
  *    friends to having the same affiliation as the origin; if specified, this function
  *    will return results in the visualizer format
+ * @param {boolean} returnTrueUUID (default false) set to true to return the true UUID
+ *    rather than the confirmedUUID (only works if !visualizationOrigin)
+ * @param {boolean} descending (default false) set to true to return friendships in decreasing
+ *    order of uuid (only works if !visualizationOrigin)
  * @return {Array} a list of friend usernames
  */
-export async function getFriendships(username, page, limit, visualizationOrigin) {
+export async function getFriendships(username, page, limit, visualizationOrigin, returnTrueUUID, descending) { // eslint-disable-line max-len
   if (!visualizationOrigin) {
     const friendships = await queryGetListPageLimit(
-        Friendship.query(username).usingIndex('FriendUUIDIndex'),
-        'friendshipUUID', page, limit, true, // ascending
+        Friendship.query(username).usingIndex('ConfirmedUUIDIndex'),
+        'confirmedUUID', page, limit, !descending, // ascending
     );
-    return friendships.map(friendshipModelToResponse);
+    return friendships.map(
+        (f) => ({ ...f, confirmedUUID: returnTrueUUID ? f.friendshipUUID : f.confirmedUUID }),
+    ).map(friendshipModelToResponse);
   }
   const originUser = await getUser(visualizationOrigin);
   const originVisualization = (username === visualizationOrigin);
@@ -235,8 +238,10 @@ export async function getFriendships(username, page, limit, visualizationOrigin)
   const indexName = originVisualization ? 'ConfirmedUUIDIndex' : 'ConfirmedAffiliationUUIDIndex';
   const sortKey = originVisualization ? 'confirmedUUID' : 'confirmedAffiliationUUID';
   const requests = [
-    queryGetList(Friendship.query(username).usingIndex(indexName)
-        .where(sortKey).gte(page).limit(limit+1)),
+    await queryGetListPageLimit(
+        Friendship.query(username).usingIndex(indexName),
+        sortKey, page, limit, true, // ascending
+    ),
   ];
   if (!originVisualization) {
     requests.push(getUser(username));
@@ -244,9 +249,32 @@ export async function getFriendships(username, page, limit, visualizationOrigin)
   const responses = await Promise.all(requests);
 
   const friendships = responses[0].filter((f) => (
-    (!page || f.confirmedAffiliationUUID > page) &&
     f.confirmed && (originVisualization || f.friendAffiliation === originUser.affiliation)
-  )).slice(0, limit);
+  ));
   const user = originVisualization ? originUser : responses[1];
   return friendshipModelsToVisResponse(user, friendships);
+}
+
+/**
+ * Given a username, get an array of all its confirmed friends (all pages)
+ * @param {string} username the username to get friends of
+ * @param {boolean} returnTrueUUID (default false) set to true to return the true UUID
+ *    rather than the confirmedUUID
+ * @param {boolean} descending (default false) set to true to return friendships in decreasing
+ *    order of uuid
+ * @return {Array} a list of friend usernames
+ */
+export async function getAllConfirmedFriendships(username, returnTrueUUID, descending) {
+  let userFriends = await getFriendships(
+      username, undefined, 5000, undefined, returnTrueUUID, descending);
+  userFriends = userFriends.filter((f) => f.confirmed);
+  let newFriends = userFriends;
+  while (newFriends.length) {
+    newFriends = await getFriendships(
+        username, `true#${newFriends[newFriends.length-1].friendshipUUID}`,
+        5000, undefined, returnTrueUUID, descending);
+    newFriends = newFriends.filter((f) => f.confirmed);
+    userFriends = userFriends.concat(newFriends);
+  }
+  return userFriends;
 }

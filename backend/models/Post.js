@@ -7,7 +7,7 @@ import { checkThrowAWSError, queryGetListPageLimit,
   removeDuplicatesByField, extractUserObject, queryGetList,
   executeAsync, unmarshallItem } from '../util/utils.js';
 import { Conflict, Forbidden, NotFound } from '../error/errors.js';
-import { getFriendship, getFriendships } from './Friendship.js';
+import { getAllConfirmedFriendships, getFriendship, getFriendships } from './Friendship.js';
 
 /**
  * Uncompresses the content attribute of the given object.
@@ -266,17 +266,17 @@ export async function getPostsOnWall(wallUsername, page, limit) {
  * @return {Array} all posts corresponding to the home page
  */
 export async function getHomepageItems(username, page, limit) {
-  let [postsOnWall, userFriends] = await Promise.all([
+  const [postsOnWall, userFriends] = await Promise.all([
     getPostsOnWall(username, page, limit),
-    getFriendships(username),
+    getAllConfirmedFriendships(username, true, true),
   ]);
-  userFriends = userFriends.filter((friendship) => friendship.confirmed);
 
   const [postsOnFriends, friendsOfFriends] = await Promise.all([
     Promise.all(
         userFriends.map(({ username }) => getPostsOnWall(username, page, limit))),
     Promise.all(
-        userFriends.map(({ username }) => getFriendships(username, page, limit))),
+        userFriends.map(({ username }) => getFriendships(
+            username, page ? `true#${page}` : undefined, limit, undefined, true, true))),
   ]);
 
   const allPosts = await augmentPostsWithLikes(postsOnWall.concat(postsOnFriends.flat())

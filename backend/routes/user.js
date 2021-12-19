@@ -104,7 +104,7 @@ router.patch('/users/:username/profile', userAuthAndPathRequired, asyncHandler(a
  */
 router.get('/users', asyncHandler(async function(req, res) {
   const query = assertString(req.query.q, 'q param').toLowerCase().trim().split(/\s+/).join(' ');
-  const page = assertString(req.query.page, 'page param', 64, 1, '');
+  const page = assertString(req.query.page, 'page param', 70, 1, '');
   const limit = assertInt(req.query.limit, 'limit param', 5000, 1, 10);
   const results = await searchUsers(query, page, limit);
   res.status(StatusCodes.OK).json(results);
@@ -147,10 +147,11 @@ router.delete('/users/:username/friends/:friendUsername', userAuthAndPathRequire
  * Get friendships.
  */
 router.get('/users/:username/friends/', userAuthRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
-  const page = assertString(req.query.page, 'page param', 64, 1, '');
-  const limit = assertInt(req.query.limit, 'limit param', 2000, 1, 10);
+  const page = assertString(
+    req.query.page ? decodeURIComponent(req.query.page) : undefined, 'page param', 70, 1, '');
+  const limit = assertInt(req.query.limit, 'limit param', 5000, 1, 10);
   const visualizationOrigin = assertString(
-      req.query.visualizationOrigin, 'visualizationOrigin param', 64, 1, '');
+      req.query.visualizationOrigin, 'visualizationOrigin param', 70, 1, '');
   if (visualizationOrigin && visualizationOrigin !== req.user.username) {
     throw new Forbidden(`Origin parameter set to ${visualizationOrigin}, not authenticated user.`);
   }
