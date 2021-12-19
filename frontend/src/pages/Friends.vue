@@ -139,7 +139,10 @@
         style="display: flex; position: relative; margin-top: 2%"
       >
         <!--TODO: make this functional and search for friends / move elsewhere-->
-        <q-toolbar class="bg-primary text-white rounded-borders" style="width: 50%">
+        <q-toolbar
+          class="bg-primary text-white rounded-borders"
+          style="width: 50%"
+        >
           <h7 class="gt-xs"> Find/Add friends! </h7>
 
           <q-space />
@@ -171,9 +174,11 @@
           color="secondary"
           @click="searchPeople"
         />
-
       </div>
-        <div v-if="this.searchedFriends && this.tab == 'people' " style="margin-top: 2%">
+      <div
+        v-if="this.searchedFriends && this.tab == 'people'"
+        style="margin-top: 2%"
+      >
         <q-item
           v-for="searchedFriend in this.searchedFriends"
           :key="searchedFriend"
@@ -206,6 +211,11 @@
           </q-item-section>
 
           <q-btn
+            v-if="
+              !this.friends.some(
+                (friend) => friend.username === searchedFriend.username
+              )
+            "
             icon="add_circle"
             flat
             dense
@@ -214,10 +224,18 @@
             color="green"
             @click="addFriend(searchedFriend.username)"
           />
+          <q-btn
+            v-else
+            icon="remove_circle_outline"
+            flat
+            dense
+            unelevated
+            style="font-size: 12px !important; margin-left: 5px"
+            color="red"
+            @click="removeFriend(searchedFriend.username)"
+          />
         </q-item>
       </div>
-
-
     </div>
   </q-page>
 </template>
@@ -231,7 +249,7 @@ export default {
       tab: "friends",
       searchPeopleQuery: "",
       friends: [],
-      searchedFriends: []
+      searchedFriends: [],
     };
   },
   props: {},
@@ -263,34 +281,24 @@ export default {
         });
     },
     removeFriend(friendUsername) {
-      /*
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
-          .delete("/api/users/" + sessions.username + "/friends/" + friendUsername + "/").then((resp) => {
-            if (resp == 200) {
-              // ok
-            } else if (resp == 401) {
-              // unath
-            } else if (resp == 403) {
-              // forbidden
-            } else if (resp == 404) {
-              // friendUsername not found
-            } else if (resp == 409) {
-              // not already friend
-            }
-          })
-      }
-      */
-    },
-    //TODO: make this route call
-    searchPeople() {
-      console.log(this.searchPeopleQuery);
-
-      axios
-        .get("/api/users/", { params: { q: this.searchPeopleQuery } })
+        .delete(
+          "/api/users/" +
+            userInfo.username +
+            "/friends/" +
+            friendUsername +
+            "/",
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
         .then((resp) => {
-          console.log(resp);
-          if (resp.status == 200) {
+          if (resp.status == 204) {
             // ok
+            this.friends = this.friends.filter(
+              (friend) => friend.username != friendUsername
+            );
           }
         })
         .catch((err) => {
@@ -298,8 +306,45 @@ export default {
             console.log(err.response);
           }
         });
-
-        //TODO: set this.searchedFriends
+    },
+    addFriend(friendUsername) {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .post(
+          "/api/users/" + userInfo.username + "/friends/" + friendUsername,
+          {},
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          console.log(resp);
+          if (resp.status == 201) {
+            // ok
+            alert("Added " + friendUsername + "!");
+            this.friends.push(resp.data);
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+          }
+        });
+    },
+    searchPeople() {
+      axios
+        .get("/api/users/", { params: { q: this.searchPeopleQuery } })
+        .then((resp) => {
+          if (resp.status == 200) {
+            // ok
+            this.searchedFriends = resp.data;
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+          }
+        });
     },
 
     showChat(otherUsername) {
