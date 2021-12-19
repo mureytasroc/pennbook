@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import routeCache from 'route-cache';
 import { turnTextToKeywords } from '../jobs/load-news.js';
 import {
-  articleSearch, getCategories, likeArticle, recommendArticles, unlikeArticle,
+  articleSearch, getCategories, getLikesOnArticle, likeArticle, recommendArticles, unlikeArticle,
 } from '../models/News.js';
 import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 import { assertString, assertInt } from '../util/utils.js';
@@ -25,7 +25,7 @@ router.get('/news/categories', routeCache.cacheSeconds(60 * 60), asyncHandler(as
 /**
  * News search.
  */
-router.get('/news/articles', userAuthRequired, async function(req, res) {
+router.get('/news/articles', userAuthRequired, asyncHandler(async function(req, res) {
   const keywords = turnTextToKeywords(decodeURIComponent(
       assertString(req.query.q, 'q param', 200, 1), true));
   if (!keywords.length) {
@@ -35,7 +35,7 @@ router.get('/news/articles', userAuthRequired, async function(req, res) {
   const limit = assertInt(req.query.limit, 'limit param', 2000, 1, 10);
   const articles = await articleSearch(req.user.username, keywords, page, limit);
   res.json(articles);
-});
+}));
 
 
 /**
@@ -53,7 +53,7 @@ router.get('/users/:username/recommended-articles', userAuthAndPathRequired, asy
  * Like article.
  */
 router.post('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
-  const articleUUID = assertString(req.params.articleUUID, 'articleUUID', 64, 1, '');
+  const articleUUID = assertString(req.params.articleUUID, 'articleUUID', 64, 1);
   await likeArticle(req.user.username, articleUUID);
   res.sendStatus(StatusCodes.CREATED);
 }));
@@ -63,9 +63,21 @@ router.post('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequi
  * Unlike article.
  */
 router.delete('/users/:username/liked-articles/:articleUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
-  const articleUUID = assertString(req.params.articleUUID, 'articleUUID', 64, 1, '');
+  const articleUUID = assertString(req.params.articleUUID, 'articleUUID', 64, 1);
   await unlikeArticle(req.user.username, articleUUID);
   res.sendStatus(StatusCodes.NO_CONTENT);
+}));
+
+
+/**
+ * Get page of article likes.
+ */
+router.get('/news/articles/:articleUUID/likes', asyncHandler(async function(req, res) {
+  const articleUUID = assertString(req.params.articleUUID, 'articleUUID', 64, 1);
+  const page = assertString(req.query.page, 'page param', 64, 1, '');
+  const limit = assertInt(req.query.limit, 'limit param', 5000, 1, 10);
+  const likes = await getLikesOnArticle(articleUUID, page, limit);
+  res.json(likes);
 }));
 
 

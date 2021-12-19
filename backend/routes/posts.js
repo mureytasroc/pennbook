@@ -2,7 +2,8 @@ import express from 'express';
 import { assertFriendshipConfirmed } from '../models/Friendship.js';
 import {
   createPost, getHomepageItems, getPostsOnWall,
-  createComment, getCommentsOnPost,
+  createComment, getCommentsOnPost, likePost, unlikePost, getLikesOnPost,
+  getLikesOnComment, likeComment, unlikeComment,
 } from '../models/Post.js';
 import { StatusCodes } from 'http-status-codes';
 import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
@@ -47,6 +48,38 @@ router.post('/users/:username/wall', userAuthRequired, asyncHandler(async functi
   };
   const post = await createPost(postObj, req.user.username, wallUsername);
   res.status(StatusCodes.CREATED).json(post);
+}));
+
+/**
+ * Like post.
+ */
+router.post('/users/:username/liked-posts/:postUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const postUUID = assertString(req.params.postUUID, 'postUUID', 64, 1);
+  await likePost(req.user.username, postUUID);
+  res.sendStatus(StatusCodes.CREATED);
+}));
+
+
+/**
+ * Unlike post.
+ */
+router.delete('/users/:username/liked-posts/:postUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const postUUID = assertString(req.params.postUUID, 'postUUID', 64, 1);
+  await unlikePost(req.user.username, postUUID);
+  res.sendStatus(StatusCodes.NO_CONTENT);
+}));
+
+
+/**
+ * Get page of post likes.
+ */
+router.get('/users/:username/wall/:postUUID/likes', userAuthRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const wallUsername = await getWallUsername(req);
+  const postUUID = assertString(req.params.postUUID, 'postUUID', 64, 1);
+  const page = assertString(req.query.page, 'page param', 64, 1, '');
+  const limit = assertInt(req.query.limit, 'limit param', 5000, 1, 10);
+  const likes = await getLikesOnPost(postUUID, wallUsername, page, limit);
+  res.json(likes);
 }));
 
 
@@ -98,6 +131,42 @@ router.get('/users/:username/wall/:postUUID/comments', userAuthRequired, asyncHa
   const postUUID = assertString(req.params.postUUID, 'postUUID param', 64, 1);
   const comments = await getCommentsOnPost(postUUID, wallUsername, page, limit);
   res.status(StatusCodes.OK).json(comments);
+}));
+
+
+/**
+ * Like comment.
+ */
+router.post('/users/:username/liked-comments/:postUUID/:commentUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const postUUID = assertString(req.params.postUUID, 'postUUID', 64, 1);
+  const commentUUID = assertString(req.params.commentUUID, 'commentUUID', 64, 1);
+  await likeComment(req.user.username, postUUID, commentUUID);
+  res.sendStatus(StatusCodes.CREATED);
+}));
+
+
+/**
+ * Unlike comment.
+ */
+router.delete('/users/:username/liked-comments/:postUUID/:commentUUID', userAuthAndPathRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const postUUID = assertString(req.params.postUUID, 'postUUID', 64, 1);
+  const commentUUID = assertString(req.params.commentUUID, 'commentUUID', 64, 1);
+  await unlikeComment(req.user.username, postUUID, commentUUID);
+  res.sendStatus(StatusCodes.NO_CONTENT);
+}));
+
+
+/**
+ * Get page of comment likes.
+ */
+router.get('/users/:username/wall/:postUUID/comment/:commentUUID/likes', userAuthRequired, asyncHandler(async function(req, res) { // eslint-disable-line max-len
+  const wallUsername = await getWallUsername(req);
+  const postUUID = assertString(req.params.postUUID, 'postUUID', 64, 1);
+  const commentUUID = assertString(req.params.commentUUID, 'postUUID', 64, 1);
+  const page = assertString(req.query.page, 'page param', 64, 1, '');
+  const limit = assertInt(req.query.limit, 'limit param', 5000, 1, 10);
+  const likes = await getLikesOnComment(postUUID, wallUsername, commentUUID, page, limit);
+  res.json(likes);
 }));
 
 

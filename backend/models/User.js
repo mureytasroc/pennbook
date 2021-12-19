@@ -121,7 +121,7 @@ export async function validateUserProfile(profile, keysToCheck) {
     if (!interests) {
       throw new BadRequest('You must specify your interests.');
     }
-    const interestsList = interests.map((x) => x.trim());
+    const interestsList = interests.split(',').map((x) => x.trim());
     const categoriesSet = await getCategories();
     const invalidInterests = interestsList.filter((interest) => !categoriesSet.has(interest));
     if (invalidInterests.length) {

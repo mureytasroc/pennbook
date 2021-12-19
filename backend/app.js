@@ -1,6 +1,6 @@
 import './config/dotenv.js';
 import { returnError } from './error/errorHandlers.js';
-import './models/connect.js';
+import { initTables } from './models/connect.js';
 import express from 'express';
 import api from './routes/api.js';
 import { Server } from 'socket.io';
@@ -11,6 +11,8 @@ import { prod } from './config/dotenv.js';
 import cors from 'cors';
 import { getChatInstance, createChatMessage } from './models/Chat.js';
 import { setOnlineStatus } from './models/User.js';
+
+await initTables(); // initialize DynamoDB tables
 
 if (prod) {
   Sentry.init();

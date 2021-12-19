@@ -15,7 +15,7 @@ router.use(user);
  * An example route for throwing an error, for demo purposes only. Of course in a real
  * app we would not expose something like this.
  */
-router.get('/error-example', async function(req, res) {
+router.get('/error-example', function(req, res) {
   throw new Error('Example error.');
 });
 
