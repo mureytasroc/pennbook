@@ -121,7 +121,7 @@ export async function validateUserProfile(profile, keysToCheck) {
     if (!interests) {
       throw new BadRequest('You must specify your interests.');
     }
-    const interestsList = interests.map((x) => x.trim());
+    const interestsList = interests.split(',').map((x) => x.trim());
     const categoriesSet = await getCategories();
     const invalidInterests = interestsList.filter((interest) => !categoriesSet.has(interest));
     if (invalidInterests.length) {
@@ -144,16 +144,20 @@ export async function validateUserProfile(profile, keysToCheck) {
  * @param {*} status new status to set (true or false)
  */
 export async function setOnlineStatus(username, status) {
-  await checkThrowAWSError(
-      User.update({ onlineStatus: status },
-          {
-            ConditionExpression: `username = :uname`,
-            ExpressionAttributeValues: { ':uname': username },
-            ReturnValues: 'ALL_NEW',
-          }),
-      'ConditionalCheckFailedException',
-      new NotFound(`The username ${username} was not found.`),
-  );
+  try {
+    await checkThrowAWSError(
+        User.update({ username: username, onlineStatus: status },
+            {
+              ConditionExpression: `username = :uname`,
+              ExpressionAttributeValues: { ':uname': username },
+              ReturnValues: 'ALL_NEW',
+            }),
+        'ConditionalCheckFailedException',
+        new NotFound(`The username ${username} was not found.`),
+    );
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 /**

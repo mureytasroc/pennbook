@@ -3,10 +3,9 @@ import { BadRequest, UnprocessableEntity } from '../error/errors.js';
 /**
  * A helper function to wrap DynamodDb API queries into promises
  * @param {Object} q the query to execute
- * @return {Object} a promise for the executed query
  */
-export function executeAsync(q) {
-  return new Promise(function(resolve, reject) {
+export async function executeAsync(q) {
+  return await new Promise(function(resolve, reject) {
     q.exec(function(err, resp) {
       if (err) {
         reject(err);

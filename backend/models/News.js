@@ -3,7 +3,9 @@ import Joi from 'joi';
 import memoize from 'memoizee';
 import { BadRequest, Conflict, NotFound } from '../error/errors.js';
 import { unmarshallItem, queryGetList,
-  checkThrowAWSError, queryGetListPageLimit } from '../util/utils.js';
+  checkThrowAWSError, queryGetListPageLimit,
+  executeAsync, extractUserObject } from '../util/utils.js';
+import { getUser } from './User.js';
 
 
 export const Category = dynamo.define('Category', {
@@ -34,12 +36,23 @@ export const Article = dynamo.define('Article', {
 export function articleModelToResponse(article) {
   return {
     articleUUID: article.articleUUID,
+    likes: article.likes,
     category: article.category,
     headline: article.headline,
     authors: article.authors,
     shortDescription: article.shortDescription,
     date: article.date,
   };
+}
+
+/**
+ * Augments each article in the given array with its like count
+ * @param {Array} articles an array of articles to augment with like counts
+ */
+async function augmentArticlesWithLikes(articles) {
+  const likes = await Promise.all(articles.map((a) =>
+    executeAsync(ArticleLike.query(a.articleUUID).select('COUNT'))));
+  return articles.map((a, i) => ({ likes: likes[i].Count, ...a }));
 }
 
 export const ArticleLike = dynamo.define('ArticleLike', {
@@ -191,10 +204,10 @@ export async function articleSearch(username, keywords, page, limit) {
   const finalUUIDs = matchCountSections.flat().slice(0, limit);
   const uuidToIdx = new Map();
   finalUUIDs.forEach((uuid, idx) => uuidToIdx.set(uuid, idx));
-  const finalArticles = JSON.parse(JSON.stringify(await Article.getItems(finalUUIDs)));
-  return finalArticles
-      .sort((a, b)=>(uuidToIdx.get(a.articleUUID)-uuidToIdx.get(b.articleUUID)))
-      .map(articleModelToResponse);
+  const finalArticles = await augmentArticlesWithLikes(
+      JSON.parse(JSON.stringify(await Article.getItems(finalUUIDs)))
+          .sort((a, b)=>(uuidToIdx.get(a.articleUUID)-uuidToIdx.get(b.articleUUID))));
+  return finalArticles.map(articleModelToResponse);
 }
 
 
@@ -226,9 +239,9 @@ export async function recommendArticles(username, page, limit) {
  * @param {string} articleUUID the UUID of the article to like
  */
 export async function likeArticle(username, articleUUID) {
-  await getArticle(articleUUID);
+  const [user, article] = await Promise.all([getUser(username), getArticle(articleUUID)]); // eslint-disable-line no-unused-vars, max-len
   try {
-    await ArticleLike.create({ articleUUID, username }, { overwrite: false });
+    await ArticleLike.create({ articleUUID, ...extractUserObject(user) }, { overwrite: false });
   } catch (err) {
     if (err.code === 'ConditionalCheckFailedException') {
       throw new Conflict(`The username ${username} has already liked the article ${articleUUID}.`);
@@ -243,11 +256,25 @@ export async function likeArticle(username, articleUUID) {
  * @param {string} articleUUID the UUID of the article to unlike
  */
 export async function unlikeArticle(username, articleUUID) {
-  const existingArticles = await ArticleLike.destroy(
+  const existingLike = await ArticleLike.destroy(
       { articleUUID, username },
       { ReturnValues: 'ALL_OLD' },
   );
-  if (!existingArticles) {
+  if (!existingLike) {
     throw new Conflict(`The username ${username} has not liked the article ${articleUUID}.`);
   }
+}
+
+/**
+ * Get likes on article corresponding to param articleUUID
+ * @param {string} articleUUID the UUID of the article to get likes from
+ * @param {string} page the username to get likes less than
+ * @param {number} limit the max number of likes to get
+ * @return {Array} an array of the likes under the article
+ */
+export async function getLikesOnArticle(articleUUID, page, limit) {
+  await getArticle(articleUUID);
+  const likes = await queryGetListPageLimit(
+      ArticleLike.query(articleUUID), 'username', page, limit, true);
+  return likes.map((l) => extractUserObject(l));
 }
