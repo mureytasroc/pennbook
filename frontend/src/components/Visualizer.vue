@@ -1,6 +1,8 @@
 <template>
-  <div>
-    <h1>Hallo</h1>
+  <div id="container">
+    <div id="center-container">
+      <div id="infovis"></div>
+    </div>
   </div>
 </template>
 
@@ -27,3 +29,7 @@ export default {
   },
 };
 </script>
+
+<style>
+@import "../css/visualizer.css";
+</style>
