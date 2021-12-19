@@ -196,7 +196,7 @@ export default {
 
     closeChat() {
        console.log('eh??')
-       this.$router.push('/friends')
+       this.$router.push('/chats')
     },
 
     getOnlineFriends() {

@@ -192,7 +192,7 @@
             <!--TODO: on click, remove this friend -->
             <q-btn
               style="margin-right: 20px"
-              v-if="friend.loggedIn"
+
               dense
               round
               icon="textsms"

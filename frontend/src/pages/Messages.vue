@@ -1,7 +1,7 @@
 <!--q-item list over chatUUIDs: display names of users in chat -->
 <template>
   <q-page style="overflow-y: hidden">
-  <div v-if="this.tab == 'friends'" style="margin-top: 2%">
+  <div style="margin-top: 2%">
         <q-item
           v-for="chat in this.chats"
           :key="chat"
@@ -23,16 +23,14 @@
               <q-avatar color="primary" text-color="white">
 
                 {{
-
-                  friend.firstName.charAt(0).toUpperCase() +
-                  friend.lastName.charAt(0).toUpperCase()
+                  chat.chatName.charAt(0).toUpperCase()
                 }}
 
               </q-avatar>
             </q-item-section>
           </q-btn>
 
-          <q-item-section avatar>
+          <!--<q-item-section avatar>
             <q-btn
               v-if="friend.loggedIn"
               round
@@ -41,11 +39,11 @@
               style="font-size: 6px !important; margin-left: 5px"
               color="light-green-5"
             />
-          </q-item-section>
+          </q-item-section>-->
 
           <q-item-section>
             <q-item-label>{{
-              friend.firstName + " " + friend.lastName
+              chat.chatName.charAt(0).toUpperCase()
             }}</q-item-label>
 
           </q-item-section>
@@ -82,18 +80,18 @@ export default {
 
   watch: {},
   mounted() {
-    this.getFriends();
+    this.getChats();
   },
   methods: {
     getChats() {
       //make route call (list chats by user) and set chats
     },
+
+    visitChat(chatUUID) {
+      this.$router.push("/chat/" + chatUUID);
+    }
   },
   beforeUnmount() {},
-
-  visitChat(chatUUID) {
-      this.$router.push("/chat/" + chatUUID);
-  }
 
 };
 </script>
