@@ -67,6 +67,7 @@ io.on('connection', (socket) => {
 
       redisClient.set(socket.id, username);
     } catch (err) {
+      console.log(err);
       socket.emit('err', { message: 'You cannot join a chat you are not a part of!' });
     }
   });
@@ -105,7 +106,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', async () => {
-    const name = await redisClient.GETDEL(socket.id); // eslint-disable-line new-cap
+    const name = await redisClient.getdel(socket.id); // eslint-disable-line new-cap
     await setOnlineStatus(name, false);
   });
 });

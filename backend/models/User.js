@@ -144,16 +144,20 @@ export async function validateUserProfile(profile, keysToCheck) {
  * @param {*} status new status to set (true or false)
  */
 export async function setOnlineStatus(username, status) {
-  await checkThrowAWSError(
-      User.update({ onlineStatus: status },
-          {
-            ConditionExpression: `username = :uname`,
-            ExpressionAttributeValues: { ':uname': username },
-            ReturnValues: 'ALL_NEW',
-          }),
-      'ConditionalCheckFailedException',
-      new NotFound(`The username ${username} was not found.`),
-  );
+  try {
+    await checkThrowAWSError(
+        User.update({ username: username, onlineStatus: status },
+            {
+              ConditionExpression: `username = :uname`,
+              ExpressionAttributeValues: { ':uname': username },
+              ReturnValues: 'ALL_NEW',
+            }),
+        'ConditionalCheckFailedException',
+        new NotFound(`The username ${username} was not found.`),
+    );
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 /**

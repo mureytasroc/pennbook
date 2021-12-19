@@ -126,18 +126,22 @@
   //prompt to ask user's name
   const username = prompt('Welcome! Please enter your name:')
 
-  const UUID = 696969;
+  const UUID = "5e05928c-2953-420a-85b1-59ccfc78254e";
 
   // emit event to server with the user's name
   socket.emit('join', {
     username: username,
-    uuid: 696969
+    uuid: UUID
   })
 
   // captures server msgs (possibly from other ppl)
   socket.on('message', (data) => {
     console.log('received welcome-message >>', data)
     addMessage(data, false)
+  })
+
+  socket.on('err', (data) => {
+    console.log(data.message)
   })
 
   function addMessage(data, isSelf = false) {
