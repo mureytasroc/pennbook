@@ -6,6 +6,7 @@
           v-for="chat in this.chats"
           :key="chat"
           clickable
+          @click="visitChat(chat.chatUUID)"
           v-ripple
           style="
             height: 80px;
@@ -53,23 +54,14 @@
             <!--TODO: on click, remove this friend -->
             <q-btn
               style="margin-right: 20px"
-              v-if="friend.loggedIn"
               dense
               round
               icon="textsms"
               color="light-green-6"
-              @click="showChat(friend.username)"
+              @click="showChat(chat.chatUUID)"
             />
           </q-item-section>
-          <q-btn
-            icon="remove_circle_outline"
-            flat
-            dense
-            unelevated
-            style="font-size: 12px !important; margin-left: 5px"
-            color="red"
-            @click="removeFriend(friend.username)"
-          />
+
         </q-item>
       </div>
     </q-page>
@@ -81,7 +73,7 @@ import axios from "axios";
 export default {
   data() {
     return {
-      chats: [ {"chatUUID": "abc123", "chatName": "eh?", "creatorUsername": "pat", "users": {"pat": {"firstName": "pat", "lastName": "liu"}}}],
+      chats: [ {"chatUUID": "abc123", "chatName": "eh?", "creatorUsername": "pat", "users": {"pat": {"firstName": "pat", "lastName": "liu"}, }}],
     };
   },
   props: {},
@@ -98,5 +90,10 @@ export default {
     },
   },
   beforeUnmount() {},
+
+  visitChat(chatUUID) {
+      this.$router.push("/chat/" + chatUUID);
+  }
+
 };
 </script>
