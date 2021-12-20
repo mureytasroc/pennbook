@@ -9,7 +9,7 @@ const exec = util.promisify(ChildProcess.exec);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
 
-const SPARK_POLL_MS = 5000;
+const SPARK_POLL_MS = 10000;
 
 /**
  * Gets the status of the specified sparkapplication. Possible values:
@@ -23,8 +23,9 @@ export async function getSparkStatus(name) {
     return 'UNKNOWN';
   }
   try {
-    return await exec(
+    const res = await exec(
         `kubectl get sparkapplication ${name} -o jsonpath="{.status.applicationState.state}"`);
+    return res.stdout;
   } catch (err) {
     if (err.stderr && err.stderr.includes('NotFound')) {
       return 'UNKNOWN';
@@ -46,6 +47,7 @@ export async function deleteSparkJob(name) {
         `kubectl delete sparkapplication ${name}`);
   } catch (err) {
     if (err.stderr && err.stderr.includes('NotFound')) {
+      console.log(err);
       return;
     }
     throw err;
@@ -71,28 +73,36 @@ export async function recommendArticles() {
   }
   await redisClient.set('RECOMMENDER_RUNNING', JSON.stringify(true));
 
-  // Load new articles since yesterday
-  const minDate = new Date();
-  minDate.setDate(minDate.getDate() - 1);
-  await loadNews(minDate);
+  try {
+    // Load new articles since yesterday
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() - 1);
+    await loadNews(minDate);
 
-  // Start Spark job
-  await deleteSparkJob('spark-recommend-articles');
-  const source = (await readFileAsync('./jobs/spark-recommend-articles-template.yaml')).toString();
-  const template = Handlebars.compile(source);
-  const contents = template(
-      { GIT_SHA: process.env.GIT_SHA, RELEASE_NAME: process.env.RELEASE_NAME });
-  await writeFileAsync('./jobs/spark-recommend-articles.yaml', contents);
+    // Start Spark job
+    await deleteSparkJob('spark-recommend-articles');
+    const source = (
+      await readFileAsync('./jobs/spark-recommend-articles-template.yaml')).toString();
+    const template = Handlebars.compile(source);
+    const contents = template(
+        { GIT_SHA: process.env.GIT_SHA, RELEASE_NAME: process.env.RELEASE_NAME });
+    await writeFileAsync('./jobs/spark-recommend-articles.yaml', contents);
 
-  if (prod) {
-    await exec('kubectl apply -f ./jobs/spark-recommend-articles.yaml');
-  } else {
-    console.log('Recommended.');
+    if (prod) {
+      await exec('kubectl apply -f ./jobs/spark-recommend-articles.yaml');
+    } else {
+      console.log('Recommended.');
+    }
+
+    do {
+      await new Promise((resolve) => setTimeout(resolve, SPARK_POLL_MS));
+    } while (!(await sparkJobFinished()));
+  } catch (err) {
+    await redisClient.set('RECOMMENDER_RUNNING', JSON.stringify(false));
+    throw err;
   }
 
-  do {
-    await new Promise((resolve) => setTimeout(resolve, SPARK_POLL_MS));
-  } while (!(await sparkJobFinished()));
+  // TODO: add a new article to recommended list for each user?
 
   await redisClient.set('RECOMMENDER_RUNNING', JSON.stringify(false));
   if (JSON.parse(await redisClient.get('RECOMMENDER_RUN_WHEN_DONE'))) {
