@@ -129,6 +129,7 @@
 
 <script>
 import { mapActions } from "vuex";
+import {socket} from "../router/index"
 import axios from "axios";
 
 export default {
@@ -191,6 +192,11 @@ export default {
               localStorage.jwt = resp.data.token;
               localStorage.setItem("userInfo", JSON.stringify(resp.data));
               this.message = "Account registered!";
+
+              socket.emit('connected', {
+                username: this.formData.username
+              })
+
               this.$router.push("/homepage");
             }
           })

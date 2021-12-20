@@ -145,7 +145,26 @@
 
         <br />
 
+        <div v-if="friends.length == 0" style="margin-top:300px">
+        <span
+          class="absolute-center"
+          style="text-align: center"
+        >
+                <q-spinner
+                color="primary"
+                size="3em"
+                :thickness="2"
+            />
+          <p
+            style="font-size: 20px; color: grey"
+          >
+            Loading your friends...
+          </p>
+        </span>
+      </div>
+
         <!-- display current list of friends -->
+        <div v-else>
         <q-item
           v-for="friend in this.friends"
           :key="friend"
@@ -208,6 +227,7 @@
             @click="removeFriend(friend.username)"
           />
         </q-item>
+        </div>
       </div>
 
       <div
