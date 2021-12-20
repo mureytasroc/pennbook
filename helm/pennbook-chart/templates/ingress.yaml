@@ -11,7 +11,7 @@ spec:
       port:
         number: {{ .Values.frontend.port }}
   rules:
-    - host: {{ .Values.application.host | quote }}
+    - host: {{ .Values.application.host }}
       http:
         paths:
           - path: "/api"
@@ -31,4 +31,24 @@ spec:
   tls:
     - hosts:
         - {{ .Values.application.host }}
+      secretName: cloudflare-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-k8s-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "k8s.{{ .Values.application.host }}"
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              serviceName: kubernetes-dashboard
+              servicePort: 443
+  tls:
+    - hosts:
+        - "k8s.{{ .Values.application.host }}"
       secretName: cloudflare-tls

@@ -15,7 +15,7 @@ spec:
         spec:
             containers:
                 - name: {{ .Release.Name }}-frontend
-                  image: '{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}'
+                  image: '{{ .Values.frontend.image }}:{{ .Values.application.gitSHA }}'
                   ports:
                       - containerPort: 4000
                       

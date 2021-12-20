@@ -16,7 +16,7 @@ spec:
                 spec:
                     containers:
                         - name: "{{ $.Release.Name }}-{{ .name }}-worker"
-                          image: "{{ $.Values.backend.image }}:{{ $.Values.backend.tag }}"
+                          image: "{{ $.Values.backend.image }}:{{ $.Values.application.gitSHA }}"
                           command: {{ .command }}
                           args: {{ .args }}
                           {{ if .maxMemory }}
@@ -34,6 +34,10 @@ spec:
                                   secretKeyRef:
                                     name: "{{ $.Release.Name }}-secret-tokens"
                                     key: uuid-namespace
+                              - name: GIT_SHA
+                                value: "{{ $.Values.application.gitSHA }}"
+                              - name: RELEASE_NAME
+                                value: "{{ $.Release.Name }}"
                               - name: SENTRY_DSN
                                 valueFrom:
                                   secretKeyRef:

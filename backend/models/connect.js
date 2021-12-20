@@ -5,12 +5,23 @@ import { Category, Article, ArticleLike, ArticleKeyword,
 import { Post, Comment, CommentLike, PostLike } from './Post.js';
 import { Affiliation, User, UserAutocomplete } from './User.js';
 import Redis from 'ioredis';
+import { prod } from '../config/dotenv.js';
+import util from 'util';
+import ChildProcess from 'child_process';
+const exec = util.promisify(ChildProcess.exec);
 
 export const redisClient = new Redis(process.env.REDIS_URL || undefined);
 
 redisClient.on('error', (err) => {
   throw err;
 });
+
+if (prod) {
+  // K8s / Spark setup
+  await exec(
+      `aws eks --region ${process.env.AWS_REGION} update-kubeconfig --name pennbook-cluster`);
+  await exec('kubectl config set-context --current --namespace default');
+}
 
 /**
  * Initializes DynamoDB tables
