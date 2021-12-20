@@ -82,33 +82,17 @@
           class="q-pa-md column col justify-end"
           style="margin-bottom: 30px; margin-top: 30px"
         >
-          <div v-if="this.userInfo.username == 'server'">
+          <div>
              <q-chat-message
               class="chatSize"
               style="font-size: 16px; color: black"
               v-for="message in messages"
               :text="[message.message]"
-              :name="message.sender"
+              :name="('user' in message) ? 'amy gutmann' : message.sender"
               :key="message"
               :sent="message.sender == this.userInfo.username ? true : false"
               :bg-color="
-                message.from == userOrder ? 'whitesmoke' : 'red'
-              "
-            >
-            </q-chat-message>
-          </div>
-
-          <div v-else>
-             <q-chat-message
-              class="chatSize"
-              style="font-size: 16px; color: black"
-              v-for="message in messages"
-              :text="[message.message]"
-              :name="message.sender"
-              :key="message"
-              :sent="message.sender == this.userInfo.username ? true : false"
-              :bg-color="
-                message.from == userOrder ? 'whitesmoke' : 'red'
+                ('user' in message) ? 'grey-4' : 'light-green-3'
               "
             >
             </q-chat-message>
@@ -206,6 +190,9 @@ export default {
           message: this.newMessage,
           uuid: this.chatUUID
         })
+
+        let messageObj = {"timestamp": new Date().toISOString(), "sender": this.userInfo.username, "message": messageContent }
+        this.messages.push(messageObj)
 
         this.clearMessage();
 
