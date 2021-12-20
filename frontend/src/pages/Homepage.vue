@@ -27,18 +27,9 @@
       </div>
 
       <div v-if="this.posts.length == 0">
-        <span
-          class="absolute-center"
-          style="text-align: center"
-        >
-                <q-spinner
-                color="primary"
-                size="3em"
-                :thickness="2"
-            />
-          <p
-            style="font-size: 20px; color: grey"
-          >
+        <span class="absolute-center" style="text-align: center">
+          <q-spinner color="primary" size="3em" :thickness="2" />
+          <p style="font-size: 20px; color: grey">
             Loading your feed... if it loads too long, there is no content!
           </p>
         </span>
@@ -98,7 +89,7 @@ export default {
   data() {
     return {
       posts: [],
-      hasLoaded: false
+      hasLoaded: false,
     };
   },
 
@@ -148,7 +139,7 @@ export default {
       })
       .catch((err) => {
         if (err.response) {
-          console.log(err.response);
+          alert(err.response.data.message);
         }
       });
   },

@@ -128,7 +128,7 @@ export default {
       })
       .catch((err) => {
         if (err.response) {
-          console.log(err);
+          alert(err.response.data.message);
         }
       });
   },

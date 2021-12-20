@@ -22,14 +22,10 @@
         <q-card class="my-card">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">
-              {{
-                this.getActiveUserInfo.firstName +
-                " " +
-                this.getActiveUserInfo.lastName
-              }}
+              {{ this.userInfo.firstName + " " + this.userInfo.lastName }}
             </div>
             <div v-if="!this.editMode" class="text-subtitle2">
-              {{ this.getActiveUserInfo.emailAddress + " " }}
+              {{ this.userInfo.emailAddress + " " }}
             </div>
 
             <q-input
@@ -37,7 +33,7 @@
               v-if="this.editMode"
               filled
               v-model="newEmailAddress"
-              :placeholder="this.getActiveUserInfo.emailAddress"
+              :placeholder="this.userInfo.emailAddress"
               :dense="dense"
               style="color: white; background: white; margin-top: 10px"
             />
@@ -56,7 +52,7 @@
             <q-item
               v-if="!this.editMode"
               style="font-size: 1.1rem; color: black"
-              >{{ "🎓: " + this.getActiveUserInfo.affiliation + " " }}</q-item
+              >{{ "🎓: " + this.userInfo.affiliation + " " }}</q-item
             >
 
             <br v-if="this.editMode" />
@@ -82,7 +78,7 @@
             <q-item
               v-if="!this.editMode"
               style="font-size: 1.1rem; color: black"
-              >{{ "❤️:  " + this.getActiveUserInfo.interests }}</q-item
+              >{{ "❤️:  " + this.userInfo.interests }}</q-item
             >
 
             <q-item
@@ -141,6 +137,7 @@ export default {
       newPassword: "",
       affiliationOptions: [],
       interestOptions: [],
+      userInfo: {},
     };
   },
 
@@ -151,39 +148,60 @@ export default {
   methods: {
     //...mapActions("forms", ["fbReadCurrentUserData", "updateProfileNewUser"]),
     //...mapActions("auth", ["setNewUser", "setReturningUser"]),
-
+    getActiveUserInfo() {
+      this.userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    },
     updateProfile() {
-      this.editMode = false;
       //TODO: compare new values (below line) with values from getActiveUserInfo, and update if necessary (make route call to update / make respective wall posts)
       //this.newEmailAddress + this.newPassword + this.newAffiliation + this.newInterests
+      let params = {};
+      if (this.newEmailAddress !== this.userInfo.emailAddress) {
+        params["emailAddress"] = this.newEmailAddress;
+      } else if (this.newPassword !== "") {
+        params["password"] = this.newPassword;
+      } else if (this.newAffiliation !== this.userInfo.affiliation) {
+        params["affiliation"] = this.newAffiliation;
+      } else if (
+        this.newInterests.sort().toString() !==
+        this.userInfo.interests.sort().toString()
+      ) {
+        params["interests"] = this.newInterests;
+      }
+      if (Object.keys(params).length !== 0) {
+        axios
+          .patch("/api/users/" + this.userInfo.username + "/profile/", params, {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          })
+          .then((resp) => {
+            if (resp.status == 200) {
+              localStorage.jwt = resp.data.token;
+              localStorage.setItem("userInfo", JSON.stringify(resp.data));
+              alert("Updated profile!");
+              this.editMode = false;
+              this.getActiveUserInfo();
+            }
+          })
+          .catch((err) => {
+            if (err.response) {
+              alert(err.response.data.message);
+              this.editMode = false;
+            }
+          });
+      }
     },
   },
 
   computed: {
     ...mapGetters("forms", ["activeUserInfo"]),
-
-    getActiveUserInfo() {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      return {
-        username: userInfo.username,
-        password: "",
-        firstName: userInfo.firstName,
-        lastName: userInfo.lastName,
-        emailAddress: userInfo.emailAddress,
-        affiliation: userInfo.affiliation,
-        interests: userInfo.interests,
-      };
-      //this.activeUserInfo;
-    },
   },
 
   watch: {},
 
   mounted() {
     // prefill affiliations/interests with current chosen
-    const userInfo = this.getActiveUserInfo;
-    this.newAffiliation = userInfo.affiliation;
-    this.newInterests = userInfo.interests;
+    this.getActiveUserInfo();
+    this.newAffiliation = this.userInfo.affiliation;
+    this.newInterests = this.userInfo.interests;
 
     // load affiliations and interests
     axios
@@ -194,7 +212,9 @@ export default {
         }
       })
       .catch((err) => {
-        console.log(err);
+        if (err.response) {
+          alert(err.response.data.message);
+        }
       });
 
     axios
@@ -205,14 +225,16 @@ export default {
         }
       })
       .catch((err) => {
-        console.log(err);
+        if (err.response) {
+          alert(err.response.data.message);
+        }
       });
 
     // load wall posts
 
     axios
       .get(
-        "/api/users/" + userInfo.username + "/wall/",
+        "/api/users/" + this.userInfo.username + "/wall/",
 
         {
           headers: { Authorization: `Bearer ${localStorage.jwt}` },
@@ -225,7 +247,7 @@ export default {
       })
       .catch((err) => {
         if (err.response) {
-          console.log(err.response);
+          alert(err.response.data.message);
         }
       });
   },

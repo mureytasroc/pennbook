@@ -23,6 +23,7 @@ const routes = [
     children: [
       {
         path: "/chat/:catchAll(.*)*",
+        name: "chat",
         component: () => import("pages/Chat.vue"),
       },
     ],

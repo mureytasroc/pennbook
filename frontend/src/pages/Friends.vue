@@ -145,88 +145,77 @@
 
         <br />
 
-        <div v-if="friends.length == 0" style="margin-top:300px">
-        <span
-          class="absolute-center"
-          style="text-align: center"
-        >
-                <q-spinner
-                color="primary"
-                size="3em"
-                :thickness="2"
-            />
-          <p
-            style="font-size: 20px; color: grey"
-          >
-            Loading your friends...
-          </p>
-        </span>
-      </div>
+        <div v-if="friends.length == 0" style="margin-top: 300px">
+          <span class="absolute-center" style="text-align: center">
+            <q-spinner color="primary" size="3em" :thickness="2" />
+            <p style="font-size: 20px; color: grey">Loading your friends...</p>
+          </span>
+        </div>
 
         <!-- display current list of friends -->
         <div v-else>
-        <q-item
-          v-for="friend in this.friends"
-          :key="friend"
-          clickable
-          v-ripple
-          style="
-            height: 80px;
-            margin: auto;
-            margin-bottom: 10px;
-            width: 600px;
-            opacity: 0.8;
-            background: whitesmoke;
-          "
-        >
-          <q-btn @click="visitWall(friend.username)" flat>
-            <q-item-section avatar>
-              <q-avatar color="primary" text-color="white">
-                {{
-                  friend.firstName.charAt(0).toUpperCase() +
-                  friend.lastName.charAt(0).toUpperCase()
-                }}
-              </q-avatar>
-            </q-item-section>
-          </q-btn>
+          <q-item
+            v-for="friend in this.friends"
+            :key="friend"
+            clickable
+            v-ripple
+            style="
+              height: 80px;
+              margin: auto;
+              margin-bottom: 10px;
+              width: 600px;
+              opacity: 0.8;
+              background: whitesmoke;
+            "
+          >
+            <q-btn @click="visitWall(friend.username)" flat>
+              <q-item-section avatar>
+                <q-avatar color="primary" text-color="white">
+                  {{
+                    friend.firstName.charAt(0).toUpperCase() +
+                    friend.lastName.charAt(0).toUpperCase()
+                  }}
+                </q-avatar>
+              </q-item-section>
+            </q-btn>
 
-          <q-item-section avatar>
+            <q-item-section avatar>
+              <q-btn
+                v-if="friend.loggedIn"
+                round
+                dense
+                unelevated
+                style="font-size: 6px !important; margin-left: 5px"
+                color="light-green-5"
+              />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label>{{
+                friend.firstName + " " + friend.lastName
+              }}</q-item-label>
+            </q-item-section>
+
+            <q-item-section side>
+              <q-btn
+                style="margin-right: 20px"
+                dense
+                round
+                icon="textsms"
+                color="light-green-6"
+                @click="createChat(friend)"
+              />
+            </q-item-section>
             <q-btn
-              v-if="friend.loggedIn"
-              round
+              icon="remove_circle_outline"
+              flat
               dense
               unelevated
-              style="font-size: 6px !important; margin-left: 5px"
-              color="light-green-5"
+              style="font-size: 12px !important; margin-left: 5px"
+              color="red"
+              @click="removeFriend(friend.username)"
             />
-          </q-item-section>
-
-          <q-item-section>
-            <q-item-label>{{
-              friend.firstName + " " + friend.lastName
-            }}</q-item-label>
-          </q-item-section>
-
-          <q-item-section side>
-            <q-btn
-              style="margin-right: 20px"
-              dense
-              round
-              icon="textsms"
-              color="light-green-6"
-              @click="createChat(friend)"
-            />
-          </q-item-section>
-          <q-btn
-            icon="remove_circle_outline"
-            flat
-            dense
-            unelevated
-            style="font-size: 12px !important; margin-left: 5px"
-            color="red"
-            @click="removeFriend(friend.username)"
-          />
-        </q-item>
+          </q-item>
         </div>
       </div>
 
@@ -393,7 +382,7 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            alert(err.response.data.message);
           }
         });
     },
@@ -420,7 +409,7 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            alert(err.response.data.message);
           }
         });
     },
@@ -442,7 +431,7 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            alert(err.response.data.message);
           }
         });
     },
@@ -470,7 +459,7 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            alert(err.response.data.message);
           }
         });
     },
@@ -498,7 +487,7 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            alert(err.response.data.message);
           }
         });
     },
@@ -513,7 +502,7 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            alert(err.response.data.message);
           }
         });
     },
@@ -544,13 +533,12 @@ export default {
         )
         .then((resp) => {
           if (resp.status == 200) {
-            // ok
-            this.$router.push("/chat/" + resp.data.chatUUID);
+            this.$router.push({ name: "chat", params: { ...resp.data[0] } });
           }
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            alert(err.response.data.message);
           }
         });
     },
