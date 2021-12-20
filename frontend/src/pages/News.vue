@@ -12,7 +12,51 @@
       "
     >
 
+
          <div>
+                 <div
+        class="inline justify-center shift no-wrap"
+        style="display: flex; position: relative; margin-top: 2%"
+      >
+
+        <q-toolbar
+            class="bg-primary text-white rounded-borders"
+            style="width: 100%"
+            >
+            <h7 class="gt-xs"> Search News! </h7>
+
+            <q-space />
+
+            <q-input
+                dark
+                dense
+                standout
+                v-model="searchNewsQuery"
+                input-class="text-right"
+                class="q-ml-md"
+            >
+                <template v-slot:append>
+                <q-icon v-if="text === ''" name="search" />
+                <q-icon
+                    v-else
+                    name="clear"
+                    class="cursor-pointer"
+                    @click="text = ''"
+                />
+                </template>
+            </q-input>
+            </q-toolbar>
+
+             <q-btn
+          v-if="searchNewsQuery"
+          icon="search"
+          style="margin-left: 20px"
+          color="secondary"
+          @click="searchNews"
+        />
+
+    </div>
+    <br><br>
       <!--TODO: v-else -->
       <div>
         <q-bar dark class="bg-secondary text-white">
@@ -21,11 +65,7 @@
           </div>
         </q-bar>
         <br />
-        <br v-if="!this.isSelf" />
-fasfa <!-- insert search bar here l8r-->
 
-          <br />
-          <br />
 
       </div>
 
@@ -77,7 +117,8 @@ import axios from "axios";
 export default {
   data() {
     return {
-        newsArticles: [{"articleUUID": "abc123", "recUUID": "placeholder", "likes": 5, "category": "politics", "headline": "something politics", "authors": "dr. seuss, me", "link": "https://www.nytimes.com/2017/04/11/world/middleeast/russia-syria-chemical-weapons-white-house.html", "shortDescription": "this is a news caption", "date": "2011-10-05T14:48:00.000Z"}]
+        newsArticles: [{"articleUUID": "abc123", "recUUID": "placeholder", "likes": 5, "category": "politics", "headline": "something politics", "authors": "dr. seuss, me", "link": "https://www.nytimes.com/2017/04/11/world/middleeast/russia-syria-chemical-weapons-white-house.html", "shortDescription": "this is a news caption", "date": "2011-10-05T14:48:00.000Z"}],
+        searchNewsQuery: ""
     };
   },
 
@@ -95,7 +136,9 @@ export default {
   computed: {},
 
   methods: {
-
+      searchNews() {
+          //TODO: implement (uses searchNewsQuery as input)
+      }
   },
 
   mounted() {},
