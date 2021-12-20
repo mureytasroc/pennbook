@@ -121,12 +121,12 @@
   console.log('chat.js file loaded!')
 
 
-  var socket = io.connect()
+  var socket = io.connect("https://pennbook.app")
 
   //prompt to ask user's name
   const username = prompt('Welcome! Please enter your name:')
 
-  const UUID = "5e05928c-2953-420a-85b1-59ccfc78254e";
+  const UUID = "bb8edf75-d16b-440c-823e-7fbe13a2fa89";
 
   // emit event to server with the user's name
   socket.emit('join', {
