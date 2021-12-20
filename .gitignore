@@ -64,3 +64,4 @@ yarn-error.log*
 *.pk
 *.crt
 *.rdb
+backend/jobs/spark-recommend-articles.yaml

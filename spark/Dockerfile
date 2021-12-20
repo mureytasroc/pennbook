@@ -1,4 +1,4 @@
-ARG SPARK_IMAGE=gcr.io/spark-operator/spark:v3.1.1
+ARG SPARK_IMAGE=gcr.io/spark-operator/spark-py:v3.1.1
 ARG SITE_PACKAGES=/opt/spark/work-dir
 ARG APPS_DIR=/opt/spark/sparkapps/
 
