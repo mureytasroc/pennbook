@@ -191,10 +191,6 @@
           <q-item-section side>
             <q-btn
               style="margin-right: 20px"
-<<<<<<< HEAD
-=======
-
->>>>>>> e8ef3bfdabf4aef8d7160d140c80bc4d3e7948d9
               dense
               round
               icon="textsms"

@@ -134,6 +134,37 @@
             </span>
           </q-item-section>
         </q-item>
+
+        <!-- newsfeed btn -->
+        <q-item
+          :style="
+            $route.name == 'news'
+              ? 'border:1px solid white; border-radius: 10px'
+              : ''
+          "
+          active-class="tab-active"
+          to="/news"
+          class="q-ma-sm"
+          clickable
+          :focused="this.messageFocus"
+          v-ripple
+        >
+          <q-item-section avatar>
+            <q-icon style="color: white" name="newspaper" />
+          </q-item-section>
+
+          <q-item-section v-if="!this.displayNotification" style="color: white"
+            >News</q-item-section
+          >
+
+          <q-item-section v-else>
+            <span>
+              News
+              <q-spinner-rings color="green" size="2.5em" />
+            </span>
+          </q-item-section>
+        </q-item>
+
       </q-list>
 
       <!-- lower toolbar section (contact, suggestion, logout) -->
