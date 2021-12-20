@@ -36,7 +36,32 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: {{ .Release.Name }}-spark-ui-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "spark.{{ .Values.application.host }}"
+      http:
+        paths:
+          - path: "/"
+            backend:
+              service:
+                name: spark-recommend-articles-ui-svc
+                port:
+                  number: 4040
+  tls:
+    - hosts:
+        - "spark.{{ .Values.application.host }}"
+      secretName: cloudflare-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
   name: {{ .Release.Name }}-k8s-ingress
+  namespace: kubernetes-dashboard
+  nginx.ingress.kubernetes.io/auth-type: basic
+  nginx.ingress.kubernetes.io/auth-secret: admin-basic-auth
+  nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
 spec:
   ingressClassName: nginx
   rules:
@@ -44,7 +69,6 @@ spec:
       http:
         paths:
           - path: "/"
-            pathType: Prefix
             backend:
               service:
                 name: kubernetes-dashboard

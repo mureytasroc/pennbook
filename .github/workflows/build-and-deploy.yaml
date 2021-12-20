@@ -176,6 +176,7 @@ jobs:
           --set application.secrets.dockerConfigJson=${{ secrets.DOCKER_CONFIG_JSON }}
           --set application.secrets.awsAccessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }},application.secrets.awsSecretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           --set application.secrets.sentryUrl=${{ secrets.SENTRY_URL }}
+          --set application.secrets.adminPassword=${{ secrets.ADMIN_PASSWORD }}
           --set application.gitSHA=${{ github.sha }}
 
           helm upgrade --install --atomic prometheus prometheus
@@ -186,7 +187,7 @@ jobs:
           helm upgrade --install --atomic grafana grafana 
           --repo https://grafana.github.io/helm-charts
           --values grafana-values.yaml
-          --set adminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          --set adminPassword=${{ secrets.ADMIN_PASSWORD }}
           --namespace monitoring
 
           helm upgrade --install --atomic ingress-nginx ingress-nginx
