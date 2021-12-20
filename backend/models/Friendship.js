@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import dynamo from 'dynamodb';
-import { getUser } from '../models/User.js';
+import { getUser, User } from '../models/User.js';
 import { Conflict, Forbidden, NotFound } from '../error/errors.js';
 import Joi from 'joi';
 import { unmarshallItem, queryGetListPageLimit, checkThrowAWSError,
@@ -49,8 +49,19 @@ export function friendshipModelToResponse(friendship) {
     requested: friendship.requested ? true : false,
     timestamp: friendship.timestamp,
     friendshipUUID: friendship.confirmedUUID,
-    loggedIn: false, // TODO: set loggedIn status
+    loggedIn: friendship.friendOnlineStatus || false,
   };
+}
+
+/**
+ * Augments the given array of friendship objects with online statuses.
+ * @param {Array} friendships an array of friendship objects to augment with online statuses
+ * @return {Array} the array of augmented friendships
+ */
+async function fetchOnlineStatuses(friendships) {
+  const users = JSON.parse(JSON.stringify(
+      await User.getItems(friendships.map((f) => f.friendUsername))));
+  return friendships.map((f, i) => ({ ...f, friendOnlineStatus: users[i].onlineStatus }));
 }
 
 /**
@@ -142,11 +153,13 @@ export async function createFriendship(username, friendUsername) {
           Friendship.update(existingFriendship),
           Friendship.update(existingReverseFriendship),
         ]);
+        existingFriendship.friendOnlineStatus = friend.onlineStatus;
         return friendshipModelToResponse(existingFriendship);
       }
     }
     throw err;
   }
+  friendship.friendOnlineStatus = friend.onlineStatus;
   return friendshipModelToResponse(friendship);
 }
 
@@ -223,10 +236,11 @@ export async function deleteFriendship(username, friendUsername) {
  */
 export async function getFriendships(username, page, limit, visualizationOrigin, returnTrueUUID, descending) { // eslint-disable-line max-len
   if (!visualizationOrigin) {
-    const friendships = await queryGetListPageLimit(
+    let friendships = await queryGetListPageLimit(
         Friendship.query(username).usingIndex('ConfirmedUUIDIndex'),
         'confirmedUUID', page, limit, !descending, // ascending
     );
+    friendships = await fetchOnlineStatuses(friendships);
     return friendships.map(
         (f) => ({ ...f, confirmedUUID: returnTrueUUID ? f.friendshipUUID : f.confirmedUUID }),
     ).map(friendshipModelToResponse);

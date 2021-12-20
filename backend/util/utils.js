@@ -195,3 +195,15 @@ export function extractUserObject(data, prefix) {
     lastName: data[prefix ? prefix + 'LastName' : 'lastName'],
   };
 }
+
+/**
+ * Combines the given array of strings into a grammatically correct sentence
+ * of strings.
+ * @param {Array} arr an array of strings
+ * @return {string} the sentence of combined strings
+ */
+export function toSentence(arr) {
+  return arr.slice(0, -2).join(', ') +
+    (arr.slice(0, -2).length ? ', ' : '') +
+    arr.slice(-2).join(' and ');
+}

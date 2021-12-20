@@ -9,11 +9,12 @@ import owasp from 'owasp-password-strength-test';
 import { BadRequest, Conflict, NotFound } from '../error/errors.js';
 import {
   assertString, checkThrowAWSError,
-  queryGetList, queryGetListPageLimit,
+  queryGetList, queryGetListPageLimit, toSentence,
 } from '../util/utils.js';
 import { Friendship } from './Friendship.js';
 import { recommendArticles } from '../jobs/recommend-articles.js';
 import { redisClient } from './connect.js';
+import { createPost } from './Post.js';
 
 
 export const Affiliation = dynamo.define('Affiliation', {
@@ -127,8 +128,8 @@ export async function validateUserProfile(profile, keysToCheck) {
     if (invalidInterests.length) {
       throw new BadRequest('Invalid interests: ' + JSON.stringify(invalidInterests));
     }
-    if (interestsList.length == 0) {
-      throw new BadRequest('All interests were invalid');
+    if (interestsList.length < 2) {
+      throw new BadRequest('You must specify at least 2 interests.');
     }
     validatedProfile.interests = interestsList;
   }
@@ -220,6 +221,7 @@ export async function updateUser(profile) {
       'ConditionalCheckFailedException',
       new NotFound(`The username ${username} was not found.`),
   ));
+  const fullName = `${newProfile.firstName} ${newProfile.lastName}`;
   if (profile.interests) {
     // Run recommender if diff threshold is met
     const interestsDiff = JSON.parse(await redisClient.get('INTERESTS_DIFF') || JSON.stringify({}));
@@ -230,6 +232,10 @@ export async function updateUser(profile) {
     } else {
       await redisClient.set('INTERESTS_DIFF', JSON.stringify(interestsDiff));
     }
+    await createPost(
+        { 'type': 'Status Update', 'content': `${fullName} is now interested in ${toSentence(profile.interests)}.` }, // eslint-disable-line max-len
+        newProfile.username, newProfile.username,
+    );
   }
   if (profile.affiliation) {
     const friendships = await queryGetList(
@@ -243,6 +249,10 @@ export async function updateUser(profile) {
         `${f.confirmed ? 'true' : 'false'}#${newProfile.affiliation}#${f.friendshipUUID}`
       ),
     })));
+    await createPost(
+        { 'type': 'Status Update', 'content': `${fullName} is now affiliated with ${profile.affiliation}.` }, // eslint-disable-line max-len
+        newProfile.username, newProfile.username,
+    );
   }
   delete newProfile.passwordHash;
   return newProfile;
