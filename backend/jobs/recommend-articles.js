@@ -34,6 +34,25 @@ export async function getSparkStatus(name) {
 }
 
 /**
+ * Deletes the specified Spark job
+ * @param {string} name the name of the sparkapplication to delete
+ */
+export async function deleteSparkJob(name) {
+  if (!prod) {
+    return;
+  }
+  try {
+    return await exec(
+        `kubectl delete sparkapplication ${name}`);
+  } catch (err) {
+    if (err.stderr && err.stderr.includes('NotFound')) {
+      return;
+    }
+    throw err;
+  }
+}
+
+/**
  * Loads news and then runs the livy job to recommend articles.
  */
 export async function recommendArticles() {
@@ -58,6 +77,7 @@ export async function recommendArticles() {
   await loadNews(minDate);
 
   // Start Spark job
+  await deleteSparkJob('spark-recommend-articles');
   const source = (await readFileAsync('./jobs/spark-recommend-articles-template.yaml')).toString();
   const template = Handlebars.compile(source);
   const contents = template(
