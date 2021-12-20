@@ -138,7 +138,7 @@
 
 
 
-<script>
+<script src="/socket.io/socket.io.js">
 import { mapState, mapActions, mapGetters } from "vuex";
 export default {
   data() {

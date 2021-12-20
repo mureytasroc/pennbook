@@ -22,15 +22,18 @@
         </q-bar>
         <br />
         <br v-if="!this.isSelf" />
-
+fasfa <!-- insert search bar here l8r-->
 
           <br />
           <br />
 
       </div>
+
+
       <q-list class="full-width">
         <div>
           <q-item
+            class="columns large-3 medium-6"
             v-for="newsArticle in this.newsArticles"
             :key="newsArticle"
             clickable
@@ -74,7 +77,7 @@ import axios from "axios";
 export default {
   data() {
     return {
-        newsArticles: [{"articleUUID": "abc123", "recUUID": "placeholder", "likes": 5, "category": "politics", "headline": "something politics", "authors": "dr. seuss", "link": "google.com", "shortDescription": "this is a news caption", "date": "2011-10-05T14:48:00.000Z"}]
+        newsArticles: [{"articleUUID": "abc123", "recUUID": "placeholder", "likes": 5, "category": "politics", "headline": "something politics", "authors": "dr. seuss", "link": "https://www.nytimes.com/2017/04/11/world/middleeast/russia-syria-chemical-weapons-white-house.html", "shortDescription": "this is a news caption", "date": "2011-10-05T14:48:00.000Z"}]
     };
   },
 
