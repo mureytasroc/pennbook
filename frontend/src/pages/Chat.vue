@@ -82,7 +82,26 @@
           class="q-pa-md column col justify-end"
           style="margin-bottom: 30px; margin-top: 30px"
         >
-          <div>
+
+      <div v-if="messages.length == 0" style="margin-top:300px">
+        <span
+          class="absolute-center"
+          style="text-align: center"
+        >
+                <q-spinner
+                color="primary"
+                size="3em"
+                :thickness="2"
+            />
+          <p
+            style="font-size: 20px; color: grey"
+          >
+            Loading your messages...
+          </p>
+        </span>
+      </div>
+
+          <div v-else>
              <q-chat-message
               class="chatSize"
               style="font-size: 16px; color: black"

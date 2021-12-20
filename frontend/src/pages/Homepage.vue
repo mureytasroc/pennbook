@@ -26,9 +26,8 @@
         </span>-->
       </div>
 
-      <div>
-        <!-- TODO: v-else-if="!this.feedLoaded" -->
-        <!--<span
+      <div v-if="this.posts.length == 0">
+        <span
           class="absolute-center"
           style="text-align: center"
         >
@@ -40,13 +39,12 @@
           <p
             style="font-size: 20px; color: grey"
           >
-            Loading your feed...
+            Loading your feed... if it loads too long, there is no content!
           </p>
-        </span>-->
+        </span>
       </div>
 
-      <div>
-        <!--TODO: v-else -->
+      <div v-else>
         <div style="margin-left: -100px"></div>
         <q-list class="full-width">
           <div>
@@ -100,6 +98,7 @@ export default {
   data() {
     return {
       posts: [],
+      hasLoaded: false
     };
   },
 
