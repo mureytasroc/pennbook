@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   getChatHistory, getChatInstance, getChatsOfUser,
-  createChat, deleteChat, leaveChat,
+  createChat, deleteChat, leaveChat, getChatWithMembers,
 } from '../models/Chat.js';
 import { userAuthRequired, userAuthAndPathRequired } from './auth.js';
 import { StatusCodes } from 'http-status-codes';
@@ -65,6 +65,18 @@ router.delete('/chats/:chatUUID/:username', userAuthAndPathRequired, asyncHandle
   }
 }));
 
+/**
+ * Chat with members
+ */
+router.get('/chats/members/:chatUUID', userAuthRequired,
+    asyncHandler(async function(req, res, next) {
+      try {
+        const chatMembers = await getChatWithMembers(req.params.chatUUID);
+        res.status(StatusCodes.OK).json(chatMembers);
+      } catch (err) {
+        next(err);
+      }
+    }));
 
 /**
  * Chat history.

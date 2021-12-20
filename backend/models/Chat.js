@@ -40,6 +40,7 @@ export const ChatHistory = dynamo.define('ChatHistory', {
 export async function createChat(chatObj) {
   const creator = await getUser(chatObj.creator);
   const CHAT_UUID = uuidv4();
+  const instances = [];
   for (const user of chatObj.members) {
     const userObj = await getUser(user);
     const chat = {
@@ -51,10 +52,9 @@ export async function createChat(chatObj) {
       chatUUID: CHAT_UUID,
     };
     // Create chat record ("membership") for each user
-    await Chat.create(chat, { overwrite: false });
+    instances.push(await Chat.create(chat, { overwrite: false }));
   }
-
-  return { chatUUID: CHAT_UUID };
+  return instances;
 }
 
 
