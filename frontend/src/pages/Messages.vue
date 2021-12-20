@@ -1,13 +1,12 @@
 <!--q-item list over chatUUIDs: display names of users in chat -->
 <template>
   <q-page style="overflow-y: hidden">
-
-       <div v-if="this.chats.length == 0" style="margin-top: 300px">
-          <span class="absolute-center" style="text-align: center">
-            <q-spinner color="primary" size="3em" :thickness="2" />
-            <p style="font-size: 20px; color: grey">Loading your chats...</p>
-          </span>
-        </div>
+    <div v-if="this.chats.length == 0" style="margin-top: 300px">
+      <span class="absolute-center" style="text-align: center">
+        <q-spinner color="primary" size="3em" :thickness="2" />
+        <p style="font-size: 20px; color: grey">Loading your chats...</p>
+      </span>
+    </div>
 
     <div v-else style="margin-top: 2%">
       <q-item
@@ -29,7 +28,12 @@
           <!--loop over members of chat / join by comma -->
           <q-item-section avatar>
             <q-avatar color="primary" text-color="white">
-              {{ chat.chatName.split(", ").map(name => name.charAt(0).toUpperCase()).join("") }}
+              {{
+                chat.chatName
+                  .split(", ")
+                  .map((name) => name.charAt(0).toUpperCase())
+                  .join("")
+              }}
             </q-avatar>
           </q-item-section>
         </q-btn>
@@ -97,7 +101,10 @@ export default {
           }
         })
         .catch((err) => {
-          if (err.response) {
+          if (err.response.status == 401) {
+            localStorage.clear();
+            this.$router.push("/login");
+          } else {
             alert(err.response.data.message);
           }
         });

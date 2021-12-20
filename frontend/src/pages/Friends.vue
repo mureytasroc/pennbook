@@ -382,7 +382,12 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            alert(err.response.data.message);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+            }
           }
         });
     },
@@ -409,7 +414,12 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            alert(err.response.data.message);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+            }
           }
         });
     },
@@ -431,7 +441,12 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            alert(err.response.data.message);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+            }
           }
         });
     },
@@ -459,7 +474,12 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            alert(err.response.data.message);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+            }
           }
         });
     },
@@ -487,7 +507,12 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            alert(err.response.data.message);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+            }
           }
         });
     },
@@ -502,7 +527,12 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            alert(err.response.data.message);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+            }
           }
         });
     },
@@ -542,7 +572,12 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            alert(err.response.data.message);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+            }
           }
         });
     },

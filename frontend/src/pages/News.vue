@@ -11,110 +11,100 @@
         overflow-x: hidden;
       "
     >
-
-
-         <div>
-                 <div
-        class="inline justify-center shift no-wrap"
-        style="display: flex; position: relative; margin-top: 2%"
-      >
-
-        <q-toolbar
+      <div>
+        <div
+          class="inline justify-center shift no-wrap"
+          style="display: flex; position: relative; margin-top: 2%"
+        >
+          <q-toolbar
             class="bg-primary text-white rounded-borders"
             style="width: 100%"
-            >
+          >
             <h7 class="gt-xs"> Search News! </h7>
 
             <q-space />
 
             <q-input
-                dark
-                dense
-                standout
-                v-model="searchNewsQuery"
-                input-class="text-right"
-                class="q-ml-md"
+              dark
+              dense
+              standout
+              v-model="searchNewsQuery"
+              input-class="text-right"
+              class="q-ml-md"
             >
-                <template v-slot:append>
+              <template v-slot:append>
                 <q-icon v-if="text === ''" name="search" />
                 <q-icon
-                    v-else
-                    name="clear"
-                    class="cursor-pointer"
-                    @click="text = ''"
+                  v-else
+                  name="clear"
+                  class="cursor-pointer"
+                  @click="text = ''"
                 />
-                </template>
+              </template>
             </q-input>
-            </q-toolbar>
+          </q-toolbar>
 
-             <q-btn
-          v-if="searchNewsQuery"
-          icon="search"
-          style="margin-left: 20px"
-          color="secondary"
-          @click="searchNews"
-        />
+          <q-btn
+            v-if="searchNewsQuery"
+            icon="search"
+            style="margin-left: 20px"
+            color="secondary"
+            @click="searchNews"
+          />
+        </div>
+        <br /><br />
+        <!--TODO: v-else -->
+        <div>
+          <q-bar dark class="bg-secondary text-white">
+            <div class="col text-center text-weight-bold">Your Newsfeed!</div>
+          </q-bar>
+          <br />
+        </div>
 
-    </div>
-    <br><br>
-      <!--TODO: v-else -->
-      <div>
-        <q-bar dark class="bg-secondary text-white">
-          <div class="col text-center text-weight-bold">
-           Your Newsfeed!
-          </div>
-        </q-bar>
-        <br />
-
-
-      </div>
-
-       <div v-if="this.newsArticles.length == 0" style="margin-top: 300px">
+        <div v-if="this.loadingNews" style="margin-top: 300px">
           <span class="absolute-center" style="text-align: center">
             <q-spinner color="primary" size="3em" :thickness="2" />
             <p style="font-size: 20px; color: grey">Loading your news...</p>
           </span>
         </div>
 
-    <div v-else>
-      <q-list class="full-width">
-        <div>
-          <q-item
-            class="columns large-3 medium-6"
-            v-for="newsArticle in this.newsArticles"
-            :key="newsArticle"
-            clickable
-            v-ripple
-            style="
-              margin: auto;
-              margin-bottom: 10px;
-              margin-top: 10px;
-              opacity: 0.8;
-            "
-          >
+        <div v-else>
+          <q-list class="full-width">
             <div>
-              <NewsArticle
-                :articleUUID="newsArticle.articleUUID"
-                :likes="newsArticle.likes"
-                :category="newsArticle.category"
-                :headline="newsArticle.headline"
-                :authors="newsArticle.authors"
-                :link="newsArticle.link"
-                :shortDescription="newsArticle.shortDescription"
-                :date="newsArticle.date"
-                style="height: 100%; width: 100%; margin: auto"
-              />
+              <q-item
+                class="columns large-3 medium-6"
+                v-for="newsArticle in this.newsArticles"
+                :key="newsArticle"
+                clickable
+                v-ripple
+                style="
+                  margin: auto;
+                  margin-bottom: 10px;
+                  margin-top: 10px;
+                  opacity: 0.8;
+                "
+              >
+                <div>
+                  <NewsArticle
+                    :articleUUID="newsArticle.articleUUID"
+                    :likes="newsArticle.likes"
+                    :category="newsArticle.category"
+                    :headline="newsArticle.headline"
+                    :authors="newsArticle.authors"
+                    :link="newsArticle.link"
+                    :shortDescription="newsArticle.shortDescription"
+                    :date="newsArticle.date"
+                    style="height: 100%; width: 100%; margin: auto"
+                  />
+                </div>
+              </q-item>
             </div>
-          </q-item>
+          </q-list>
         </div>
-      </q-list>
-    </div>
-    </div>
-
+      </div>
     </div>
   </q-page>
 </template>
-
 
 <script>
 //maybe pull up chats of matches here; in v-for, only load user if in liked array
@@ -125,8 +115,9 @@ import axios from "axios";
 export default {
   data() {
     return {
-        newsArticles: [{"articleUUID": "abc123", "recUUID": "placeholder", "likes": 5, "category": "politics", "headline": "something politics", "authors": "dr. seuss, me", "link": "https://www.nytimes.com/2017/04/11/world/middleeast/russia-syria-chemical-weapons-white-house.html", "shortDescription": "this is a news caption", "date": "2011-10-05T14:48:00.000Z"}],
-        searchNewsQuery: ""
+      newsArticles: [],
+      searchNewsQuery: "",
+      loadingNews: false,
     };
   },
 
@@ -144,12 +135,69 @@ export default {
   computed: {},
 
   methods: {
-      searchNews() {
-          //TODO: implement (uses searchNewsQuery as input)
-      }
+    searchNews() {
+      this.loadingNews = true;
+      axios
+        .get("/api/news/articles", {
+          params: { q: this.searchNewsQuery },
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+        .then((resp) => {
+          if (resp.status == 200) {
+            // ok
+            console.log(resp.data);
+            this.newsArticles = resp.data;
+            this.loadingNews = false;
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            console.log(err.response);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              this.loadingNews = false;
+            }
+          }
+        });
+    },
+    getNews() {
+      // get recommended articles
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      this.loadingNews = true;
+      axios
+        .get(
+          "/api/users/" + userInfo.username + "/recommended-articles/",
+
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            this.newsArticles = resp.data;
+            this.loadingNews = false;
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              this.loadingNews = false;
+            }
+          }
+        });
+    },
   },
 
-  mounted() {},
+  mounted() {
+    this.getNews();
+  },
 };
 </script>
 
