@@ -29,7 +29,7 @@
           <!--loop over members of chat / join by comma -->
           <q-item-section avatar>
             <q-avatar color="primary" text-color="white">
-              {{ chat.chatName.charAt(0).toUpperCase() }}
+              {{ chat.chatName.split(", ").map(name => name.charAt(0).toUpperCase()).join("") }}
             </q-avatar>
           </q-item-section>
         </q-btn>
