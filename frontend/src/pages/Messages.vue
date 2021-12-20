@@ -1,7 +1,15 @@
 <!--q-item list over chatUUIDs: display names of users in chat -->
 <template>
   <q-page style="overflow-y: hidden">
-    <div style="margin-top: 2%">
+
+       <div v-if="this.chats.length == 0" style="margin-top: 300px">
+          <span class="absolute-center" style="text-align: center">
+            <q-spinner color="primary" size="3em" :thickness="2" />
+            <p style="font-size: 20px; color: grey">Loading your chats...</p>
+          </span>
+        </div>
+
+    <div v-else style="margin-top: 2%">
       <q-item
         v-for="chat in this.chats"
         :key="chat"

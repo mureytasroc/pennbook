@@ -69,7 +69,14 @@
 
       </div>
 
+       <div v-if="this.newsArticles.length == 0" style="margin-top: 300px">
+          <span class="absolute-center" style="text-align: center">
+            <q-spinner color="primary" size="3em" :thickness="2" />
+            <p style="font-size: 20px; color: grey">Loading your news...</p>
+          </span>
+        </div>
 
+    <div v-else>
       <q-list class="full-width">
         <div>
           <q-item
@@ -101,6 +108,7 @@
           </q-item>
         </div>
       </q-list>
+    </div>
     </div>
 
     </div>
