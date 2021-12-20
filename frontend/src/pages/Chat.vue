@@ -255,6 +255,37 @@ export default {
       uuid: this.chatInfo.chatUUID,
     });
 
+    // get members endpoint
+    axios
+      .get(
+        "/api/chats/members/" + this.chatInfo.chatUUID + "/",
+
+        {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        }
+      )
+      .then((resp) => {
+        if (resp.status == 200) {
+          if (resp.data.length > 0) {
+            resp.data.map((data) => {
+              this.users.push({
+                username: data.creatorUsername,
+                firstName: data.firstName,
+                lastName: data.lastName,
+              });
+            });
+            this.chatInfo = resp.data[0];
+          } else {
+            alert("No members found in chat!");
+          }
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          alert(err.response.data.message);
+        }
+      });
+
     //load chats initially
     this.loadingMessages = true;
     axios
@@ -296,37 +327,10 @@ export default {
   created() {
     let currentPath = this.$route.fullPath;
     let subdomains = currentPath.split("/");
-    // this.chatInfo.chatUUID = subdomains[subdomains.length - 1];
-    this.chatInfo = this.$route.params;
+    this.chatInfo.chatUUID = subdomains[subdomains.length - 1];
+    // this.chatInfo = this.$route.params;
 
     this.userInfo = JSON.parse(localStorage.getItem("userInfo"));
-
-    //TODO: set chatUUID field and load all messages (route call) into "messages"
-    //get involved users and set users variable
-    axios
-      .get(
-        "/api/chats/members/" + this.chatInfo.chatUUID + "/",
-
-        {
-          headers: { Authorization: `Bearer ${localStorage.jwt}` },
-        }
-      )
-      .then((resp) => {
-        if (resp.status == 200) {
-          resp.data.map((data) => {
-            this.users.push({
-              username: data.creatorUsername,
-              firstName: data.firstName,
-              lastName: data.lastName,
-            });
-          });
-        }
-      })
-      .catch((err) => {
-        if (err.response) {
-          alert(err.response.data.message);
-        }
-      });
   },
 
   beforeDestroy() {
@@ -334,6 +338,12 @@ export default {
     if (this.chatTab == "chat") {
       this.setChatTab("");
     }
+  },
+  unmounted() {
+    socket.emit("leave", {
+      username: this.userInfo.username,
+      uuid: this.chatInfo.chatUUID,
+    });
   },
 };
 </script>

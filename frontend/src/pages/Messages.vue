@@ -6,7 +6,7 @@
         v-for="chat in this.chats"
         :key="chat"
         clickable
-        @click="visitChat(chat)"
+        @click="visitChat(chat.chatUUID)"
         v-ripple
         style="
           height: 80px;
@@ -95,10 +95,8 @@ export default {
         });
     },
 
-    visitChat(chatInfo) {
-      // this.$router.push("/chat/" + chatUUID);
-
-      this.$router.push({ name: "chat", params: { ...chatInfo } });
+    visitChat(chatUUID) {
+      this.$router.push("/chat/" + chatUUID);
     },
   },
   beforeUnmount() {},

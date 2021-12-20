@@ -533,7 +533,11 @@ export default {
         )
         .then((resp) => {
           if (resp.status == 200) {
-            this.$router.push({ name: "chat", params: { ...resp.data[0] } });
+            if (resp.data.length > 0) {
+              this.$router.push("/chat/" + resp.data[0].chatUUID);
+            } else {
+              alert("Error creating chat!");
+            }
           }
         })
         .catch((err) => {
