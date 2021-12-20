@@ -54,16 +54,16 @@
               >
                 <q-list bordered separator>
                   <q-item
-                    v-for="user in this.users"
-                    :key="user"
+                    v-for="friend in this.onlineFriends"
+                    :key="friend"
                     clickable
-                    @click="sendInvite(user.username)"
+                    @click="sendInvite(friend)"
                   >
                     <q-item-section avatar>
                       <q-avatar color="primary" text-color="white">
                         {{
-                          user.firstName.charAt(0).toUpperCase() +
-                          user.lastName.charAt(0).toUpperCase()
+                          friend.firstName.charAt(0).toUpperCase() +
+                          friend.lastName.charAt(0).toUpperCase()
                         }}
                       </q-avatar>
                     </q-item-section>
@@ -80,7 +80,7 @@
 
                     <q-item-section>
                       <q-item-label>{{
-                        user.firstName + " " + user.lastName
+                        friend.firstName + " " + friend.lastName
                       }}</q-item-label>
                     </q-item-section>
                   </q-item>
@@ -175,6 +175,7 @@ export default {
       userInfo: {},
       messages: [],
       loadingMessages: false,
+      onlineFriends: [],
     };
   },
 
@@ -239,13 +240,148 @@ export default {
         .substring(0, dateObj.toLocaleDateString().length - 5);
     },
 
-    sendInvite(username) {
+    sendInvite(friend) {
       //invite user with username to same chatUUID – should open up new chatUUID?
-    },
-  },
+      if (
+        this.users.filter((user) => user.username == friend.username).length > 0
+      ) {
+        alert("Friend is already in the chat!");
+        return;
+      }
 
-  watch: {
-    messages() {},
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+      // create new chat
+      let chatName = this.chatInfo.chatName.split(", ");
+      chatName.push(friend.firstName + " " + friend.lastName);
+      chatName.sort();
+      let chatNameString = chatName.join(", ");
+
+      let chatUsernames = this.users;
+      chatUsernames.push({
+        username: friend.username,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+      });
+
+      axios
+        .post(
+          "/api/chats/",
+          {
+            creator: userInfo.username,
+            name: chatNameString,
+            members: chatUsernames,
+          },
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            if (resp.data.length > 0) {
+              this.$router.push("/chat/" + resp.data[0].chatUUID);
+            } else {
+              alert("Error creating chat!");
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            alert(err.response.data.message);
+          }
+        });
+    },
+    getOnlineFriends() {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .get("/api/users/" + userInfo.username + "/friends/", {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+        .then((resp) => {
+          if (resp.status == 200) {
+            // ok
+            resp.data.map((friendInfo) => {
+              if (friendInfo.confirmed) {
+                // TODO: check if friend is online
+                // friend
+                this.onlineFriends.push(friendInfo);
+              }
+            });
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            alert(err.response.data.message);
+          }
+        });
+    },
+    getMembers() {
+      axios
+        .get(
+          "/api/chats/members/" + this.chatInfo.chatUUID + "/",
+
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            if (resp.data.length > 0) {
+              resp.data.map((data) => {
+                this.users.push({
+                  username: data.username,
+                  firstName: data.firstName,
+                  lastName: data.lastName,
+                });
+              });
+              this.chatInfo = resp.data[0];
+            } else {
+              alert("No members found in chat!");
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            alert(err.response.data.message);
+          }
+        });
+    },
+    loadMessages() {
+      //load chats initially
+      (this.messages = []), (this.loadingMessages = true);
+      axios
+        .get(
+          "/api/chats/" + this.chatInfo.chatUUID + "/",
+
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            console.log("fetched chat history:");
+            let fetchedMessages = resp.data;
+            fetchedMessages.reverse();
+
+            this.messages = fetchedMessages;
+            this.loadingMessages = false;
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            alert(err.response.data.message);
+          }
+          this.loadingMessages = false;
+        });
+
+      // captures server msgs (possibly from other ppl)
+      socket.on("message", (data) => {
+        console.log("received message");
+        console.log(data);
+
+        this.messages.push(data);
+      });
+    },
   },
 
   mounted() {
@@ -255,73 +391,12 @@ export default {
       uuid: this.chatInfo.chatUUID,
     });
 
-    // get members endpoint
-    axios
-      .get(
-        "/api/chats/members/" + this.chatInfo.chatUUID + "/",
+    this.getMembers();
 
-        {
-          headers: { Authorization: `Bearer ${localStorage.jwt}` },
-        }
-      )
-      .then((resp) => {
-        if (resp.status == 200) {
-          if (resp.data.length > 0) {
-            resp.data.map((data) => {
-              this.users.push({
-                username: data.creatorUsername,
-                firstName: data.firstName,
-                lastName: data.lastName,
-              });
-            });
-            this.chatInfo = resp.data[0];
-          } else {
-            alert("No members found in chat!");
-          }
-        }
-      })
-      .catch((err) => {
-        if (err.response) {
-          alert(err.response.data.message);
-        }
-      });
+    this.loadMessages();
 
-    //load chats initially
-    this.loadingMessages = true;
-    axios
-      .get(
-        "/api/chats/" + this.chatInfo.chatUUID + "/",
-
-        {
-          headers: { Authorization: `Bearer ${localStorage.jwt}` },
-        }
-      )
-      .then((resp) => {
-        if (resp.status == 200) {
-          console.log("fetched chat history:");
-          let fetchedMessages = resp.data;
-          fetchedMessages.reverse();
-
-          this.messages = fetchedMessages;
-          this.loadingMessages = false;
-        }
-      })
-      .catch((err) => {
-        if (err.response) {
-          alert(err.response.data.message);
-        }
-        this.loadingMessages = false;
-      });
-
-    // captures server msgs (possibly from other ppl)
-    socket.on("message", (data) => {
-      console.log("received message");
-      console.log(data);
-
-      this.messages.push(data);
-    });
-
-    //get messages
+    // get onlineFriends
+    this.getOnlineFriends();
   },
 
   created() {
