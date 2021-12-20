@@ -7,6 +7,16 @@ import {
 } from "vue-router";
 import routes from "./routes";
 
+import { io } from "socket.io-client";
+console.log('connecting socket')
+export const socket = io("https://pennbook.app");
+
+let userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+socket.emit('connected', {
+  username: userInfo.username
+})
+
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;

@@ -82,17 +82,33 @@
           class="q-pa-md column col justify-end"
           style="margin-bottom: 30px; margin-top: 30px"
         >
-          <div>
+          <div v-if="this.userInfo.username == 'server'">
              <q-chat-message
               class="chatSize"
               style="font-size: 16px; color: black"
               v-for="message in messages"
-              :text="[message.messageUUID]"
-              :name="message.sender.username"
+              :text="[message.message]"
+              :name="message.sender"
               :key="message"
-              :sent="message.sender.username == this.userInfo.username ? true : false"
+              :sent="message.sender == this.userInfo.username ? true : false"
               :bg-color="
-                message.from == userOrder ? 'whitesmoke' : 'light-green-3'
+                message.from == userOrder ? 'whitesmoke' : 'red'
+              "
+            >
+            </q-chat-message>
+          </div>
+
+          <div v-else>
+             <q-chat-message
+              class="chatSize"
+              style="font-size: 16px; color: black"
+              v-for="message in messages"
+              :text="[message.message]"
+              :name="message.sender"
+              :key="message"
+              :sent="message.sender == this.userInfo.username ? true : false"
+              :bg-color="
+                message.from == userOrder ? 'whitesmoke' : 'red'
               "
             >
             </q-chat-message>
@@ -138,8 +154,11 @@
 
 
 
-<script src="/socket.io/socket.io.js">
+<script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import {socket} from "../router/index"
+import axios from "axios";
+
 export default {
   data() {
     return {
@@ -150,6 +169,7 @@ export default {
       icon: "chevron_right",
       newMessage: "",
       buttonShow: false,
+      chatUUID: "",
       userOrder: "",
       popupMode: "",
       name: "",
@@ -177,14 +197,22 @@ export default {
       if (this.newMessage.replace(/\s/g, "") != "") {
 
         //TODO: post message to route
+
         let messageContent = this.newMessage;
         console.log(messageContent);
+
+        socket.emit('message', {
+          username: this.userInfo.username,
+          message: this.newMessage,
+          uuid: this.chatUUID
+        })
 
         this.clearMessage();
 
         let date = Date.parse(new Date()).toString();
 
       }
+
     },
 
     clearMessage() {
@@ -198,6 +226,7 @@ export default {
 
     closeChat() {
        console.log('eh??')
+       socket.emit('leave', {username: this.userInfo.username, uuid: this.chatUUID});
        this.$router.push('/chats')
     },
 
@@ -245,13 +274,53 @@ export default {
   },
 
   mounted() {
+    // emit event to server with the user's name
+    socket.emit('join', {
+    username: this.userInfo.username,
+    uuid: this.chatUUID
+  })
+
+  //load chats initially
+  axios
+      .get(
+        "/api/chats/" + this.chatUUID + "/",
+
+        {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        }
+      )
+      .then((resp) => {
+        if (resp.status == 200) {
+          console.log("fetched chat history:")
+          let fetchedMessages = resp.data;
+          fetchedMessages.reverse()
+
+          this.messages = fetchedMessages;
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          console.log(err.response);
+        }
+      });
+
+    // captures server msgs (possibly from other ppl)
+  socket.on('message', (data) => {
+    console.log('received message')
+    console.log(data)
+
+    this.messages.push(data)
+  })
+
+  //get messages
 
   },
 
   created() {
     let currentPath = this.$route.fullPath;
     let subdomains = currentPath.split('/');
-    let chatUUID = subdomains[subdomains.length-1]
+    this.chatUUID = subdomains[subdomains.length-1]
+
     this.userInfo = JSON.parse(localStorage.getItem("userInfo"));
     console.log(this.userInfo)
 
