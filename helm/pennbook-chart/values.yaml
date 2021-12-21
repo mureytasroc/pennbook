@@ -28,3 +28,7 @@ frontend:
   image: ghcr.io/mureytasroc/pennbook/frontend
   port: 3000
   replicas: 1
+
+ml:
+  image: gchr.io/mureytasroc/pennbook/ml
+  port: 8001

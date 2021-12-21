@@ -21,6 +21,13 @@ spec:
                 name: {{ .Release.Name }}-backend
                 port:
                   number: {{ .Values.backend.port }}
+          - path: "/predict"
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-ml
+                port:
+                  number: {{ .Values.ml.port }}
           - path: "/socket.io"
             pathType: Prefix
             backend:
