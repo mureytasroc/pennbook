@@ -190,7 +190,8 @@ if __name__ == "__main__":
     )  # ((node, label), value)
     print("\n\n---\n node_and_label_to_value:\n", node_and_label_to_value.take(5), "---\n\n")
 
-    for _ in range(MAX_NUM_ITERATIONS):
+    for i in range(MAX_NUM_ITERATIONS):
+        print(f"Iteration {i}:")
         new_node_to_labels = (
             edges.join(node_to_labels)
             .map(
@@ -202,21 +203,30 @@ if __name__ == "__main__":
                 lambda t: (t[0][0], (t[0][1], 1 if t[0][0] == t[0][1] else t[1]))
             )  # (new_node, (label_name, label_value))
         )
+        print("\n\n---\n new_node_to_labels:\n", new_node_to_labels.take(5), "---\n\n")
         node_sums = new_node_to_labels.map(lambda t: (t[0], t[1][1])).reduceByKey(
             add
         )  # (new_node, label_sum)
+        print("\n\n---\n node_sums:\n", node_sums.take(5), "---\n\n")
         new_node_to_labels = new_node_to_labels.join(node_sums).map(
             lambda t: (t[0], (t[1][0][0], t[1][0][1] / t[1][1]))
         )  # (new_node, (label_name, label_value / label_sum))
+        print("\n\n---\n new_node_to_labels:\n", new_node_to_labels.take(5), "---\n\n")
         new_node_and_label_to_value = new_node_to_labels.map(
             lambda t: ((t[0], t[1][0]), t[1][1])
         )  # ((new_node, label_name), label_value)
+        print(
+            "\n\n---\n new_node_and_label_to_value:\n",
+            new_node_and_label_to_value.take(5),
+            "---\n\n",
+        )
 
         max_value_change = (
             node_and_label_to_value.join(new_node_and_label_to_value)
             .map(lambda t: abs(t[1][0] - t[1][1]))
             .max()
         )
+        print("\n\n---\n max_value_change:\n", max_value_change.take(5), "---\n\n")
 
         node_to_labels = new_node_to_labels
         node_and_label_to_value = new_node_and_label_to_value
@@ -227,6 +237,7 @@ if __name__ == "__main__":
     username_to_article_labels = node_to_labels.filter(lambda t: t[0].startswith("uuid/")).map(
         lambda t: (t[1][0][5:], (t[0][5:], t[1][1]))
     )  # (username, (uuid, weight))
+    print("\n\n---\n username_to_article_labels:\n", username_to_article_labels.take(5), "---\n\n")
 
     username_to_article_labels.foreachPartition(updateAdsorptionWeightsDynamoDB)
 
@@ -234,12 +245,14 @@ if __name__ == "__main__":
     articles_today = articles_rdd.filter(lambda t: t[1][1] >= yesterday).map(
         lambda t: (t[0][5:], t[1][1])
     )  # (uuid, date)
+    print("\n\n---\n articles_today:\n", articles_today.take(5), "---\n\n")
 
     recommended_articles_today = recommended_articles_rdd.filter(
         lambda t: t[1][1] >= yesterday
     ).map(
         lambda t: ((t[0], t[1][0]), t[1][1])
     )  # ((username, uuid), date)
+    print("\n\n---\n recommended_articles_today:\n", recommended_articles_today.take(5), "---\n\n")
 
     username_to_candidate_recs = (
         username_to_article_labels.map(
@@ -252,6 +265,7 @@ if __name__ == "__main__":
         .subtractByKey(recommended_articles_today)
         .map(lambda t: (t[0][0], (t[0][1], t[1][0], t[1][1])))  # (username, (uuid, date, weight))
     )
+    print("\n\n---\n username_to_candidate_recs:\n", username_to_candidate_recs.take(5), "---\n\n")
 
     username_to_candidate_recs.foreachPartition(recommendArticlesDynamoDB)
 
