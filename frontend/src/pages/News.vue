@@ -86,7 +86,7 @@
                   "
                 >
                   <div>
-                    <q-img :src="this.adLink" />
+                    <q-img :src="this.adLink.url" />
 
                     <NewsArticle
                       :articleUUID="newsArticle.articleUUID"
