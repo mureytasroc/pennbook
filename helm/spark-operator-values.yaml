@@ -6,3 +6,8 @@ sparkJobNamespace: default
 serviceAccounts:
   spark:
     name: spark
+
+enableWebhook: true
+
+webhook:
+  enable: true
