@@ -373,6 +373,7 @@ export default {
           "/api/chats/" + this.chatInfo.chatUUID + "/",
 
           {
+            params: { limit: 1000 },
             headers: { Authorization: `Bearer ${localStorage.jwt}` },
           }
         )
@@ -381,7 +382,6 @@ export default {
             console.log("fetched chat history:");
             let fetchedMessages = resp.data;
             fetchedMessages.reverse();
-
             this.messages = fetchedMessages;
             this.loadingMessages = false;
           }
