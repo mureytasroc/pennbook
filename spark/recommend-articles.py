@@ -27,9 +27,9 @@ def scan_whole_table(table):
 def updateAdsorptionWeightsDynamoDB(tuples):
     dynamodb = boto3.resource(
         "dynamodb",
-        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-        region_name=os.environ["AWS_REGION"],
+        aws_access_key_id="AKIAS4XUEYH7G7D7R57X",
+        aws_secret_access_key="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",
+        region_name="us-east-1",
     )
     with dynamodb.Table("articlerankings").batch_write() as batch:
         for username, (article_uuid, adsorption_weight) in tuples:
@@ -55,9 +55,9 @@ def recommendArticlesDynamoDB(tuples):
 
     dynamodb = boto3.resource(
         "dynamodb",
-        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-        region_name=os.environ["AWS_REGION"],
+        aws_access_key_id="AKIAS4XUEYH7G7D7R57X",
+        aws_secret_access_key="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",
+        region_name="us-east-1",
     )
     with dynamodb.Table("recommendedarticles").batch_write() as batch:
         for username, article_uuid in user_to_recommendation.items():
@@ -76,9 +76,9 @@ if __name__ == "__main__":
 
     dynamodb = boto3.resource(
         "dynamodb",
-        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-        region_name=os.environ["AWS_REGION"],
+        aws_access_key_id="AKIAS4XUEYH7G7D7R57X",
+        aws_secret_access_key="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",
+        region_name="us-east-1",
     )
     articles_table = dynamodb.Table("articles")
     article_items_to_tuples = lambda items: [
