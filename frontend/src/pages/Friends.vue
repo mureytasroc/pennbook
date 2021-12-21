@@ -154,68 +154,75 @@
 
         <!-- display current list of friends -->
         <div v-else>
-          <q-item
-            v-for="friend in this.friends"
-            :key="friend"
-            clickable
-            v-ripple
-            style="
-              height: 80px;
-              margin: auto;
-              margin-bottom: 10px;
-              width: 600px;
-              opacity: 0.8;
-              background: whitesmoke;
-            "
-          >
-            <q-btn @click="visitWall(friend.username)" flat>
-              <q-item-section avatar>
-                <q-avatar color="primary" text-color="white">
-                  {{
-                    friend.firstName.charAt(0).toUpperCase() +
-                    friend.lastName.charAt(0).toUpperCase()
-                  }}
-                </q-avatar>
-              </q-item-section>
-            </q-btn>
+          <q-infinite-scroll @load="onLoadFriends">
+            <q-item
+              v-for="friend in this.friends"
+              :key="friend"
+              clickable
+              v-ripple
+              style="
+                height: 80px;
+                margin: auto;
+                margin-bottom: 10px;
+                width: 600px;
+                opacity: 0.8;
+                background: whitesmoke;
+              "
+            >
+              <q-btn @click="visitWall(friend.username)" flat>
+                <q-item-section avatar>
+                  <q-avatar color="primary" text-color="white">
+                    {{
+                      friend.firstName.charAt(0).toUpperCase() +
+                      friend.lastName.charAt(0).toUpperCase()
+                    }}
+                  </q-avatar>
+                </q-item-section>
+              </q-btn>
 
-            <q-item-section avatar>
+              <q-item-section avatar>
+                <q-btn
+                  v-if="friend.loggedIn"
+                  round
+                  dense
+                  unelevated
+                  style="font-size: 6px !important; margin-left: 5px"
+                  color="light-green-5"
+                />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>{{
+                  friend.firstName + " " + friend.lastName
+                }}</q-item-label>
+              </q-item-section>
+
+              <q-item-section side>
+                <q-btn
+                  style="margin-right: 20px"
+                  dense
+                  round
+                  icon="textsms"
+                  color="light-green-6"
+                  @click="createChat(friend)"
+                />
+              </q-item-section>
               <q-btn
-                v-if="friend.loggedIn"
-                round
+                icon="remove_circle_outline"
+                flat
                 dense
                 unelevated
-                style="font-size: 6px !important; margin-left: 5px"
-                color="light-green-5"
+                style="font-size: 12px !important; margin-left: 5px"
+                color="red"
+                @click="removeFriend(friend.username)"
               />
-            </q-item-section>
-
-            <q-item-section>
-              <q-item-label>{{
-                friend.firstName + " " + friend.lastName
-              }}</q-item-label>
-            </q-item-section>
-
-            <q-item-section side>
-              <q-btn
-                style="margin-right: 20px"
-                dense
-                round
-                icon="textsms"
-                color="light-green-6"
-                @click="createChat(friend)"
-              />
-            </q-item-section>
-            <q-btn
-              icon="remove_circle_outline"
-              flat
-              dense
-              unelevated
-              style="font-size: 12px !important; margin-left: 5px"
-              color="red"
-              @click="removeFriend(friend.username)"
-            />
-          </q-item>
+            </q-item>
+            <template v-slot:loading>
+              <div class="row justify-center q-my-md">
+                <q-spinner-dots color="primary" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
         </div>
       </div>
 
@@ -252,12 +259,12 @@
             class="q-ml-md"
           >
             <template v-slot:append>
-              <q-icon v-if="text === ''" name="search" />
+              <q-icon v-if="this.searchPeopleQuery === ''" name="search" />
               <q-icon
                 v-else
                 name="clear"
                 class="cursor-pointer"
-                @click="text = ''"
+                @click="this.searchPeopleQuery = ''"
               />
             </template>
           </q-input>
@@ -398,6 +405,54 @@ export default {
             } else {
               alert(err.response.data.message);
               this.loadingFriends = false;
+            }
+          }
+        });
+    },
+    onLoadFriends(index, done) {
+      if (this.friends.length == 0) {
+        done();
+        return;
+      }
+
+      axios
+        .get("/api/users/" + userInfo.username + "/friends/", {
+          params: {
+            page: this.searchedFriends[this.searchedFriends.length - 1]
+              .username,
+            q: encodeURIComponent(this.searchPeopleQuery),
+          },
+
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+
+        .then((resp) => {
+          if (resp.status == 200) {
+            if (resp.data.length == 0) {
+              // reached end
+              done(true);
+            } else {
+              resp.data.map((friendInfo) => {
+                if (!friendInfo.requested && !friendInfo.confirmed) {
+                  // incoming request
+                  this.friendRequests.push(friendInfo);
+                } else if (friendInfo.confirmed) {
+                  // friend
+                  this.friends.push(friendInfo);
+                }
+              });
+              done();
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              done(true);
             }
           }
         });
