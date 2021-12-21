@@ -81,6 +81,11 @@ io.on('connection', (socket) => {
     }
   });
 
+
+  socket.on('logging off', async ({ uuid }) => {
+    socket.leave(uuid);
+  });
+
   socket.on('leave', async ({ username, uuid }) => {
     socket.leave(uuid);
     io.to(uuid).emit('message', {
