@@ -12,6 +12,7 @@ import keywordExtractor from 'keyword-extractor';
 import LineByLineReader from 'line-by-line';
 import fs from 'fs';
 
+const LOAD_NEWS_BATCH_SIZE = 10000;
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
 /**
@@ -109,7 +110,7 @@ export async function loadNews(minDate) {
     }
     categoriesSet.add(article.category);
     batch.push(article);
-    if (batch.length >= 20) {
+    if (batch.length >= LOAD_NEWS_BATCH_SIZE) {
       lineReader.pause();
       await uploadArticleBatch();
       lineReader.resume();
