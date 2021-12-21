@@ -12,8 +12,8 @@ from uuid import uuid4
 from pyspark.sql import SparkSession
 
 MIN_ITERATIONS = 5
-MAX_ITERATIONS = 15
-CONVERGENCE_THRESH = 0.05
+MAX_ITERATIONS = 10
+CONVERGENCE_THRESH = 0.2
 
 
 def scan_whole_table(table):
