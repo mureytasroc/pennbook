@@ -12,7 +12,7 @@ import keywordExtractor from 'keyword-extractor';
 import LineByLineReader from 'line-by-line';
 import fs from 'fs';
 
-const LOAD_NEWS_BATCH_SIZE = 10000;
+const LOAD_NEWS_BATCH_SIZE = 5000;
 const isValidKeyword = /[a-zA-Z0-9]+/; // used in turnTextToKeywords
 
 /**
