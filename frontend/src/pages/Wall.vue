@@ -1,15 +1,6 @@
 <template>
   <q-page style="overflow-y: hidden">
     <div
-      class="flex q-pa-md"
-      style="
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        margin: auto;
-        margin-top: 30px;
-        overflow-x: hidden;
-      "
     >
       <WallView
         :wallPosts="this.wallPosts"

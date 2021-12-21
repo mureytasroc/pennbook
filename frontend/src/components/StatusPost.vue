@@ -6,14 +6,15 @@
       vertical
       flat
       style="
-        width: 350px;
+        width: 550px;
+        min-height: 400px;
         display: flex;
         border: 5px solid whitesmoke;
         border-radius: 10px;
         overflow: hidden;
       "
     >
-      <q-card-section style="width: 100%">
+      <q-card-section style="width: 100%;">
         <div flat>
           <q-item clickable v-ripple style="background: #fce8ea">
             <q-item-section avatar>

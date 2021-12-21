@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex q-pa-md"
+  class="flex q-pa-md"
     style="
       width: 100%;
       display: flex;
@@ -16,10 +16,7 @@
       <!--TODO: v-else -->
       <div>
         <q-bar dark class="bg-secondary text-white">
-          <div v-if="this.isSelf" class="col text-center text-weight-bold">
-            {{ this.username }} Wall!
-          </div>
-          <div v-else class="col text-center text-weight-bold">
+          <div class="col text-center text-weight-bold">
             {{ this.username }}'s Wall!
           </div>
         </q-bar>
@@ -34,11 +31,11 @@
             overflow-y: hidden;
             overflow-x: hidden;
             bottom: 20%;
-            width: 90%;
+            width: 550px;
           "
         >
           <q-card
-            style="border-radius: 20px; height: 190px; background: whitesmoke"
+            style="border-radius: 20px; height: 220px; background: whitesmoke"
           >
             <q-card-section style="font-size: 1rem">
               <q-input
@@ -71,6 +68,7 @@
             </q-btn>
           </q-card-actions>
         </q-card>
+        <br><br>
         <div v-if="!this.isSelf">
           <br />
           <br />
@@ -90,7 +88,7 @@
               opacity: 0.8;
             "
           >
-            <div>
+            <div style="margin: 0px auto;">
               <StatusPost
                 :postUUID="post.postUUID"
                 :firstName="post.creator.firstName"
@@ -99,6 +97,7 @@
                 :creator="post.creator.username"
                 style="height: 100%; width: 100%; margin: auto"
               />
+              <br><br>
             </div>
           </q-item>
         </div>

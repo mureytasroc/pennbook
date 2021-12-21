@@ -12,14 +12,14 @@
         overflow-x: hidden;
       "
     >
-      <div>
+      <div style="margin:auto;width:50%">
         <q-bar dark class="bg-secondary text-white">
           <div class="col text-center text-weight-bold">My Profile</div>
         </q-bar>
 
         <br />
 
-        <q-card class="my-card">
+        <q-card class="my-card" style="margin: 0 auto;">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">
               {{ this.userInfo.firstName + " " + this.userInfo.lastName }}
@@ -109,6 +109,7 @@
             <!--this should open up og component to update settings?-->
           </div>
         </q-card>
+
         <br />
       </div>
 
@@ -279,5 +280,5 @@ export default {
 <style lang="sass">
 .my-card
   width: 100%
-  max-width: 500px
+  max-width: 80%
 </style>
