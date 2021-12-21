@@ -7,7 +7,6 @@ serviceAccounts:
   spark:
     name: spark
 
-enableWebhook: true
-
-webhook:
+uiService:
   enable: true
+ingressUrlFormat: "spark.pennbook.app"

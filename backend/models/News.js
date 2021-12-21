@@ -134,7 +134,8 @@ export async function getArticle(articleUUID) {
  */
 export async function articleSearch(username, keywords, page, limit) {
   const matchingArticles = await Promise.all(
-      keywords.map((keyword) => queryGetList(ArticleKeyword.query(keyword).loadAll())));
+      keywords.map((keyword) => queryGetList(
+          ArticleKeyword.query(keyword).descending().loadAll())));
   const articleUUIDtoMatchCount = new Map();
   const articleUUIDtoWeight = new Map();
   let maxMatchCount = 0;

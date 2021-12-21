@@ -97,12 +97,10 @@ export async function recommendArticles() {
     do {
       await new Promise((resolve) => setTimeout(resolve, SPARK_POLL_MS));
     } while (!(await sparkJobFinished()));
-  } catch (err) {
+  } finally {
     await redisClient.set('RECOMMENDER_RUNNING', JSON.stringify(false));
-    throw err;
   }
 
-  await redisClient.set('RECOMMENDER_RUNNING', JSON.stringify(false));
   if (JSON.parse(await redisClient.get('RECOMMENDER_RUN_WHEN_DONE'))) {
     await redisClient.set('RECOMMENDER_RUN_WHEN_DONE', JSON.stringify(false));
     return await recommendArticles();
