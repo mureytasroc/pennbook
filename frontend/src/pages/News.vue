@@ -72,6 +72,9 @@
           <q-infinite-scroll @load="onLoad">
             <q-list class="full-width">
               <div>
+
+                    <q-img :src="this.adLink.url"/>
+                    <br>
                 <q-item
                   class="columns large-3 medium-6"
                   v-for="newsArticle in this.newsArticles"
@@ -86,7 +89,6 @@
                   "
                 >
                   <div>
-                    <q-img :src="this.adLink.url" />
 
                     <NewsArticle
                       :articleUUID="newsArticle.articleUUID"
