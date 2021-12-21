@@ -102,8 +102,6 @@ export async function recommendArticles() {
     throw err;
   }
 
-  // TODO: add a new article to recommended list for each user?
-
   await redisClient.set('RECOMMENDER_RUNNING', JSON.stringify(false));
   if (JSON.parse(await redisClient.get('RECOMMENDER_RUN_WHEN_DONE'))) {
     await redisClient.set('RECOMMENDER_RUN_WHEN_DONE', JSON.stringify(false));

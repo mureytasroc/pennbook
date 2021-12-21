@@ -92,6 +92,7 @@ export const RecommendedArticle = dynamo.define('RecommendedArticle', {
     username: Joi.string(),
     recUUID: Joi.string(),
     articleUUID: Joi.string(),
+    articleDate: Joi.string(),
   },
 });
 
