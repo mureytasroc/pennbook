@@ -21,7 +21,7 @@ const router = new express.Router();
  * @return {string} the wall username
  */
 async function getWallUsername(req) {
-  const wallUsername = req.params.username;
+  const wallUsername = assertString(req.params.username, 'username', 64, 1);
   if (wallUsername != req.user.username) {
     await assertFriendshipConfirmed(wallUsername, req.user.username);
   }
