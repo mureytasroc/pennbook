@@ -1,7 +1,7 @@
 <template>
   <q-page style="overflow-y: hidden">
     <div
-      class="flex q-pa-md"
+      class="column items-center"
       style="
         width: 100%;
         display: flex;
@@ -72,6 +72,9 @@
           <q-infinite-scroll @load="onLoad">
             <q-list class="full-width">
               <div>
+
+                    <q-img :src="this.adLink.url"/>
+                    <br>
                 <q-item
                   class="columns large-3 medium-6"
                   v-for="newsArticle in this.newsArticles"
@@ -86,6 +89,7 @@
                   "
                 >
                   <div>
+
                     <NewsArticle
                       :articleUUID="newsArticle.articleUUID"
                       :likes="newsArticle.likes"
@@ -110,6 +114,17 @@
         </div>
       </div>
     </div>
+
+    <div
+      class="column self-end"
+      style="
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin: auto;
+        overflow-x: hidden;
+      "
+    ></div>
   </q-page>
 </template>
 
@@ -125,6 +140,7 @@ export default {
       newsArticles: [],
       searchNewsQuery: "",
       loadingNews: false,
+      adLink: "",
     };
   },
 
@@ -154,6 +170,35 @@ export default {
             // ok
             this.newsArticles = resp.data;
             this.loadingNews = false;
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              this.loadingNews = false;
+            }
+          }
+        });
+    },
+
+    getAdLink() {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      this.loadingNews = true;
+      axios
+        .get(
+          "/api/ad/" + userInfo.username,
+
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            this.adLink = resp.data;
           }
         })
         .catch((err) => {
@@ -278,6 +323,7 @@ export default {
 
   beforeMount() {
     this.getNews();
+    this.getAdLink();
   },
 };
 </script>
