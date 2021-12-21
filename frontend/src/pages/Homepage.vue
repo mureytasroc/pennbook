@@ -24,9 +24,7 @@
       <div v-if="this.loadingInitialPosts">
         <span class="absolute-center" style="text-align: center">
           <q-spinner color="primary" size="3em" :thickness="2" />
-          <p style="font-size: 20px; color: grey">
-            Loading your feed... if it loads too long, there is no content!
-          </p>
+          <p style="font-size: 20px; color: grey">Loading your feed...</p>
         </span>
       </div>
 

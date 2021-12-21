@@ -33,12 +33,12 @@
               class="q-ml-md"
             >
               <template v-slot:append>
-                <q-icon v-if="text === ''" name="search" />
+                <q-icon v-if="this.searchNewsQuery === ''" name="search" />
                 <q-icon
                   v-else
                   name="clear"
                   class="cursor-pointer"
-                  @click="text = ''"
+                  @click="this.searchNewsQuery = ''"
                 />
               </template>
             </q-input>
@@ -146,7 +146,7 @@ export default {
       this.loadingNews = true;
       axios
         .get("/api/news/articles", {
-          params: { q: this.searchNewsQuery },
+          params: { q: encodeURIComponent(this.searchNewsQuery) },
           headers: { Authorization: `Bearer ${localStorage.jwt}` },
         })
         .then((resp) => {
@@ -203,41 +203,76 @@ export default {
         done();
         return;
       }
+      console.log("FIRED");
 
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      axios
-        .get(
-          "/api/users/" + userInfo.username + "/recommended-articles/",
+      if (searchNewsQuery === "") {
+        axios
+          .get(
+            "/api/users/" + userInfo.username + "/recommended-articles/",
 
-          {
+            {
+              params: {
+                page: this.newsArticles[this.newsArticles.length - 1].recUUID,
+              },
+              headers: { Authorization: `Bearer ${localStorage.jwt}` },
+            }
+          )
+          .then((resp) => {
+            if (resp.status == 200) {
+              if (resp.data.length == 0) {
+                // reached end
+                done(true);
+              } else {
+                this.newsArticles.push(...resp.data);
+                done();
+              }
+            }
+          })
+          .catch((err) => {
+            if (err.response) {
+              if (err.response.status == 401) {
+                localStorage.clear();
+                this.$router.push("/login");
+              } else {
+                alert(err.response.data.message);
+                done(true);
+              }
+            }
+          });
+      } else {
+        axios
+          .get("/api/news/articles", {
             params: {
+              q: encodeURIComponent(this.searchNewsQuery),
               page: this.newsArticles[this.newsArticles.length - 1].articleUUID,
             },
             headers: { Authorization: `Bearer ${localStorage.jwt}` },
-          }
-        )
-        .then((resp) => {
-          if (resp.status == 200) {
-            if (resp.data.length == 0) {
-              // reached end
-              done(true);
-            } else {
-              this.newsArticles.push(...resp.data);
-              done();
+          })
+
+          .then((resp) => {
+            if (resp.status == 200) {
+              if (resp.data.length == 0) {
+                // reached end
+                done(true);
+              } else {
+                this.newsArticles.push(...resp.data);
+                done();
+              }
             }
-          }
-        })
-        .catch((err) => {
-          if (err.response) {
-            if (err.response.status == 401) {
-              localStorage.clear();
-              this.$router.push("/login");
-            } else {
-              alert(err.response.data.message);
-              done(true);
+          })
+          .catch((err) => {
+            if (err.response) {
+              if (err.response.status == 401) {
+                localStorage.clear();
+                this.$router.push("/login");
+              } else {
+                alert(err.response.data.message);
+                done(true);
+              }
             }
-          }
-        });
+          });
+      }
     },
   },
 
