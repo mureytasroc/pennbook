@@ -12,7 +12,7 @@ from uuid import uuid4
 from pyspark.sql import SparkSession
 
 MAX_NUM_ITERATIONS = 15
-CONVERGENCE_THRESH = 0.01
+CONVERGENCE_THRESH = 0.05
 
 
 def scan_whole_table(table):
@@ -170,25 +170,37 @@ if __name__ == "__main__":
         .union(articles_outbound_edges)
         .union(category_to_users_edges)
     )
-    node_to_labels = user_interest_counts.map(lambda t: (t[0], (t[0], 1)))  # node, label, value
-    node_and_label_to_value = node_to_labels.map(lambda t: ((t[0], t[1][0]), t[1][1]))
+    node_to_labels = user_interest_counts.map(lambda t: (t[0], (t[0], 1)))  # (node, (label, value))
+    node_and_label_to_value = node_to_labels.map(
+        lambda t: ((t[0], t[1][0]), t[1][1])
+    )  # ((node, label), value)
 
     for _ in range(MAX_NUM_ITERATIONS):
         new_node_to_labels = (
             edges.join(node_to_labels)
-            .map(lambda t: (t[1][0][0], (t[1][1][0], t[1][0][1] * t[1][1][1])))
-            .map(lambda t: ((t[0], t[1][0]), t[1][1]))
+            .map(
+                lambda t: (t[1][0][0], (t[1][1][0], t[1][0][1] * t[1][1][1]))
+            )  # (new_node, (label_name, edge_weight*label_value))
+            .map(lambda t: ((t[0], t[1][0]), t[1][1]))  # ((new_node, label_name), label_value)
             .reduceByKey(add)
-            .map(lambda t: (t[0][0], (t[0][1], 1 if t[0][0] == t[0][1] else t[1])))
+            .map(
+                lambda t: (t[0][0], (t[0][1], 1 if t[0][0] == t[0][1] else t[1]))
+            )  # (new_node, (label_name, label_value))
         )
-        node_sums = new_node_to_labels.map(lambda t: (t[0], t[1][1])).reduceByKey(add)
+        node_sums = new_node_to_labels.map(lambda t: (t[0], t[1][1])).reduceByKey(
+            add
+        )  # (new_node, label_sum)
         new_node_to_labels = new_node_to_labels.join(node_sums).map(
             lambda t: (t[0], (t[1][0][0], t[1][0][1] / t[1][1]))
-        )
-        new_node_and_label_to_value = new_node_to_labels.map(lambda t: ((t[0], t[1][0]), t[1][1]))
+        )  # (new_node, (label_name, label_value / label_sum))
+        new_node_and_label_to_value = new_node_to_labels.map(
+            lambda t: ((t[0], t[1][0]), t[1][1])
+        )  # ((new_node, label_name), label_value)
 
-        max_value_change = node_and_label_to_value.join(new_node_and_label_to_value).map(
-            lambda t: (t[0], abs(t[1][0] - t[1][1]))
+        max_value_change = (
+            node_and_label_to_value.join(new_node_and_label_to_value)
+            .map(lambda t: abs(t[1][0] - t[1][1]))
+            .max()
         )
 
         node_to_labels = new_node_to_labels
@@ -199,25 +211,31 @@ if __name__ == "__main__":
 
     username_to_article_labels = node_to_labels.filter(lambda t: t[0].startswith("uuid/")).map(
         lambda t: (t[1][0][5:], (t[0][5:], t[1][1]))
-    )
+    )  # (username, (uuid, weight))
 
     username_to_article_labels.foreachPartition(updateAdsorptionWeightsDynamoDB)
 
     yesterday = (datetime.now() - timedelta(hours=24)).isoformat()
     articles_today = articles_rdd.filter(lambda t: t[1][1] >= yesterday).map(
         lambda t: (t[0][5:], t[1][1])
-    )  # uuid, date
+    )  # (uuid, date)
 
     recommended_articles_today = recommended_articles_rdd.filter(
         lambda t: t[1][1] >= yesterday
-    ).map(lambda t: ((t[0], t[1][0]), t[1][1]))
+    ).map(
+        lambda t: ((t[0], t[1][0]), t[1][1])
+    )  # ((username, uuid), date)
 
     username_to_candidate_recs = (
-        username_to_article_labels.map(lambda t: (t[1][0], (t[0], t[1][1])))
+        username_to_article_labels.map(
+            lambda t: (t[1][0], (t[0], t[1][1]))
+        )  # (uuid, (username, weight))
         .join(articles_today)
-        .map(lambda t: ((t[1][0][0], t[0]), (t[1][1], t[1][0][1])))
+        .map(
+            lambda t: ((t[1][0][0], t[0]), (t[1][1], t[1][0][1]))
+        )  # ((username, uuid), (date, weight))
         .subtractByKey(recommended_articles_today)
-        .map(lambda t: (t[0][0], (t[0][1], t[1][0], t[1][1])))
+        .map(lambda t: (t[0][0], (t[0][1], t[1][0], t[1][1])))  # (username, (uuid, date, weight))
     )
 
     username_to_candidate_recs.foreachPartition(recommendArticlesDynamoDB)
