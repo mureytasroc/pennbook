@@ -11,8 +11,8 @@ from uuid import uuid4
 
 from pyspark.sql import SparkSession
 
-MIN_ITERATIONS = 4
-MAX_ITERATIONS = 15
+MIN_ITERATIONS = 5
+MAX_ITERATIONS = 10  # TODO: set to 15
 CONVERGENCE_THRESH = 0.05
 
 
@@ -222,18 +222,18 @@ if __name__ == "__main__":
             "---\n\n",
         )
 
-        if i > MIN_ITERATIONS:
+        if i >= MIN_ITERATIONS:
             max_value_change = (
                 node_and_label_to_value.join(new_node_and_label_to_value)
                 .map(lambda t: abs(t[1][0] - t[1][1]))
                 .max()
             )
-        print("\n\n---\n max_value_change:\n", max_value_change.take(5), "---\n\n")
+            print("\n\n---\n max_value_change:\n", max_value_change.take(5), "---\n\n")
 
         node_to_labels = new_node_to_labels
         node_and_label_to_value = new_node_and_label_to_value
 
-        if i > MIN_ITERATIONS and max_value_change < CONVERGENCE_THRESH:
+        if i >= MIN_ITERATIONS and max_value_change < CONVERGENCE_THRESH:
             break
 
     username_to_article_labels = node_to_labels.filter(lambda t: t[0].startswith("uuid/")).map(
