@@ -12,7 +12,7 @@ from uuid import uuid4
 from pyspark.sql import SparkSession
 
 MIN_ITERATIONS = 5
-MAX_ITERATIONS = 10
+MAX_ITERATIONS = 5
 CONVERGENCE_THRESH = 0.2
 
 
