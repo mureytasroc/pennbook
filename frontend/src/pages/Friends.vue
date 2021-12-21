@@ -414,12 +414,12 @@ export default {
         done();
         return;
       }
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
       axios
         .get("/api/users/" + userInfo.username + "/friends/", {
           params: {
-            page: this.searchedFriends[this.searchedFriends.length - 1]
-              .username,
+            page: this.friends[this.friends.length - 1].username,
             q: encodeURIComponent(this.searchPeopleQuery),
           },
 
