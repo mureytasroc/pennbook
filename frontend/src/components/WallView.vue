@@ -96,6 +96,7 @@
                 :firstName="post.creator.firstName"
                 :lastName="post.creator.lastName"
                 :content="post.content"
+                :creator="post.creator.username"
                 style="height: 100%; width: 100%; margin: auto"
               />
             </div>
@@ -141,10 +142,9 @@ export default {
   methods: {
     postUpdate() {
       //TODO: post update (text in newPost variable) – have to store/fetch currently logged in user in local state (need creator data)
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
         .post(
-          "/api/users/" + userInfo.username + "/wall/",
+          "/api/users/" + this.username + "/wall/",
           {
             type: "Post",
             content: this.newPost,

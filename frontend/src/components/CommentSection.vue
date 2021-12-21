@@ -113,6 +113,8 @@ export default {
     },
   },
   mounted() {
+
+
     axios
       .get(
         "/api/users/" + this.creator + "/wall/" + this.postUUID + "/comments/",

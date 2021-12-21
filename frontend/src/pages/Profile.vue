@@ -116,7 +116,7 @@
 
       <WallView
         :wallPosts="this.wallPosts"
-        username="My Own"
+        :username="this.userInfo.username"
         v-bind:isSelf="true"
       ></WallView>
     </div>
@@ -270,6 +270,8 @@ export default {
           }
         }
       });
+
+                console.log(this.wallPosts)
   },
 };
 </script>
