@@ -152,6 +152,11 @@ export default {
         });
     },
     onLoad(index, done) {
+      if (this.posts.length == 0) {
+        done();
+        return;
+      }
+
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
         .get("/api/users/" + userInfo.username + "/home/", {
@@ -185,7 +190,6 @@ export default {
   beforeMount() {
     this.getInitialPosts();
   },
-  mounted() {},
 };
 </script>
 

@@ -69,37 +69,44 @@
         </div>
 
         <div v-else>
-          <q-list class="full-width">
-            <div>
-              <q-item
-                class="columns large-3 medium-6"
-                v-for="newsArticle in this.newsArticles"
-                :key="newsArticle"
-                clickable
-                v-ripple
-                style="
-                  margin: auto;
-                  margin-bottom: 10px;
-                  margin-top: 10px;
-                  opacity: 0.8;
-                "
-              >
-                <div>
-                  <NewsArticle
-                    :articleUUID="newsArticle.articleUUID"
-                    :likes="newsArticle.likes"
-                    :category="newsArticle.category"
-                    :headline="newsArticle.headline"
-                    :authors="newsArticle.authors"
-                    :link="newsArticle.link"
-                    :shortDescription="newsArticle.shortDescription"
-                    :date="newsArticle.date"
-                    style="height: 100%; width: 100%; margin: auto"
-                  />
-                </div>
-              </q-item>
-            </div>
-          </q-list>
+          <q-infinite-scroll @load="onLoad">
+            <q-list class="full-width">
+              <div>
+                <q-item
+                  class="columns large-3 medium-6"
+                  v-for="newsArticle in this.newsArticles"
+                  :key="newsArticle"
+                  clickable
+                  v-ripple
+                  style="
+                    margin: auto;
+                    margin-bottom: 10px;
+                    margin-top: 10px;
+                    opacity: 0.8;
+                  "
+                >
+                  <div>
+                    <NewsArticle
+                      :articleUUID="newsArticle.articleUUID"
+                      :likes="newsArticle.likes"
+                      :category="newsArticle.category"
+                      :headline="newsArticle.headline"
+                      :authors="newsArticle.authors"
+                      :link="newsArticle.link"
+                      :shortDescription="newsArticle.shortDescription"
+                      :date="newsArticle.date"
+                      style="height: 100%; width: 100%; margin: auto"
+                    />
+                  </div>
+                </q-item>
+              </div>
+            </q-list>
+            <template v-slot:loading>
+              <div class="row justify-center q-my-md">
+                <q-spinner-dots color="primary" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
         </div>
       </div>
     </div>
@@ -145,14 +152,12 @@ export default {
         .then((resp) => {
           if (resp.status == 200) {
             // ok
-            console.log(resp.data);
             this.newsArticles = resp.data;
             this.loadingNews = false;
           }
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
             if (err.response.status == 401) {
               localStorage.clear();
               this.$router.push("/login");
@@ -193,9 +198,50 @@ export default {
           }
         });
     },
+    onLoad(index, done) {
+      if (this.newsArticles.length == 0) {
+        done();
+        return;
+      }
+
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .get(
+          "/api/users/" + userInfo.username + "/recommended-articles/",
+
+          {
+            params: {
+              page: this.newsArticles[this.newsArticles.length - 1].articleUUID,
+            },
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            if (resp.data.length == 0) {
+              // reached end
+              done(true);
+            } else {
+              this.newsArticles.push(...resp.data);
+              done();
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              done(true);
+            }
+          }
+        });
+    },
   },
 
-  mounted() {
+  beforeMount() {
     this.getNews();
   },
 };
