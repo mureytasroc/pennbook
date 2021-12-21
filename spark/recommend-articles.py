@@ -107,23 +107,23 @@ if __name__ == "__main__":
     ]
 
     articles_rdd = spark.sparkContext.parallelize(
-        scan_whole_table(articles_table, article_items_to_tuples)
+        article_items_to_tuples(scan_whole_table(articles_table))
     )  # (uuid, category)
     gc.collect()
     recommended_articles_rdd = spark.sparkContext.parallelize(
-        scan_whole_table(recommended_articles_table, recommended_articles_to_tuples)
+        recommended_articles_to_tuples(scan_whole_table(recommended_articles_table))
     )  # (username, uuid)
     gc.collect()
     article_likes_rdd = spark.sparkContext.parallelize(
-        scan_whole_table(article_likes_table, article_likes_items_to_tuples)
+        article_likes_items_to_tuples(scan_whole_table(article_likes_table))
     )  # (uuid, username)
     gc.collect()
     users_rdd = spark.sparkContext.parallelize(
-        scan_whole_table(users_table, users_items_to_tuples)
+        users_items_to_tuples(scan_whole_table(users_table))
     )  # (username, interest)
     gc.collect()
     friendships_rdd = spark.sparkContext.parallelize(
-        scan_whole_table(friendships_table, friendships_items_to_tuples)
+        friendships_items_to_tuples(scan_whole_table(friendships_table))
     )  # (username1, username2)
     gc.collect()
 
