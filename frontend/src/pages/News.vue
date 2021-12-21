@@ -1,7 +1,7 @@
 <template>
   <q-page style="overflow-y: hidden">
     <div
-      class="flex q-pa-md"
+      class="column items-center"
       style="
         width: 100%;
         display: flex;
@@ -33,12 +33,12 @@
               class="q-ml-md"
             >
               <template v-slot:append>
-                <q-icon v-if="text === ''" name="search" />
+                <q-icon v-if="this.searchNewsQuery === ''" name="search" />
                 <q-icon
                   v-else
                   name="clear"
                   class="cursor-pointer"
-                  @click="text = ''"
+                  @click="this.searchNewsQuery = ''"
                 />
               </template>
             </q-input>
@@ -69,40 +69,62 @@
         </div>
 
         <div v-else>
-          <q-list class="full-width">
-            <div>
-              <q-item
-                class="columns large-3 medium-6"
-                v-for="newsArticle in this.newsArticles"
-                :key="newsArticle"
-                clickable
-                v-ripple
-                style="
-                  margin: auto;
-                  margin-bottom: 10px;
-                  margin-top: 10px;
-                  opacity: 0.8;
-                "
-              >
-                <div>
-                  <NewsArticle
-                    :articleUUID="newsArticle.articleUUID"
-                    :likes="newsArticle.likes"
-                    :category="newsArticle.category"
-                    :headline="newsArticle.headline"
-                    :authors="newsArticle.authors"
-                    :link="newsArticle.link"
-                    :shortDescription="newsArticle.shortDescription"
-                    :date="newsArticle.date"
-                    style="height: 100%; width: 100%; margin: auto"
-                  />
-                </div>
-              </q-item>
-            </div>
-          </q-list>
+          <q-infinite-scroll @load="onLoad">
+            <q-list class="full-width">
+              <div>
+
+                    <q-img :src="this.adLink.url"/>
+                    <br>
+                <q-item
+                  class="columns large-3 medium-6"
+                  v-for="newsArticle in this.newsArticles"
+                  :key="newsArticle"
+                  clickable
+                  v-ripple
+                  style="
+                    margin: auto;
+                    margin-bottom: 10px;
+                    margin-top: 10px;
+                    opacity: 0.8;
+                  "
+                >
+                  <div>
+
+                    <NewsArticle
+                      :articleUUID="newsArticle.articleUUID"
+                      :likes="newsArticle.likes"
+                      :category="newsArticle.category"
+                      :headline="newsArticle.headline"
+                      :authors="newsArticle.authors"
+                      :link="newsArticle.link"
+                      :shortDescription="newsArticle.shortDescription"
+                      :date="newsArticle.date"
+                      style="height: 100%; width: 100%; margin: auto"
+                    />
+                  </div>
+                </q-item>
+              </div>
+            </q-list>
+            <template v-slot:loading>
+              <div class="row justify-center q-my-md">
+                <q-spinner-dots color="primary" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
         </div>
       </div>
     </div>
+
+    <div
+      class="column self-end"
+      style="
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin: auto;
+        overflow-x: hidden;
+      "
+    ></div>
   </q-page>
 </template>
 
@@ -118,6 +140,7 @@ export default {
       newsArticles: [],
       searchNewsQuery: "",
       loadingNews: false,
+      adLink: "",
     };
   },
 
@@ -139,20 +162,47 @@ export default {
       this.loadingNews = true;
       axios
         .get("/api/news/articles", {
-          params: { q: this.searchNewsQuery },
+          params: { q: encodeURIComponent(this.searchNewsQuery) },
           headers: { Authorization: `Bearer ${localStorage.jwt}` },
         })
         .then((resp) => {
           if (resp.status == 200) {
             // ok
-            console.log(resp.data);
             this.newsArticles = resp.data;
             this.loadingNews = false;
           }
         })
         .catch((err) => {
           if (err.response) {
-            console.log(err.response);
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              this.loadingNews = false;
+            }
+          }
+        });
+    },
+
+    getAdLink() {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      this.loadingNews = true;
+      axios
+        .get(
+          "/api/ad/" + userInfo.username,
+
+          {
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          }
+        )
+        .then((resp) => {
+          if (resp.status == 200) {
+            this.adLink = resp.data;
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
             if (err.response.status == 401) {
               localStorage.clear();
               this.$router.push("/login");
@@ -193,10 +243,87 @@ export default {
           }
         });
     },
+    onLoad(index, done) {
+      if (this.newsArticles.length == 0) {
+        done();
+        return;
+      }
+      console.log("FIRED");
+
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (searchNewsQuery === "") {
+        axios
+          .get(
+            "/api/users/" + userInfo.username + "/recommended-articles/",
+
+            {
+              params: {
+                page: this.newsArticles[this.newsArticles.length - 1].recUUID,
+              },
+              headers: { Authorization: `Bearer ${localStorage.jwt}` },
+            }
+          )
+          .then((resp) => {
+            if (resp.status == 200) {
+              if (resp.data.length == 0) {
+                // reached end
+                done(true);
+              } else {
+                this.newsArticles.push(...resp.data);
+                done();
+              }
+            }
+          })
+          .catch((err) => {
+            if (err.response) {
+              if (err.response.status == 401) {
+                localStorage.clear();
+                this.$router.push("/login");
+              } else {
+                alert(err.response.data.message);
+                done(true);
+              }
+            }
+          });
+      } else {
+        axios
+          .get("/api/news/articles", {
+            params: {
+              q: encodeURIComponent(this.searchNewsQuery),
+              page: this.newsArticles[this.newsArticles.length - 1].articleUUID,
+            },
+            headers: { Authorization: `Bearer ${localStorage.jwt}` },
+          })
+
+          .then((resp) => {
+            if (resp.status == 200) {
+              if (resp.data.length == 0) {
+                // reached end
+                done(true);
+              } else {
+                this.newsArticles.push(...resp.data);
+                done();
+              }
+            }
+          })
+          .catch((err) => {
+            if (err.response) {
+              if (err.response.status == 401) {
+                localStorage.clear();
+                this.$router.push("/login");
+              } else {
+                alert(err.response.data.message);
+                done(true);
+              }
+            }
+          });
+      }
+    },
   },
 
-  mounted() {
+  beforeMount() {
     this.getNews();
+    this.getAdLink();
   },
 };
 </script>

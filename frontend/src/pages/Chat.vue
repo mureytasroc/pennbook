@@ -224,8 +224,7 @@ export default {
     },
 
     closeChat() {
-      console.log("eh??");
-      socket.emit("leave", {
+      socket.emit("logging off", {
         username: this.userInfo.username,
         uuid: this.chatInfo.chatUUID,
       });
@@ -374,6 +373,7 @@ export default {
           "/api/chats/" + this.chatInfo.chatUUID + "/",
 
           {
+            params: { limit: 1000 },
             headers: { Authorization: `Bearer ${localStorage.jwt}` },
           }
         )
@@ -382,7 +382,6 @@ export default {
             console.log("fetched chat history:");
             let fetchedMessages = resp.data;
             fetchedMessages.reverse();
-
             this.messages = fetchedMessages;
             this.loadingMessages = false;
           }
@@ -440,7 +439,7 @@ export default {
     }
   },
   unmounted() {
-    socket.emit("leave", {
+    socket.emit("logging off", {
       username: this.userInfo.username,
       uuid: this.chatInfo.chatUUID,
     });

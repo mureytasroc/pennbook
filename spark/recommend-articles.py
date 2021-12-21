@@ -11,8 +11,9 @@ from uuid import uuid4
 
 from pyspark.sql import SparkSession
 
-MAX_NUM_ITERATIONS = 15
-CONVERGENCE_THRESH = 0.05
+MIN_ITERATIONS = 5
+MAX_ITERATIONS = 5
+CONVERGENCE_THRESH = 0.2
 
 
 def scan_whole_table(table):
@@ -27,11 +28,11 @@ def scan_whole_table(table):
 def updateAdsorptionWeightsDynamoDB(tuples):
     dynamodb = boto3.resource(
         "dynamodb",
-        aws_access_key_id="AKIAS4XUEYH7G7D7R57X",
-        aws_secret_access_key="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",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
         region_name="us-east-1",
     )
-    with dynamodb.Table("articlerankings").batch_write() as batch:
+    with dynamodb.Table("articlerankings").batch_writer() as batch:
         for username, (article_uuid, adsorption_weight) in tuples:
             batch.put_item(
                 Item={
@@ -51,21 +52,21 @@ def recommendArticlesDynamoDB(tuples):
         user_to_candidates[username][1].append(adsorption_weight)
     user_to_recommendation = dict()
     for username, (choices, weights) in user_to_candidates.items():
-        user_to_recommendation[username] = random.choices(choices, weights)
+        user_to_recommendation[username] = random.choices(choices, weights)[0]
 
     dynamodb = boto3.resource(
         "dynamodb",
-        aws_access_key_id="AKIAS4XUEYH7G7D7R57X",
-        aws_secret_access_key="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",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
         region_name="us-east-1",
     )
-    with dynamodb.Table("recommendedarticles").batch_write() as batch:
+    with dynamodb.Table("recommendedarticles").batch_writer() as batch:
         for username, article_uuid in user_to_recommendation.items():
             batch.put_item(
                 Item={
                     "username": username,
                     "articleUUID": article_uuid,
-                    "recUUID": datetime.now().isoformat() + uuid4(),
+                    "recUUID": datetime.now().isoformat() + str(uuid4()),
                     "articleDate": article_uuid_to_date[article_uuid],
                 }
             )
@@ -76,8 +77,8 @@ if __name__ == "__main__":
 
     dynamodb = boto3.resource(
         "dynamodb",
-        aws_access_key_id="AKIAS4XUEYH7G7D7R57X",
-        aws_secret_access_key="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",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
         region_name="us-east-1",
     )
     articles_table = dynamodb.Table("articles")
@@ -175,7 +176,8 @@ if __name__ == "__main__":
         lambda t: ((t[0], t[1][0]), t[1][1])
     )  # ((node, label), value)
 
-    for _ in range(MAX_NUM_ITERATIONS):
+    for i in range(MAX_ITERATIONS):
+        print(f"Iteration {i}...")
         new_node_to_labels = (
             edges.join(node_to_labels)
             .map(
@@ -197,17 +199,19 @@ if __name__ == "__main__":
             lambda t: ((t[0], t[1][0]), t[1][1])
         )  # ((new_node, label_name), label_value)
 
-        max_value_change = (
-            node_and_label_to_value.join(new_node_and_label_to_value)
-            .map(lambda t: abs(t[1][0] - t[1][1]))
-            .max()
-        )
+        if i >= MIN_ITERATIONS:
+            max_value_change = (
+                node_and_label_to_value.join(new_node_and_label_to_value)
+                .map(lambda t: abs(t[1][0] - t[1][1]))
+                .max()
+            )
 
         node_to_labels = new_node_to_labels
         node_and_label_to_value = new_node_and_label_to_value
 
-        if max_value_change < CONVERGENCE_THRESH:
+        if i >= MIN_ITERATIONS and max_value_change < CONVERGENCE_THRESH:
             break
+    print("Converged.")
 
     username_to_article_labels = node_to_labels.filter(lambda t: t[0].startswith("uuid/")).map(
         lambda t: (t[1][0][5:], (t[0][5:], t[1][1]))

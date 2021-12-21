@@ -1,7 +1,7 @@
 <!--q-item list over chatUUIDs: display names of users in chat -->
 <template>
   <q-page style="overflow-y: hidden">
-    <div v-if="this.chats.length == 0" style="margin-top: 300px">
+    <div v-if="this.loadingChats" style="margin-top: 300px">
       <span class="absolute-center" style="text-align: center">
         <q-spinner color="primary" size="3em" :thickness="2" />
         <p style="font-size: 20px; color: grey">Loading your chats...</p>
@@ -61,7 +61,7 @@
             round
             icon="textsms"
             color="light-green-6"
-            @click="showChat(chat.chatUUID)"
+            @click="visitChat(chat.chatUUID)"
           />
         </q-item-section>
       </q-item>
@@ -76,18 +76,19 @@ export default {
   data() {
     return {
       chats: [],
+      loadingChats: false,
     };
   },
   props: {},
   components: {},
 
   watch: {},
-  mounted() {
+  beforeMount() {
     this.getChats();
   },
   methods: {
     getChats() {
-      //make route call (list chats by user) and set chats
+      this.loadingChats = true;
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
         .get("/api/users/" + userInfo.username + "/chats/", {
@@ -98,6 +99,7 @@ export default {
           if (resp.status == 200) {
             // ok
             this.chats = resp.data;
+            this.loadingChats = false;
           }
         })
         .catch((err) => {
@@ -106,6 +108,7 @@ export default {
             this.$router.push("/login");
           } else {
             alert(err.response.data.message);
+            this.loadingChats = false;
           }
         });
     },

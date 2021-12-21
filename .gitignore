@@ -65,3 +65,4 @@ yarn-error.log*
 *.crt
 *.rdb
 backend/jobs/spark-recommend-articles.yaml
+spark/test.py
