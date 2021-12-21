@@ -264,7 +264,11 @@
                 v-else
                 name="clear"
                 class="cursor-pointer"
+<<<<<<< HEAD
                 @click="this.searchPeopleQuery = ''"
+=======
+                @click="searchPeopleQuery = ''"
+>>>>>>> 067ec6dc34721506eb305b9e9a8fe57095a5d520
               />
             </template>
           </q-input>
