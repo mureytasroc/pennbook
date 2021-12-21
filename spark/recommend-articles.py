@@ -216,7 +216,6 @@ if __name__ == "__main__":
     username_to_article_labels = node_to_labels.filter(lambda t: t[0].startswith("uuid/")).map(
         lambda t: (t[1][0][5:], (t[0][5:], t[1][1]))
     )  # (username, (uuid, weight))
-    print("\n\n---\n username_to_article_labels:\n", username_to_article_labels.take(5), "---\n\n")
 
     username_to_article_labels.foreachPartition(updateAdsorptionWeightsDynamoDB)
 
@@ -224,14 +223,12 @@ if __name__ == "__main__":
     articles_today = articles_rdd.filter(lambda t: t[1][1] >= yesterday).map(
         lambda t: (t[0][5:], t[1][1])
     )  # (uuid, date)
-    print("\n\n---\n articles_today:\n", articles_today.take(5), "---\n\n")
 
     recommended_articles_today = recommended_articles_rdd.filter(
         lambda t: t[1][1] >= yesterday
     ).map(
         lambda t: ((t[0], t[1][0]), t[1][1])
     )  # ((username, uuid), date)
-    print("\n\n---\n recommended_articles_today:\n", recommended_articles_today.take(5), "---\n\n")
 
     username_to_candidate_recs = (
         username_to_article_labels.map(
@@ -244,7 +241,6 @@ if __name__ == "__main__":
         .subtractByKey(recommended_articles_today)
         .map(lambda t: (t[0][0], (t[0][1], t[1][0], t[1][1])))  # (username, (uuid, date, weight))
     )
-    print("\n\n---\n username_to_candidate_recs:\n", username_to_candidate_recs.take(5), "---\n\n")
 
     username_to_candidate_recs.foreachPartition(recommendArticlesDynamoDB)
 

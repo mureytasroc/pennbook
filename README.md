@@ -34,7 +34,25 @@ We also added rate limiting to the login route so too many failed login attempts
 We implemented a CI/CD system that automatically lints, tests, Dockerizes, and deploys the PennBook application (backend, frontend, and spark job)
 upon commit to master. See `.github/build-and-deploy.yaml` for our workflow specification.
 
-We implemented a highly scalable production infrastructure using Kubernetes, which can easily
+We implemented a highly scalable production infrastructure using Kubernetes.
+See [this diagram](https://docs.google.com/drawings/d/1C6wGLiv0xLoiG6v6JggdXkh93UfQMV-0IIO1YnMi3gM/edit?usp=sharing)
+for context. We can easily scale up the number of replicas/workers in any of our deployments (backend, frontend, Spark, Redis, even the ingress
+controller and observability/monitoring deployments), depending on production needs (which can be assessed using the monitoring/observability tools discussed below).
+Check out `helm/pennbook-chart/values.yaml` to see how easy it is to tweak the number of replicas. Additionally, we successfully set up
+AWS EKS load balancing, and an NGINX ingress controller with TLS termination to route requests to the proper services,
+so we have secure and scalable traffic ingress to our cluster from the outside world.
+We set up Cloudflare to manage the DNS records of our pennbook.app domain name and point traffic to our EKS load balancer.
+
+We connected our application to Sentry, so any errors that occur in production show up (with the relevant stack trace / context)
+in our Sentry dashboard, where we can detect and diagnose issues. We also set up deployments of Prometheus (a system for collecting and managing metrics, e.g.
+about a Kubernetes cluster), and Grafana (a frontend interface supporting informative dashboards and data visualizations) so we can monitor the health of
+our Kubernetes cluster in real time, assess scaling needs, and set up automatic alerts. [screenshot](https://drive.google.com/file/d/1-1KkE1qNzlrQIg0D7GkvVBkXJ5wKQ4h0/view?usp=sharing).
+
+We set up Google's SparkOperator to manage Spark jobs with kubernetes (making creation of workers a more lightweight process due to containerization as
+opposed to VM creation). This was more difficult than expected due to the novelty of this project, but we were ultimately able to get it working
+and it fit very seamlessly into the rest of our production architecture. Hopefully support for spark on kubernetes continues to improve.
+
+TODO (grohan): describe advertising
 
 ## File Structure Overview
 
@@ -64,13 +82,14 @@ with the command `npm recommend-articles`. In production this command actually t
 To run the frontend in dev, follow the following steps:
 
 - cd into the frontend directory
+- run `npm install -g @quasar/cli`
 - run `npm install`
 - run `quasar dev`
 
-To set up a production environment, you can use our helm chart (`helm/pennbook-chart`) and configuration options for the grafana, prometheus, and spark operator charts,
-and take a look at `.github/build-and-deploy.yaml` for detailed steps of how our deployment process works. Note that secrets are taken from GitHub Actions secrets,
-in the interest of security. We did not have enough time in this project to explore using tools like Terraform for a reproducible description
-of allocated cloud computing resources, so you will have to setup EKS manually, although this is fairly easy with the eksctl command line tool.
+To set up a production environment, you can use our helm chart (`helm/pennbook-chart`) and configuration options for the grafana, prometheus, and spark operator charts in `helm`.
+Take a look at `.github/build-and-deploy.yaml` for detailed steps of how our deployment process works. Note that secrets are taken from GitHub Actions secrets,
+in the interest of security. We did not have enough time in this project to explore using tools like Terraform for a reproducible/declarative specification
+of cloud computing resources, so you will have to set up EKS manually, although this is fairly easy with the eksctl command line tool.
 
 ## Declarations
 
