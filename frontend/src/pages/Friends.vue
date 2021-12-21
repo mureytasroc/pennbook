@@ -145,7 +145,7 @@
 
         <br />
 
-        <div v-if="friends.length == 0" style="margin-top: 300px">
+        <div v-if="this.loadingFriends" style="margin-top: 300px">
           <span class="absolute-center" style="text-align: center">
             <q-spinner color="primary" size="3em" :thickness="2" />
             <p style="font-size: 20px; color: grey">Loading your friends...</p>
@@ -154,68 +154,75 @@
 
         <!-- display current list of friends -->
         <div v-else>
-          <q-item
-            v-for="friend in this.friends"
-            :key="friend"
-            clickable
-            v-ripple
-            style="
-              height: 80px;
-              margin: auto;
-              margin-bottom: 10px;
-              width: 600px;
-              opacity: 0.8;
-              background: whitesmoke;
-            "
-          >
-            <q-btn @click="visitWall(friend.username)" flat>
-              <q-item-section avatar>
-                <q-avatar color="primary" text-color="white">
-                  {{
-                    friend.firstName.charAt(0).toUpperCase() +
-                    friend.lastName.charAt(0).toUpperCase()
-                  }}
-                </q-avatar>
-              </q-item-section>
-            </q-btn>
+          <q-infinite-scroll @load="onLoadFriends">
+            <q-item
+              v-for="friend in this.friends"
+              :key="friend"
+              clickable
+              v-ripple
+              style="
+                height: 80px;
+                margin: auto;
+                margin-bottom: 10px;
+                width: 600px;
+                opacity: 0.8;
+                background: whitesmoke;
+              "
+            >
+              <q-btn @click="visitWall(friend.username)" flat>
+                <q-item-section avatar>
+                  <q-avatar color="primary" text-color="white">
+                    {{
+                      friend.firstName.charAt(0).toUpperCase() +
+                      friend.lastName.charAt(0).toUpperCase()
+                    }}
+                  </q-avatar>
+                </q-item-section>
+              </q-btn>
 
-            <q-item-section avatar>
+              <q-item-section avatar>
+                <q-btn
+                  v-if="friend.loggedIn"
+                  round
+                  dense
+                  unelevated
+                  style="font-size: 6px !important; margin-left: 5px"
+                  color="light-green-5"
+                />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>{{
+                  friend.firstName + " " + friend.lastName
+                }}</q-item-label>
+              </q-item-section>
+
+              <q-item-section side>
+                <q-btn
+                  style="margin-right: 20px"
+                  dense
+                  round
+                  icon="textsms"
+                  color="light-green-6"
+                  @click="createChat(friend)"
+                />
+              </q-item-section>
               <q-btn
-                v-if="friend.loggedIn"
-                round
+                icon="remove_circle_outline"
+                flat
                 dense
                 unelevated
-                style="font-size: 6px !important; margin-left: 5px"
-                color="light-green-5"
+                style="font-size: 12px !important; margin-left: 5px"
+                color="red"
+                @click="removeFriend(friend.username)"
               />
-            </q-item-section>
-
-            <q-item-section>
-              <q-item-label>{{
-                friend.firstName + " " + friend.lastName
-              }}</q-item-label>
-            </q-item-section>
-
-            <q-item-section side>
-              <q-btn
-                style="margin-right: 20px"
-                dense
-                round
-                icon="textsms"
-                color="light-green-6"
-                @click="createChat(friend)"
-              />
-            </q-item-section>
-            <q-btn
-              icon="remove_circle_outline"
-              flat
-              dense
-              unelevated
-              style="font-size: 12px !important; margin-left: 5px"
-              color="red"
-              @click="removeFriend(friend.username)"
-            />
-          </q-item>
+            </q-item>
+            <template v-slot:loading>
+              <div class="row justify-center q-my-md">
+                <q-spinner-dots color="primary" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
         </div>
       </div>
 
@@ -252,12 +259,16 @@
             class="q-ml-md"
           >
             <template v-slot:append>
-              <q-icon v-if="text === ''" name="search" />
+              <q-icon v-if="this.searchPeopleQuery === ''" name="search" />
               <q-icon
                 v-else
                 name="clear"
                 class="cursor-pointer"
-                @click="text = ''"
+<<<<<<< HEAD
+                @click="this.searchPeopleQuery = ''"
+=======
+                @click="searchPeopleQuery = ''"
+>>>>>>> 067ec6dc34721506eb305b9e9a8fe57095a5d520
               />
             </template>
           </q-input>
@@ -275,62 +286,69 @@
         v-if="this.searchedFriends && this.tab == 'people'"
         style="margin-top: 2%"
       >
-        <q-item
-          v-for="searchedFriend in this.searchedFriends"
-          :key="searchedFriend"
-          clickable
-          v-ripple
-          style="
-            height: 80px;
-            margin: auto;
-            margin-bottom: 10px;
-            width: 600px;
-            opacity: 0.8;
-            background: whitesmoke;
-          "
-        >
-          <q-btn flat>
-            <q-item-section avatar>
-              <q-avatar color="primary" text-color="white">
-                {{
-                  searchedFriend.firstName.charAt(0).toUpperCase() +
-                  searchedFriend.lastName.charAt(0).toUpperCase()
-                }}
-              </q-avatar>
-            </q-item-section>
-          </q-btn>
-
-          <q-item-section>
-            <q-item-label>{{
-              searchedFriend.firstName + " " + searchedFriend.lastName
-            }}</q-item-label>
-          </q-item-section>
-
-          <q-btn
-            v-if="
-              !this.friends.some(
-                (friend) => friend.username === searchedFriend.username
-              )
+        <q-infinite-scroll @load="onLoadSearchedFriends">
+          <q-item
+            v-for="searchedFriend in this.searchedFriends"
+            :key="searchedFriend"
+            clickable
+            v-ripple
+            style="
+              height: 80px;
+              margin: auto;
+              margin-bottom: 10px;
+              width: 600px;
+              opacity: 0.8;
+              background: whitesmoke;
             "
-            icon="add_circle"
-            flat
-            dense
-            unelevated
-            style="font-size: 12px !important; margin-left: 5px"
-            color="green"
-            @click="addFriend(searchedFriend.username)"
-          />
-          <q-btn
-            v-else
-            icon="remove_circle_outline"
-            flat
-            dense
-            unelevated
-            style="font-size: 12px !important; margin-left: 5px"
-            color="red"
-            @click="removeFriend(searchedFriend.username)"
-          />
-        </q-item>
+          >
+            <q-btn flat>
+              <q-item-section avatar>
+                <q-avatar color="primary" text-color="white">
+                  {{
+                    searchedFriend.firstName.charAt(0).toUpperCase() +
+                    searchedFriend.lastName.charAt(0).toUpperCase()
+                  }}
+                </q-avatar>
+              </q-item-section>
+            </q-btn>
+
+            <q-item-section>
+              <q-item-label>{{
+                searchedFriend.firstName + " " + searchedFriend.lastName
+              }}</q-item-label>
+            </q-item-section>
+
+            <q-btn
+              v-if="
+                !this.friends.some(
+                  (friend) => friend.username === searchedFriend.username
+                )
+              "
+              icon="add_circle"
+              flat
+              dense
+              unelevated
+              style="font-size: 12px !important; margin-left: 5px"
+              color="green"
+              @click="addFriend(searchedFriend.username)"
+            />
+            <q-btn
+              v-else
+              icon="remove_circle_outline"
+              flat
+              dense
+              unelevated
+              style="font-size: 12px !important; margin-left: 5px"
+              color="red"
+              @click="removeFriend(searchedFriend.username)"
+            />
+          </q-item>
+          <template v-slot:loading>
+            <div class="row justify-center q-my-md">
+              <q-spinner-dots color="primary" size="40px" />
+            </div>
+          </template>
+        </q-infinite-scroll>
       </div>
     </div>
   </q-page>
@@ -347,6 +365,7 @@ export default {
       friends: [],
       friendRequests: [],
       searchedFriends: [],
+      loadingFriends: false,
     };
   },
   props: {},
@@ -360,6 +379,7 @@ export default {
   },
   methods: {
     getFriends() {
+      this.loadingFriends = true;
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       axios
         .get("/api/users/" + userInfo.username + "/friends/", {
@@ -368,7 +388,7 @@ export default {
         .then((resp) => {
           if (resp.status == 200) {
             // ok
-            console.log(resp.data);
+
             resp.data.map((friendInfo) => {
               if (!friendInfo.requested && !friendInfo.confirmed) {
                 // incoming request
@@ -378,6 +398,7 @@ export default {
                 this.friends.push(friendInfo);
               }
             });
+            this.loadingFriends = false;
           }
         })
         .catch((err) => {
@@ -387,6 +408,93 @@ export default {
               this.$router.push("/login");
             } else {
               alert(err.response.data.message);
+              this.loadingFriends = false;
+            }
+          }
+        });
+    },
+    onLoadFriends(index, done) {
+      if (this.friends.length == 0) {
+        done();
+        return;
+      }
+
+      axios
+        .get("/api/users/" + userInfo.username + "/friends/", {
+          params: {
+            page: this.searchedFriends[this.searchedFriends.length - 1]
+              .username,
+            q: encodeURIComponent(this.searchPeopleQuery),
+          },
+
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+
+        .then((resp) => {
+          if (resp.status == 200) {
+            if (resp.data.length == 0) {
+              // reached end
+              done(true);
+            } else {
+              resp.data.map((friendInfo) => {
+                if (!friendInfo.requested && !friendInfo.confirmed) {
+                  // incoming request
+                  this.friendRequests.push(friendInfo);
+                } else if (friendInfo.confirmed) {
+                  // friend
+                  this.friends.push(friendInfo);
+                }
+              });
+              done();
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              done(true);
+            }
+          }
+        });
+    },
+    onLoadSearchedFriends(index, done) {
+      if (this.searchedFriends.length == 0) {
+        done();
+        return;
+      }
+
+      axios
+        .get("/api/users/", {
+          params: {
+            page: this.searchedFriends[this.searchedFriends.length - 1]
+              .username,
+            q: encodeURIComponent(this.searchPeopleQuery),
+          },
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+        .then((resp) => {
+          if (resp.status == 200) {
+            if (resp.data.length == 0) {
+              // reached end
+              done(true);
+            } else {
+              this.searchedFriends.push(...resp.data);
+              done();
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              done(true);
             }
           }
         });
@@ -518,7 +626,9 @@ export default {
     },
     searchPeople() {
       axios
-        .get("/api/users/", { params: { q: this.searchPeopleQuery } })
+        .get("/api/users/", {
+          params: { q: encodeURIComponent(this.searchPeopleQuery) },
+        })
         .then((resp) => {
           if (resp.status == 200) {
             // ok

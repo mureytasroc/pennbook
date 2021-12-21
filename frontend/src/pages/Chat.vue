@@ -224,8 +224,7 @@ export default {
     },
 
     closeChat() {
-      console.log("eh??");
-      socket.emit("leave", {
+      socket.emit("logging off", {
         username: this.userInfo.username,
         uuid: this.chatInfo.chatUUID,
       });
@@ -440,7 +439,7 @@ export default {
     }
   },
   unmounted() {
-    socket.emit("leave", {
+    socket.emit("logging off", {
       username: this.userInfo.username,
       uuid: this.chatInfo.chatUUID,
     });

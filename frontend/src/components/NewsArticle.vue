@@ -152,7 +152,6 @@ export default {
           }
         )
         .then((resp) => {
-          console.log(resp);
           if (resp.status == 201) {
             // ok
             this.liked = true;
@@ -184,7 +183,6 @@ export default {
           }
         )
         .then((resp) => {
-          console.log(resp);
           if (resp.status == 204) {
             // ok
             this.liked = false;
@@ -211,7 +209,6 @@ export default {
     axios
       .get("/api/news/articles/" + this.$props.articleUUID + "/likes/")
       .then((resp) => {
-        console.log(resp);
         if (resp.status == 200) {
           // ok
           resp.data.map((user) => {

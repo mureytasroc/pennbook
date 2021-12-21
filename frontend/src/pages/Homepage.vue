@@ -13,67 +13,67 @@
     >
       <!-- homepage -->
 
-      <div>
-        <!--TODO: v-if="!this.hasFeed" -->
-        <!-- User no feed display -->
-
-        <!--<span class="absolute-center" style="text-align: center; width: 90%">
-          <p
-            style="font-size: 50px; color: grey"
-          >
-            There is no content!
-          </p>
-        </span>-->
+      <div v-if="!this.loadingInitialPosts && this.posts.length == 0">
+        <span class="absolute-center" style="text-align: center; width: 90%">
+          <p style="font-size: 20px; color: grey">
+            No posts to display :(
+          </p> </span
+        >-
       </div>
 
-      <div v-if="this.posts.length == 0">
+      <div v-if="this.loadingInitialPosts">
         <span class="absolute-center" style="text-align: center">
           <q-spinner color="primary" size="3em" :thickness="2" />
-          <p style="font-size: 20px; color: grey">
-            Loading your feed... if it loads too long, there is no content!
-          </p>
+          <p style="font-size: 20px; color: grey">Loading your feed...</p>
         </span>
       </div>
 
       <div v-else>
-        <div style="margin-left: -100px"></div>
-        <q-list class="full-width">
-          <div>
-            <q-item
-              v-for="post in this.posts"
-              :key="post.postUUID"
-              clickable
-              v-ripple
-              style="
-                margin: auto;
-                margin-bottom: 10px;
-                margin-top: 10px;
-                opacity: 0.8;
-              "
-            >
-              <div v-if="post.type == 'Friendship'">
-                <FriendshipUpdate
-                  :firstNameA="post.friend.firstName"
-                  :lastNameA="post.friend.lastName"
-                  :firstNameB="post.friendOfFriend.firstName"
-                  :lastNameB="post.friendOfFriend.lastName"
-                  style="height: 100%; width: 100%; margin: auto"
-                />
-              </div>
+        <q-infinite-scroll @load="onLoad">
+          <div style="margin-left: -100px"></div>
+          <q-list class="full-width">
+            <div>
+              <q-item
+                v-for="(post, index) in this.posts"
+                :key="index"
+                clickable
+                v-ripple
+                style="
+                  margin: auto;
+                  margin-bottom: 10px;
+                  margin-top: 10px;
+                  opacity: 0.8;
+                "
+              >
+                <div v-if="post.type == 'Friendship'">
+                  <FriendshipUpdate
+                    :firstNameA="post.friend.firstName"
+                    :lastNameA="post.friend.lastName"
+                    :firstNameB="post.friendOfFriend.firstName"
+                    :lastNameB="post.friendOfFriend.lastName"
+                    style="height: 100%; width: 100%; margin: auto"
+                  />
+                </div>
 
-              <div v-else>
-                <StatusPost
-                  :postUUID="post.postUUID"
-                  :creator="post.creator.username"
-                  :firstName="post.creator.firstName"
-                  :lastName="post.creator.lastName"
-                  :content="post.content"
-                  style="height: 100%; width: 100%; margin: auto"
-                />
-              </div>
-            </q-item>
-          </div>
-        </q-list>
+                <div v-else>
+                  <StatusPost
+                    :postUUID="post.postUUID"
+                    :creator="post.creator.username"
+                    :firstName="post.creator.firstName"
+                    :lastName="post.creator.lastName"
+                    :content="post.content"
+                    style="height: 100%; width: 100%; margin: auto"
+                  />
+                </div>
+              </q-item>
+            </div>
+          </q-list>
+          <template v-slot:loading>
+            <div class="row justify-center q-my-md">
+              <q-spinner-dots color="primary" size="40px" />
+            </div>
+          </template>
+        </q-infinite-scroll>
       </div>
     </div>
   </q-page>
@@ -89,7 +89,7 @@ export default {
   data() {
     return {
       posts: [],
-      hasLoaded: false,
+      loadingInitialPosts: false,
     };
   },
 
@@ -122,31 +122,71 @@ export default {
     },
   },
 
-  methods: {},
-
-  mounted() {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    axios
-      .get("/api/users/" + userInfo.username + "/home/", {
-        headers: { Authorization: `Bearer ${localStorage.jwt}` },
-      })
-      .then((resp) => {
-        if (resp.status == 200) {
-          // ok
-          console.log(resp.data);
-          this.posts = resp.data;
-        }
-      })
-      .catch((err) => {
-        if (err.response) {
-          if (err.response.status == 401) {
-            localStorage.clear();
-            this.$router.push("/login");
-          } else {
-            alert(err.response.data.message);
+  methods: {
+    getInitialPosts() {
+      this.loadingInitialPosts = true;
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .get("/api/users/" + userInfo.username + "/home/", {
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+        .then((resp) => {
+          if (resp.status == 200) {
+            // ok
+            this.posts = resp.data;
+            this.loadingInitialPosts = false;
           }
-        }
-      });
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              this.loadingPosts = false;
+            }
+          }
+        });
+    },
+    onLoad(index, done) {
+      if (this.posts.length == 0) {
+        done();
+        return;
+      }
+
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      axios
+        .get("/api/users/" + userInfo.username + "/home/", {
+          params: { page: this.posts[this.posts.length - 1].postUUID },
+          headers: { Authorization: `Bearer ${localStorage.jwt}` },
+        })
+        .then((resp) => {
+          if (resp.status == 200) {
+            if (resp.data.length == 0) {
+              // reached end of posts
+              done(true);
+            } else {
+              this.posts.push(...resp.data);
+              done();
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            if (err.response.status == 401) {
+              localStorage.clear();
+              this.$router.push("/login");
+            } else {
+              alert(err.response.data.message);
+              done(true);
+            }
+          }
+        });
+    },
+  },
+  beforeMount() {
+    this.getInitialPosts();
   },
 };
 </script>
