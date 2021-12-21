@@ -59,7 +59,6 @@
             <div class="col text-center text-weight-bold">Your Newsfeed!</div>
           </q-bar>
           <br />
-
         </div>
 
         <div v-if="this.loadingNews" style="margin-top: 300px">
@@ -87,8 +86,7 @@
                   "
                 >
                   <div>
-
-                    <q-img :src="this.adLink"/>
+                    <q-img :src="this.adLink" />
 
                     <NewsArticle
                       :articleUUID="newsArticle.articleUUID"
@@ -124,10 +122,7 @@
         margin: auto;
         overflow-x: hidden;
       "
-    >
-    </div>
-
-
+    ></div>
   </q-page>
 </template>
 

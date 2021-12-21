@@ -61,7 +61,7 @@
             round
             icon="textsms"
             color="light-green-6"
-            @click="showChat(chat.chatUUID)"
+            @click="visitChat(chat.chatUUID)"
           />
         </q-item-section>
       </q-item>
