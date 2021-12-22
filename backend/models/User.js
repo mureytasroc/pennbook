@@ -286,3 +286,17 @@ export async function searchUsers(query, page, limit) {
   }
   return results;
 }
+
+/**
+ * Helper to convert interests to a vector
+ * @param {*} interests interests of user
+ * @param {*} mapping mapping fn from interests to index
+ * @return {Object} arr
+ */
+export function interestsToList(interests, mapping) {
+  const arr = new Array(41).fill(0);
+  for (const interest of interests) {
+    arr[mapping(interest)] = 1;
+  }
+  return arr;
+}
