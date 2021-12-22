@@ -65,7 +65,7 @@ This repository is organized into the following sections:
 - spark: the Dockerized driver code for our adsorption pyspark job
 - .husky: our simple husky setup for running pre-commit hooks enforcing shared style guidelines (cleaning up diffs)
 - .github: our GitHub Actions configuration, specifying the CI/CD workflow of our project
-- adsense: contains the code for training the machine learning model and serving it via Fast API (serve.py). 
+- adsense: contains the code for training the machine learning model and serving it via Fast API (serve.py) -- all Dockerized 
 
 ## Instructions to Run this Application
 
