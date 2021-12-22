@@ -41,7 +41,8 @@ controller and observability/monitoring deployments), depending on production ne
 Check out `helm/pennbook-chart/values.yaml` to see how easy it is to tweak the number of replicas. Additionally, we successfully set up
 AWS EKS load balancing, and an NGINX ingress controller with TLS termination to route requests to the proper services,
 so we have secure and scalable traffic ingress to our cluster from the outside world.
-We set up Cloudflare to manage the DNS records of our pennbook.app domain name and point traffic to our EKS load balancer.
+We set up Cloudflare to manage the DNS records of our pennbook.app domain name and point traffic to our EKS load balancer. Cloudflare also offers
+additional security and caching features (like preventing DOS attacks and filtering out otherwise malicious requests), with a generous free tier.
 
 We connected our application to Sentry, so any errors that occur in production show up (with the relevant stack trace / context)
 in our Sentry dashboard, where we can detect and diagnose issues. We also set up deployments of Prometheus (a system for collecting and managing metrics, e.g.
