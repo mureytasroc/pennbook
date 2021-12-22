@@ -53,7 +53,7 @@ We set up Google's SparkOperator to manage Spark jobs with kubernetes (making cr
 opposed to VM creation). This was more difficult than expected due to the novelty of this project, but we were ultimately able to get it working
 and it fit very seamlessly into the rest of our production architecture. Hopefully support for spark on kubernetes continues to improve.
 
-TODO (grohan): describe advertising
+We implemented an Ad recommendation algorithm. We obtained ad data from this source: https://archive.ics.uci.edu/ml/machine-learning-databases/internet_ads/. This algorithm revolved around a 3 layer Neural Network built and trained in PyTorch, which takes in a vector of user interests and outputs a probability distribution over the 40 categories of ads in our dataset (about 8000 images). We then sample a category from this probability distribution, and select an ad (at random) from the chosen category. Most notably, however, this algorithm offers strong differential privacy guarantees (epsilon ~= 2.5) since we train it using Differentially Private SGD (implemented through the Opacus library). This is useful since we don’t want to be able to trace ad recommendations back to users. This model is served for inference via Fast API (a lightweight Python library)
 
 ## File Structure Overview
 
@@ -65,7 +65,7 @@ This repository is organized into the following sections:
 - spark: the Dockerized driver code for our adsorption pyspark job
 - .husky: our simple husky setup for running pre-commit hooks enforcing shared style guidelines (cleaning up diffs)
 - .github: our GitHub Actions configuration, specifying the CI/CD workflow of our project
-- adsense: TODO (grohan)
+- adsense: contains the code for training the machine learning model and serving it via Fast API (serve.py). 
 
 ## Instructions to Run this Application
 
